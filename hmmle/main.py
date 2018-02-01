@@ -185,3 +185,6 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
         click.echo('=' * 70)
         time_total = time.time() - time_start
         info(f'All done in {time_total:.1f} s.', symbol='+')
+
+if __name__ == '__main__':
+    cli()
