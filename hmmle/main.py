@@ -87,8 +87,10 @@ def parse_best(ctx, param, value):
               help='Permutate in parallel')
 @click.option('--debug', is_flag=True,
               help='Debug')
+@click.option('--test', is_flag=True,
+              help='Run test')
 @click.version_option()
-def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, debug):
+def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
     if debug:
         click.echo('Hello, world!')
         click.echo(f' >  filename = {filename}')
@@ -102,6 +104,13 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
         click.echo(f' >  only_first = {only_first}')
         click.echo(f' >  only_a = {only_a}')
         click.echo(f' >  debug = {debug}')
+
+    if test:
+        filename = None
+        names = tuple('Dog Cow Horse Bat'.split())
+        y = tuple(map(int, '17 18 12 11 7 21 24 16 14 22'.split()))
+        model_names = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 1HP 2H1'
+                            '2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
 
     species, data = parse_input(filename, names, y)
     if len(theta0) == 0:
@@ -185,6 +194,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
         click.echo('=' * 70)
         time_total = time.time() - time_start
         info(f'All done in {time_total:.1f} s.', symbol='+')
+
 
 if __name__ == '__main__':
     cli()
