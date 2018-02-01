@@ -13,10 +13,8 @@ setup(
         'numpy',
         'scipy',
         'Click',
+        'colorama'
     ],
-    extras_require={
-        'dev': ['colorama']
-    },
     entry_points={
         'console_scripts': [
             'hmmle = hmmle:cli',
