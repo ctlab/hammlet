@@ -91,6 +91,8 @@ def parse_best(ctx, param, value):
               help='Debug')
 @click.version_option()
 def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
+    """Hybridization Networks Maximum Likelihood Estimator"""
+
     if debug:
         click.echo('Hello, world!')
         click.echo(f' >  filename = {filename}')
