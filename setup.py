@@ -7,7 +7,8 @@ setup(
     url='https://github.com/Lipen/hmmle',
     author='Konstantin Chukharev',
     author_email='lipen00@gmail.com',
-    py_modules=['hmmle'],
+    # py_modules=['hmmle.main', 'hmmle.models', 'hmmle.utils', 'hmmle.printers'],
+    packages=['hmmle'],
     install_requires=[
         'numpy',
         'scipy',
