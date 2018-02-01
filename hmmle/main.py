@@ -159,22 +159,26 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             else:
                 perms = permutations(range(len(species)))
 
-            with Pool(4) as pool:
-                if parallel:
-                    it = pool.imap(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
-                else:
-                    it = map(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
+            if parallel:
+                pool = Pool(4)
+                it = pool.imap(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
+                pool.close()
+            else:
+                it = map(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
 
-                for permutation, result in it:
-                    results[permutation] = result
-                    if not result.success:
-                        click.secho(f'[!] Optimize failed:', fg='red', bold=True)
-                        click.echo(f' > permutation: [{", ".join(fix(species, permutation))}] :: {permutation}')
-                        click.echo(f' >  model name: {model_name}')
-                        click.echo(f' >     message: {result.message}')
-                        if debug:
-                            click.echo(f' >      result:\n{result}')
-                    click.echo(f'[.] Permutation [{", ".join(fix(species, permutation))}] done after {result.nit} iterations')
+            for permutation, result in it:
+                results[permutation] = result
+                if not result.success:
+                    click.secho(f'[!] Optimize failed:', fg='red', bold=True)
+                    click.echo(f' > permutation: [{", ".join(fix(species, permutation))}] :: {permutation}')
+                    click.echo(f' >  model name: {model_name}')
+                    click.echo(f' >     message: {result.message}')
+                    if debug:
+                        click.echo(f' >      result:\n{result}')
+                click.echo(f'[.] Permutation [{", ".join(fix(species, permutation))}] done after {result.nit} iterations')
+
+            if parallel:
+                pool.join()
 
             time_solve = time.time() - time_solve_start
             info(f'Done optimizing model {model_name} in {time_solve:.1f} s.', symbol='+')
