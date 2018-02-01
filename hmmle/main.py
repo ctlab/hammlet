@@ -85,10 +85,10 @@ def parse_best(ctx, param, value):
               help='Do only a_ij calculations')
 @click.option('-p', '--parallel', is_flag=True,
               help='Permutate in parallel')
-@click.option('--debug', is_flag=True,
-              help='Debug')
 @click.option('--test', is_flag=True,
               help='Run test')
+@click.option('--debug', is_flag=True,
+              help='Debug')
 @click.version_option()
 def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
     if debug:
@@ -103,6 +103,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
         click.echo(f' >  theta0 = {theta0}')
         click.echo(f' >  only_first = {only_first}')
         click.echo(f' >  only_a = {only_a}')
+        click.echo(f' >  test = {test}')
         click.echo(f' >  debug = {debug}')
 
     if test:
