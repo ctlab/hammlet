@@ -1,13 +1,15 @@
 from setuptools import setup
 
+from version import get_version
+
 setup(
     name='HMMLE',
-    version='1.0.0',
+    version=get_version(),
     description='Hybridization Models Maximum Likelihood Estimator',
     url='https://github.com/Lipen/hmmle',
     author='Konstantin Chukharev',
     author_email='lipen00@gmail.com',
-    # py_modules=['hmmle.main', 'hmmle.models', 'hmmle.utils', 'hmmle.printers'],
+    py_modules=['version'],
     packages=['hmmle'],
     install_requires=[
         'numpy',

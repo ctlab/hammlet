@@ -8,6 +8,7 @@ import numpy as np
 
 from .utils import fix, ij2pattern, get_model_theta_bounds, get_model_func, get_all_a, Worker
 from .printers import info, print_data, print_results, print_best, print_rock
+from version import get_version
 
 
 def parse_input(filename, names, y):
@@ -89,7 +90,7 @@ def parse_best(ctx, param, value):
               help='Run test')
 @click.option('--debug', is_flag=True,
               help='Debug')
-@click.version_option()
+@click.version_option(get_version())
 def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
     """Hybridization Networks Maximum Likelihood Estimator"""
 
