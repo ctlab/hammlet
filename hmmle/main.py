@@ -84,8 +84,9 @@ def parse_best(ctx, param, value):
               help='Do calculations only for first (initial) permutation')
 @click.option('--only-a', is_flag=True,
               help='Do only a_ij calculations')
-@click.option('-p', '--parallel', is_flag=True,
-              help='Permutate in parallel')
+@click.option('-p', '--parallel', type=int,
+              default=1, show_default=True,
+              help='Number of parallel optimizing processes')
 @click.option('--test', is_flag=True,
               help='Run test')
 @click.option('--debug', is_flag=True,
@@ -151,30 +152,29 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             else:
                 perms = permutations(range(len(species)))
 
-            if parallel:
-                pool = Pool(4)
-                it = pool.imap(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
+            worker = Worker(model_func, data, r, theta0, theta_bounds, method, options)
+            if parallel > 1:
+                pool = Pool(parallel, Worker.ignore_sigint)
+                it = pool.imap(worker, perms)
                 pool.close()
             else:
-                it = map(Worker(model_func, data, r, theta0, theta_bounds, method, options), perms)
+                it = map(worker, perms)
 
             for permutation, result in it:
                 results[permutation] = result
-                if not result.success:
-                    log_error(f'[!] Optimize failed:')
-                    click.echo(f' > permutation: [{", ".join(fix(species, permutation))}] :: {permutation}')
-                    click.echo(f' >  model name: {model_name}')
-                    click.echo(f' >     message: {result.message}')
-                    if debug:
-                        log_debug(f' >      result:\n{result}', symbol=None)
                 if debug:
                     log_debug(f'Permutation [{", ".join(fix(species, permutation))}] done after {result.nit} iterations')
+                if not result.success:
+                    log_error(f'Optimization for model {model_name} failed on permutation [{", ".join(fix(species, permutation))}] with message: {result.message}')
+                    if debug:
+                        log_debug(f'result:\n{result}')
+                    break
+            else:
+                time_solve = time.time() - time_solve_start
+                log_success(f'Done optimizing model {model_name} in {time_solve:.1f} s.')
 
-            if parallel:
+            if parallel > 1:
                 pool.join()
-
-            time_solve = time.time() - time_solve_start
-            log_success(f'Done optimizing model {model_name} in {time_solve:.1f} s.')
 
             assert all(result.success for result in results.values()), 'Something gone wrong'
 

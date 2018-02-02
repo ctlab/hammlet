@@ -2,6 +2,7 @@ __all__ = ('fix', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
            'get_model_func', 'get_all_a', 'likelihood', 'Worker')
 
 import re
+import signal
 
 import click
 import numpy as np
@@ -119,3 +120,10 @@ class Worker:
         result = minimize(lambda theta: -likelihood(self.model_func, self.data, permutation, theta, self.r),
                           self.theta0, bounds=self.theta_bounds, method=self.method, options=self.options)
         return permutation, result
+
+    @staticmethod
+    def ignore_sigint():
+        def sigint_handler(signum, frame):
+            pass
+
+        signal.signal(signal.SIGINT, sigint_handler)
