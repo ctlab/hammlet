@@ -6,20 +6,20 @@ from collections import OrderedDict
 import click
 import numpy as np
 
-from .utils import fix, ij2pattern, get_model_theta_bounds, get_model_func, get_all_a, Worker
-from .printers import info, print_data, print_results, print_best, print_rock
+from .utils import *
+from .printers import *
 from version import get_version
 
 
 def parse_input(filename, names, y):
     if filename:
-        info(f'Reading data from <{filename}>...')
+        log_info(f'Reading data from <{filename}>...')
         with click.open_file(filename) as f:
             lines = f.read().strip().split('\n')
             assert len(lines) >= 11, "File must contain header with names and 10 rows of data (patterns and y values)"
 
         species = lines[0].strip().split()[:-1]
-        data = {}  # {pattern: y_ij}
+        data = OrderedDict()  # {pattern: y_ij}
         for line in lines[1:]:
             tmp = line.strip().split()
             pattern = ''.join(tmp[:-1])
@@ -30,7 +30,7 @@ def parse_input(filename, names, y):
         if not y:
             raise click.BadParameter('missing y values')
         species = names
-        data = {}  # {pattern: y_ij}
+        data = OrderedDict()  # {pattern: y_ij}
         ys = iter(y)
         for i in range(4):
             for j in range(i, 4):
@@ -95,20 +95,8 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
     """Hybridization Networks Maximum Likelihood Estimator"""
 
     if debug:
-        click.echo('Hello, world!')
-        click.echo(f' >  filename = {filename}')
-        click.echo(f' >  names = {names}')
-        click.echo(f' >  y = {y}')
-        click.echo(f' >  r = {r}')
-        click.echo(f' >  model_names = {model_names}')
-        click.echo(f' >  best = {best}')
-        click.echo(f' >  method = {method}')
-        click.echo(f' >  theta0 = {theta0}')
-        click.echo(f' >  only_first = {only_first}')
-        click.echo(f' >  only_a = {only_a}')
-        click.echo(f' >  parallel = {parallel}')
-        click.echo(f' >  test = {test}')
-        click.echo(f' >  debug = {debug}')
+        for arg, value in list(locals().items())[::-1]:
+            log_debug(f'{arg} = {value}')
 
     if test:
         filename = None
@@ -118,35 +106,38 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                             '2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
 
     species, data = parse_input(filename, names, y)
+    print_data(data)
+    print_species(species)
+
     if len(theta0) == 0:
         theta0 = (0.6 * sum(data.values()), 0.5, 0.5, 0.5, 0.5)
-
-    print_data(data)
-    info(f'{len(species)} species:', symbol=':', nl=False)
-    click.echo(f' {", ".join(species)}')
+        if debug:
+            log_debug(f'Default theta0: {theta0}')
 
     if only_a:
-        info('Doing only a_ij calculations...')
+        log_info('Doing only a_ij calculations...')
+        time_start = time.time()
 
         for model_name in model_names:
             model_func = get_model_func(model_name)
             a = get_all_a(model_func, None, theta0, r)
             print_results(a, data, model_name, theta0, r)
 
-        info('Done.', symbol='+')
+        time_total = time.time() - time_start
+        log_success(f'Done in {time_total:.1f} s.')
     else:
-        info(f'Stuff:', symbol=':')
+        log_info(f'Doing calculations (method: {method})...')
+        time_start = time.time()
+
         a_hat = sum(data.values()) / 10
         L0 = 10 * a_hat * (np.log(a_hat) - 1)
-        click.echo(f' >  a_hat = {a_hat:.3f}')
-        click.echo(f' >  L_0   = {L0:.3f}')
-
-        info(f'Doing calculations (method: {method})...')
-        time_start = time.time()
+        if debug:
+            log_debug(f'a_hat: {a_hat:.3f}')
+            log_debug(f'L_0: {L0:.3f}')
 
         for model_name in model_names:
             click.echo('=' * 70)
-            info(f'Optimizing model {model_name}...')
+            log_info(f'Optimizing model {model_name}...')
             time_solve_start = time.time()
 
             theta_bounds = get_model_theta_bounds(model_name)
@@ -170,19 +161,20 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             for permutation, result in it:
                 results[permutation] = result
                 if not result.success:
-                    click.secho(f'[!] Optimize failed:', fg='red', bold=True)
+                    log_error(f'[!] Optimize failed:')
                     click.echo(f' > permutation: [{", ".join(fix(species, permutation))}] :: {permutation}')
                     click.echo(f' >  model name: {model_name}')
                     click.echo(f' >     message: {result.message}')
                     if debug:
-                        click.echo(f' >      result:\n{result}')
-                click.echo(f'[.] Permutation [{", ".join(fix(species, permutation))}] done after {result.nit} iterations')
+                        log_debug(f' >      result:\n{result}', symbol=None)
+                if debug:
+                    log_debug(f'Permutation [{", ".join(fix(species, permutation))}] done after {result.nit} iterations')
 
             if parallel:
                 pool.join()
 
             time_solve = time.time() - time_solve_start
-            info(f'Done optimizing model {model_name} in {time_solve:.1f} s.', symbol='+')
+            log_success(f'Done optimizing model {model_name} in {time_solve:.1f} s.')
 
             assert all(result.success for result in results.values()), 'Something gone wrong'
 
@@ -190,7 +182,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             if isinstance(best, int):
                 tmp = tmp[:best]
 
-            info(f'Hybridization model {model_name}')
+            log_info(f'Hybridization model {model_name}')
             for i, (permutation, result) in enumerate(tmp, start=1):
                 fit = -result.fun
                 ratio = 2 * (fit - L0)
@@ -202,7 +194,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
 
         click.echo('=' * 70)
         time_total = time.time() - time_start
-        info(f'All done in {time_total:.1f} s.', symbol='+')
+        log_success(f'All done in {time_total:.1f} s.')
 
 
 if __name__ == '__main__':

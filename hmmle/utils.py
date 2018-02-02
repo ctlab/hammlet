@@ -1,3 +1,6 @@
+__all__ = ('fix', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
+           'get_model_func', 'get_all_a', 'likelihood', 'Worker')
+
 import re
 
 import click
