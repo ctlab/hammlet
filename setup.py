@@ -1,10 +1,10 @@
 from setuptools import setup
 
-from version import get_version
+from version import __version__
 
 setup(
     name='HMMLE',
-    version=get_version(),
+    version=__version__,
     description='Hybridization Models Maximum Likelihood Estimator',
     url='https://github.com/Lipen/hmmle',
     author='Konstantin Chukharev',

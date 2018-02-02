@@ -8,7 +8,7 @@ import numpy as np
 
 from .utils import *
 from .printers import *
-from version import get_version
+from version import __version__
 
 
 def parse_input(filename, names, y):
@@ -91,7 +91,7 @@ def parse_best(ctx, param, value):
               help='Run test')
 @click.option('--debug', is_flag=True,
               help='Debug')
-@click.version_option(get_version())
+@click.version_option(__version__)
 def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
     """Hybridization Networks Maximum Likelihood Estimator"""
 
