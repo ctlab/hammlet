@@ -58,33 +58,34 @@ def parse_best(ctx, param, value):
 
 @click.command(context_settings=dict(
     max_content_width=999,
+    help_option_names=['-h', '--help'],
 ))
-@click.option('-i', '--input', 'filename', type=click.Path(exists=True, allow_dash=True),
+@click.option('-i', '--input', 'filename', metavar='<path|->',
+              type=click.Path(exists=True, allow_dash=True),
               help='File with markers presence/absence data')
-# FIXME: add meta = <4 names>
-@click.option('-n', '--names', nargs=4,
+@click.option('-n', '--names', nargs=4, metavar='<name...>',
               default=('Name1', 'Name2', 'Name3', 'Name4'),
               help='Space-separated list of ' + click.style('four', bold=True) + ' species names')
-@click.option('-y', nargs=10, type=int,
+@click.option('-y', nargs=10, metavar='<int...>', type=int,
               help='Space-separated list of ' + click.style('ten', bold=True) + ' y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)')
-@click.option('-r', nargs=4, type=float,
+@click.option('-r', nargs=4, metavar='<float...>', type=float,
               default=(1, 1, 1, 1), show_default=True,
               help='Space-separated list of ' + click.style('four', bold=True) + ' r values')
-@click.option('-m', '--model', 'model_names', multiple=True, callback=parse_models,
+@click.option('-m', '--model', 'model_names', multiple=True, metavar='<int|all>', callback=parse_models,
               help='Which model to use. Pass multiple times to use many models. Pass "all" to use all available models (default behaviour)')
-@click.option('--best', callback=parse_best,
+@click.option('--best', metavar='<int|all>', callback=parse_best,
               default='all', show_default=True,
               help='Number of best models to show')
 @click.option('--method', type=click.Choice(['SLSQP', 'L-BFGS-B', 'TNC']),
               default='SLSQP', show_default=True,
               help='Optimization method')
-@click.option('--theta0', nargs=5, type=float,
+@click.option('--theta0', nargs=5, type=float, metavar='<n0 T1 T3 γ1 γ3>',
               help='Space-separated list of ' + click.style('five', bold=True) + ' initial theta components (n0 T1 T3 gamma1 gamma3)')
 @click.option('--only-first', is_flag=True,
               help='Do calculations only for first (initial) permutation')
 @click.option('--only-a', is_flag=True,
               help='Do only a_ij calculations')
-@click.option('-p', '--parallel', type=int,
+@click.option('-p', '--parallel', type=int, metavar='<int>',
               default=1, show_default=True,
               help='Number of parallel optimizing processes')
 @click.option('--test', is_flag=True,
@@ -93,7 +94,10 @@ def parse_best(ctx, param, value):
               help='Debug')
 @click.version_option(__version__)
 def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, parallel, test, debug):
-    """Hybridization Networks Maximum Likelihood Estimator"""
+    """Hybridization Networks Maximum Likelihood Estimator
+
+    Author: Konstantin Chukharev (lipen00@gmail.com)
+    """
 
     if debug:
         for arg, value in list(locals().items())[::-1]:
@@ -101,10 +105,14 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
 
     if test:
         filename = None
-        names = tuple('Dog Cow Horse Bat'.split())
-        y = tuple(map(int, '17 18 12 11 7 21 24 16 14 22'.split()))
-        model_names = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 1HP 2H1 '
-                            '2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
+        names = 'Dog Cow Horse Bat'
+        y = '17 18 12 11 7 21 24 16 14 22'
+        model_names = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 '
+                            '1HP 2H1 2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
+        log_info('Running in test mode equivalent to the following invocation:\n'
+                 f'$ hmmle --names {names} -y {y} {" ".join(map(lambda m: f"-m {m}", model_names))}')
+        names = tuple(names.split())
+        y = tuple(map(int, y.split()))
 
     species, data = parse_input(filename, names, y)
     print_data(data)
@@ -182,15 +190,16 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             if isinstance(best, int):
                 tmp = tmp[:best]
 
-            log_info(f'Hybridization model {model_name}')
-            for i, (permutation, result) in enumerate(tmp, start=1):
-                fit = -result.fun
-                ratio = 2 * (fit - L0)
-                n0, T1, T3, gamma1, gamma3 = result.x
-                print_best(i, best, fix(species, permutation), fit, ratio, n0, T1, T3, gamma1, gamma3)
+            if tmp:
+                log_info(f'Hybridization model {model_name}')
+                for i, (permutation, result) in enumerate(tmp, start=1):
+                    fit = -result.fun
+                    ratio = 2 * (fit - L0)
+                    n0, T1, T3, gamma1, gamma3 = result.x
+                    print_best(i, best, fix(species, permutation), fit, ratio, n0, T1, T3, gamma1, gamma3)
 
-                a = get_all_a(model_func, permutation, result.x, r)
-                print_rock(a, data, model_name, permutation, result.x, r)
+                    a = get_all_a(model_func, permutation, result.x, r)
+                    print_rock(a, data, model_name, permutation, result.x, r)
 
         click.echo('=' * 70)
         time_total = time.time() - time_start
