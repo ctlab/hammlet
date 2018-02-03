@@ -9,6 +9,8 @@ setup(
     url='https://github.com/Lipen/hmmle',
     author='Konstantin Chukharev',
     author_email='lipen00@gmail.com',
+    license='GNU GPLv3',
+    python_requires='~=3.6',
     py_modules=['version'],
     packages=['hmmle'],
     install_requires=[
