@@ -1,21 +1,30 @@
-# hmmle
+# HMMLE
+
 Hybridization Networks Maximum Likelihood Estimator
 
----
+## Requirements
 
-# Install:
+* **Python 3.6**
+* numpy
+* scipy
+* click
+* colorama
 
-* `pip install git+https://github.com/Lipen/hmmle`
+## Installation
 
-**OR**
+`pip install git+https://github.com/Lipen/hmmle`
 
-* `git clone https://github.com/Lipen/hmmle`
-* `cd hmmle`
-* `python setup.py install`
+or
+
+```sh
+git clone https://github.com/Lipen/hmmle
+cd hmmle
+python setup.py install
+```
 
 # Usage
 
-* `hmmle --help`
+`hmmle --help`
 
 ## Input
 
