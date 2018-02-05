@@ -10,13 +10,13 @@ setup(
     author='Konstantin Chukharev',
     author_email='lipen00@gmail.com',
     license='GNU GPLv3',
-    python_requires='~=3.6',
+    python_requires='>=2.7, !=3.0.*',
     py_modules=['version'],
     packages=['hmmle'],
     install_requires=[
         'numpy',
         'scipy',
-        'Click',
+        'click',
         'colorama'
     ],
     entry_points={

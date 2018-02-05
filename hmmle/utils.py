@@ -30,7 +30,7 @@ def fix(iterable, permutation):
     elif isinstance(iterable, tuple):
         return tuple(iterable[i] for i in permutation)
     else:
-        raise ValueError(f'Iterable type <{type(iterable)}> is not supported')
+        raise ValueError('Iterable type <{}> is not supported'.format(type(iterable)))
 
 
 def ij2pattern(i, j):
@@ -86,7 +86,7 @@ def get_model_func(model_name):
     elif regex_model2.match(model_name):
         return models.model2
     else:
-        raise click.BadParameter(f'unknown model name "{model_name}"')
+        raise click.BadParameter('unknown model name "{}"'.format(model_name))
 
 
 def get_all_a(model_func, permutation, theta, r):

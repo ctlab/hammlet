@@ -4,9 +4,9 @@ Hybridization Models Maximum Likelihood Estimator
 
 ## Requirements
 
-* **Python 3.6**
-* numpy
-* scipy
+* Python 2.7 or 3.3+
+* NumPy
+* SciPy
 * click
 * colorama
 
