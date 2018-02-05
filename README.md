@@ -1,6 +1,6 @@
 # HMMLE
 
-Hybridization Networks Maximum Likelihood Estimator
+Hybridization Models Maximum Likelihood Estimator
 
 ## Requirements
 
@@ -12,12 +12,12 @@ Hybridization Networks Maximum Likelihood Estimator
 
 ## Installation
 
-`pip install git+https://github.com/Lipen/hmmle`
+`pip install git+https://github.com/ctlab/hmmle`
 
 or
 
 ```sh
-git clone https://github.com/Lipen/hmmle
+git clone https://github.com/ctlab/hmmle
 cd hmmle
 python setup.py install
 ```
