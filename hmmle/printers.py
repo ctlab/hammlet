@@ -59,12 +59,11 @@ def print_results(a, data, model, theta, r):
                    .format(pattern, i, j, y_ij, a_ij))
 
 
-def print_best(i, best, species, fit, ratio, theta):
+def print_best(i, best, species, fit, theta):
     n0, T1, T3, gamma1, gamma3 = theta
     log_info('Best #{} of {}'.format(i, best))
     click.echo(click.style(' -   perm:', bold=True) + ' {}'.format(", ".join(species)))
     click.echo(click.style(' -    fit:', bold=True) + ' {:.3f}'.format(fit))
-    click.echo(click.style(' -  ratio:', bold=True) + ' {:.3f}'.format(ratio))
     click.echo(click.style(' -     n0:', bold=True) + ' {:.3f}'.format(n0))
     click.echo(click.style(' -     T1:', bold=True) + ' {:.4f}'.format(T1))
     click.echo(click.style(' -     T3:', bold=True) + ' {:.4f}'.format(T3))

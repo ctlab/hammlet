@@ -111,7 +111,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
     if test:
         filename = None
         names = 'Dog Cow Horse Bat'
-        y = '17 18 12 11 7 21 24 16 14 22'
+        y = '22 21 7 11 14 12 18 16 17 24'
         model_names = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 '
                             '1HP 2H1 2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
         log_info('Running in test mode equivalent to the following invocation:\n'
@@ -143,12 +143,6 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
     else:
         log_info('Doing calculations (method: {})...'.format(method))
         time_start = time.time()
-
-        a_hat = sum(data.values()) / 10
-        L0 = 10 * a_hat * (np.log(a_hat) - 1)
-        if debug:
-            log_debug('a_hat: {:.3f}'.format(a_hat))
-            log_debug('L_0: {:.3f}'.format(L0))
 
         for model_name in model_names:
             click.echo('=' * 70)
@@ -202,8 +196,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                 log_info('Hybridization model {}'.format(model_name))
                 for i, (permutation, result) in enumerate(tmp, start=1):
                     fit = -result.fun
-                    ratio = 2 * (fit - L0)
-                    print_best(i, best, fix(species, permutation), fit, ratio, result.x)
+                    print_best(i, best, fix(species, permutation), fit, result.x)
 
                     a = get_all_a(model_func, permutation, result.x, r)
                     print_rock(a, data, permutation)
