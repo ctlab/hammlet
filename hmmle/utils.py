@@ -1,4 +1,4 @@
-__all__ = ('fix', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
+__all__ = ('all_models', 'fix', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
            'get_model_func', 'get_all_a', 'likelihood', 'Worker')
 
 import re
@@ -7,6 +7,9 @@ import signal
 import click
 import numpy as np
 from scipy.optimize import minimize
+
+all_models = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 1HP '
+                   '2H1 2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
 
 regex_model1 = re.compile(r'1(?:P|T|PH)[12]|1H[P1-4]|2H1')
 regex_model2 = re.compile(r'2(?:P|PH|T)[12]|2H[PAB2]')

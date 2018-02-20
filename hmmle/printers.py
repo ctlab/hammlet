@@ -1,5 +1,5 @@
 __all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error',
-           'print_data', 'print_species', 'print_results', 'print_best', 'print_rock')
+           'print_data', 'print_species', 'print_results', 'print_compact', 'print_best', 'print_rock')
 
 import click
 
@@ -57,6 +57,13 @@ def print_results(a, data, model, theta, r):
         i, j = pattern2ij(pattern)
         click.echo('    {}  {}{}  {: >3}  {: >6.3f}'
                    .format(pattern, i, j, y_ij, a_ij))
+
+
+def print_compact(i, model, species, fit, theta):
+    n0, T1, T3, gamma1, gamma3 = theta
+    log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+        .format(model, i, ', '.join(species), fit, n0, T1, T3, gamma1, gamma3),
+        symbol='@')
 
 
 def print_best(i, best, species, fit, theta):
