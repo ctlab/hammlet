@@ -5,7 +5,7 @@ from collections import OrderedDict
 import click
 
 from .printers import log_info
-from .utils import all_models, ij2pattern, get_model_func
+from .utils import all_models, ij2pattern
 
 
 def parse_input(filename, names, y, verbose=False):
@@ -44,8 +44,9 @@ def parse_models(ctx, param, value):
     elif 'all' in value:
         return all_models
     else:
-        if not all(map(get_model_func, value)):
-            raise click.BadParameter('unknown model name (or anything else...)')
+        for model in value:
+            if model not in all_models:
+                raise click.BadParameter('unknown model name: {}'.format(model))
         return value
 
 
