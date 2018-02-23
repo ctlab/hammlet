@@ -45,6 +45,8 @@ from version import __version__
               help='Do calculations only for first (initial) permutation')
 @click.option('--only-a', is_flag=True,
               help='Do only a_ij calculations')
+@click.option('--no-polytomy', is_flag=True,
+              help='Do not show polytomy results')
 @click.option('--compact', is_flag=True,
               help='Compact results (for batch-mode')
 @click.option('-p', '--parallel', type=int, metavar='<int>',
@@ -55,7 +57,7 @@ from version import __version__
 @click.option('--debug', is_flag=True,
               help='Debug')
 @click.version_option(__version__)
-def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, compact, parallel, test, debug):
+def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, no_polytomy, compact, parallel, test, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -156,6 +158,10 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                     fit = -result.fun
                     theta = result.x
                     a = get_all_a(model_func, permutation, theta, r)
+
+                    # Do not print polytomy (all parameters except n0 are zero)
+                    if no_polytomy and all(abs(x) < 1e-3 for x in theta[1:]):
+                        continue
 
                     if compact:
                         print_compact(i, model_name, fix(species, permutation), fit, theta)
