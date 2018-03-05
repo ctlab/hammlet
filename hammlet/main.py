@@ -76,7 +76,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
             log_info('Running in test mode...')
         else:
             log_info('Running in test mode equivalent to the following invocation:\n'
-                     '$ hmmle --names {} -y {} {}'
+                     '$ hammlet --names {} -y {} {}'
                      .format(names, y, ' '.join(map(lambda m: '-m {}'.format(m), model_names))))
         names = tuple(names.split())
         y = tuple(map(int, y.split()))
