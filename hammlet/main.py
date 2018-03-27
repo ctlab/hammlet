@@ -20,6 +20,8 @@ from version import __version__
 @click.option('-i', '--input', 'filename', metavar='<path|->',
               type=click.Path(exists=True, allow_dash=True),
               help='File with markers presence/absence data')
+@click.option('--laur', is_flag=True,
+              help='Use laurasiatherian data')
 @click.option('-n', '--names', nargs=4, metavar='<name...>',
               default=('Name1', 'Name2', 'Name3', 'Name4'),
               help='Space-separated list of ' + click.style('four', bold=True) + ' species names')
@@ -57,7 +59,7 @@ from version import __version__
 @click.option('--debug', is_flag=True,
               help='Debug')
 @click.version_option(__version__)
-def cli(filename, names, y, r, model_names, best, method, theta0, only_first, only_a, no_polytomy, compact, parallel, test, debug):
+def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_first, only_a, no_polytomy, compact, parallel, test, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -80,6 +82,10 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                      .format(names, y, ' '.join(map(lambda m: '-m {}'.format(m), model_names))))
         names = tuple(names.split())
         y = tuple(map(int, y.split()))
+    elif laur:
+        log_info('Using laurasiatherian preset data')
+        names = tuple('Dog Cow Horse Bat'.split())
+        y = tuple(map(int, '22 21 7 11 14 12 18 16 17 24'.split()))
 
     species, data = parse_input(filename, names, y, verbose=not compact)
     if not compact:
@@ -97,7 +103,7 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
 
         for model_name in model_names:
             model_func = get_model_func(model_name)
-            a = get_all_a(model_func, None, theta0, r)
+            a = get_a(model_func, theta0, r)
             print_results(a, data, model_name, theta0, r)
 
         time_total = time.time() - time_start
@@ -134,10 +140,10 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                 results[permutation] = result
                 if debug:
                     log_debug('Permutation [{}] done after {} iterations'
-                              .format(", ".join(fix(species, permutation)), result.nit))
+                              .format(", ".join(morph(species, permutation)), result.nit))
                 if not result.success:
                     log_error('Optimization for model {} failed on permutation [{}] with message: {}'
-                              .format(model_name, ", ".join(fix(species, permutation)), result.message))
+                              .format(model_name, ', '.join(morph(species, permutation)), result.message))
                     if debug:
                         log_debug('result:\n{}'.format(result))
                     break
@@ -157,16 +163,16 @@ def cli(filename, names, y, r, model_names, best, method, theta0, only_first, on
                 for i, (permutation, result) in enumerate(tmp, start=1):
                     fit = -result.fun
                     theta = result.x
-                    a = get_all_a(model_func, permutation, theta, r)
 
                     # Do not print polytomy (all parameters except n0 are zero)
                     if no_polytomy and all(abs(x) < 1e-3 for x in theta[1:]):
                         continue
 
                     if compact:
-                        print_compact(i, model_name, fix(species, permutation), fit, theta)
+                        print_compact(i, model_name, morph(species, permutation), fit, theta)
                     else:
-                        print_best(i, best, fix(species, permutation), fit, theta)
+                        a = get_a(model_func, theta, r)
+                        print_best(i, best, morph(species, permutation), fit, theta)
                         print_rock(a, data, permutation)
 
         click.echo('=' * 70)

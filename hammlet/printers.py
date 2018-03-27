@@ -3,7 +3,7 @@ __all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error',
 
 import click
 
-from .utils import fix, pattern2ij
+from .utils import morph, pattern2ij
 
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):
@@ -37,7 +37,8 @@ def log_error(text, symbol='!', fg='red', bg=None, bold=True, nl=True):
 def print_data(data):
     log_info('Data:')
     click.secho('  pattern ij  y_ij', bold=True)
-    for pattern, y_ij in sorted(data.items(), key=lambda t: pattern2ij(t[0])):
+    for pattern in sorted(data.keys(), key=pattern2ij):
+        y_ij = data[pattern]
         i, j = pattern2ij(pattern)
         click.echo('    {}  {}{}  {: >3}'.format(pattern, i, j, y_ij))
 
@@ -51,7 +52,7 @@ def print_results(a, data, model, theta, r):
     log_success('Result for hybridization model {} with theta = {}, r = {}:'
                 .format(model, theta, r))
     click.secho('  pattern ij  y_ij  a_ij', bold=True)
-    for pattern in sorted(a, key=lambda p: pattern2ij(p)):
+    for pattern in sorted(a.keys(), key=pattern2ij):
         a_ij = a[pattern]
         y_ij = data[pattern]
         i, j = pattern2ij(pattern)
@@ -61,7 +62,7 @@ def print_results(a, data, model, theta, r):
 
 def print_compact(i, model, species, fit, theta):
     n0, T1, T3, gamma1, gamma3 = theta
-    log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+    log('{}, {: >2}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
         .format(model, i, ', '.join(species), fit, n0, T1, T3, gamma1, gamma3),
         symbol='@')
 
@@ -69,7 +70,7 @@ def print_compact(i, model, species, fit, theta):
 def print_best(i, best, species, fit, theta):
     n0, T1, T3, gamma1, gamma3 = theta
     log_info('Best #{} of {}'.format(i, best))
-    click.echo(click.style(' -   perm:', bold=True) + ' {}'.format(", ".join(species)))
+    click.echo(click.style(' -   perm:', bold=True) + ' {}'.format(', '.join(species)))
     click.echo(click.style(' -    fit:', bold=True) + ' {:.3f}'.format(fit))
     click.echo(click.style(' -     n0:', bold=True) + ' {:.3f}'.format(n0))
     click.echo(click.style(' -     T1:', bold=True) + ' {:.4f}'.format(T1))
@@ -81,9 +82,10 @@ def print_best(i, best, species, fit, theta):
 def print_rock(a, data, permutation):
     log_info('For those about to rock:')
     click.secho('  pattern ij  y_ij  a_ij', bold=True)
-    for pattern, y_ij in sorted(data.items(), key=lambda t: pattern2ij(fix(t[0], permutation))):
-        pattern = fix(pattern, permutation)
+    morphed_data = {morph(pattern, permutation): y_ij for pattern, y_ij in data.items()}
+    for pattern in sorted(morphed_data.keys(), key=pattern2ij):
         a_ij = a[pattern]
+        y_ij = morphed_data[pattern]
         i, j = pattern2ij(pattern)
         click.echo('    {}  {}{}  {: >3}  {: >6.3f}'
                    .format(pattern, i, j, y_ij, a_ij))

@@ -1,5 +1,5 @@
-__all__ = ('all_models', 'fix', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
-           'get_model_func', 'get_all_a', 'likelihood', 'Worker')
+__all__ = ('all_models', 'morph', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
+           'get_model_func', 'get_a', 'likelihood', 'Worker')
 
 import re
 import signal
@@ -15,14 +15,14 @@ regex_model1 = re.compile(r'1(?:P|T|PH)[12]|1H[P1-4]|2H1')
 regex_model2 = re.compile(r'2(?:P|PH|T)[12]|2H[PAB2]')
 
 
-def fix(iterable, permutation):
-    """Return fixed iterable according to given permutation.
+def morph(iterable, permutation):
+    """Return morphed iterable with given permutation applied.
 
     Examples:
-        fix('-+++', (1,0,2,3)) -> '+-++'
-        fix('+--+', (0,2,3,1)) -> '+-+-'
-        fix(['Dog','Cow','Horse','Bat'], (1,2,3,0)) -> ['Cow','Horse','Bat','Dog']
-        fix(['Human','Colugo','Tupaia','Mouse'], (1,2,0,3)) -> ['Colugo','Tupaia','Human','Mouse']
+        morph('-+++', (1,0,2,3)) -> '+-++'
+        morph('+--+', (0,2,3,1)) -> '+-+-'
+        morph(['Dog','Cow','Horse','Bat'], (1,2,3,0)) -> ['Cow','Horse','Bat','Dog']
+        morph(['Human','Colugo','Tupaia','Mouse'], (1,2,0,3)) -> ['Colugo','Tupaia','Human','Mouse']
     """
     if permutation is None:
         return iterable
@@ -32,6 +32,9 @@ def fix(iterable, permutation):
         return list(iterable[i] for i in permutation)
     elif isinstance(iterable, tuple):
         return tuple(iterable[i] for i in permutation)
+    elif isinstance(iterable, dict):
+        raise NotImplementedError
+        return {morph(key, permutation): value for key, value in iterable.items()}
     else:
         raise ValueError('Iterable type <{}> is not supported'.format(type(iterable)))
 
@@ -40,10 +43,10 @@ def ij2pattern(i, j):
     """Convert (i,j) pair into string pattern.
 
     Examples:
-        ij2pattern(1, 1) -> "-+++"
-        ij2pattern(2, 3) -> "+--+"
-        ij2pattern(1, 4) -> "-++-"
-        ij2pattern(4, 4) -> "+++-"
+        ij2pattern(1, 1) -> '-+++'
+        ij2pattern(2, 3) -> '+--+'
+        ij2pattern(1, 4) -> '-++-'
+        ij2pattern(4, 4) -> '+++-'
     """
     return ''.join('-' if t + 1 in (i, j) else '+' for t in range(4))
 
@@ -52,10 +55,10 @@ def pattern2ij(pattern):
     """Convert string pattern into (i,j) pair.
 
     Examples:
-        pattern2ij("-+++") -> (1, 1)
-        pattern2ij("+--+") -> (2, 3)
-        pattern2ij("-++-") -> (1, 4)
-        pattern2ij("+++-") -> (4, 4)
+        pattern2ij('-+++') -> (1, 1)
+        pattern2ij('+--+') -> (2, 3)
+        pattern2ij('-++-') -> (1, 4)
+        pattern2ij('+++-') -> (4, 4)
     """
     return (pattern.find('-') + 1, pattern.rfind('-') + 1)
 
@@ -92,10 +95,9 @@ def get_model_func(model_name):
         raise click.BadParameter('unknown model name "{}"'.format(model_name))
 
 
-def get_all_a(model_func, permutation, theta, r):
-    # return {fix(ij2pattern(i, j), permutation): a_ij
-    #         for (i, j), a_ij in globals()[f'model{model}'](theta, r).items()}
-    return {fix(ij2pattern(i, j), permutation): a_ij
+def get_a(model_func, theta, r):
+    """Return `a` values from model."""
+    return {ij2pattern(i, j): a_ij
             for (i, j), a_ij in model_func(theta, r).items()}
 
 
@@ -105,8 +107,8 @@ def poisson(a, y):
 
 def likelihood(model_func, data, permutation, theta, r):
     """L(theta | y) = sum_{i,j} y_ij * ln( a_ij(theta) ) - a_ij(theta)"""
-    a = get_all_a(model_func, permutation, theta, r)  # a :: {pattern: a_ij}
-    return sum(poisson(a[pattern], y_ij) for pattern, y_ij in data.items())
+    a = get_a(model_func, theta, r)
+    return sum(poisson(a[morph(pattern, permutation)], y_ij) for pattern, y_ij in data.items())
 
 
 class Worker:
