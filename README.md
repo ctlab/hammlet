@@ -1,6 +1,6 @@
 <img src="logo.png" height="160px" align="right" />
 
-# HaMMLEt
+# Hammlet
 
 **H**ybridiz**a**tion **M**odels **M**aximum **L**ikelihood **E**stima**t**or
 

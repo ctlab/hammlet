@@ -3,7 +3,7 @@ from setuptools import setup
 from version import __version__
 
 setup(
-    name='HaMMLEt',
+    name='Hammlet',
     version=__version__,
     description='Hybridization Models Maximum Likelihood Estimator',
     url='https://github.com/ctlab/hammlet',
