@@ -8,11 +8,11 @@ import click
 import numpy as np
 from scipy.optimize import minimize
 
-all_models = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 1HP '
-                   '2H1 2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2'.split())
+all_models = tuple('1P1 1P2 1T1 1T2 1PH1 1PH2 1H1 1H2 1H3 1H4 1HP PL1 '
+                   '2H1 2P1 2P2 2PH1 2PH2 2T1 2T2 2HP 2HA 2HB 2H2 PL2'.split())
 
-regex_model1 = re.compile(r'1(?:P|T|PH)[12]|1H[P1-4]|2H1')
-regex_model2 = re.compile(r'2(?:P|PH|T)[12]|2H[PAB2]')
+regex_model1 = re.compile(r'1(?:P|T|PH)[12]|1H[P1-4]|2H1|PL1')
+regex_model2 = re.compile(r'2(?:P|PH|T)[12]|2H[PAB2]|PL2')
 
 
 def morph(iterable, permutation):
@@ -81,6 +81,11 @@ def get_model_theta_bounds(model_name):
         gamma3 = (0, 0)
     if model_name in '1H4 2T1'.split():
         gamma3 = (1, 1)
+    if model_name in 'PL1 PL2'.split():
+        T1 = (0, 0)
+        T3 = (0, 0)
+        gamma1 = (0, 0)
+        gamma3 = (0, 0)
     return (n0, T1, T3, gamma1, gamma3)
 
 

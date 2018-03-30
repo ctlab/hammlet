@@ -67,9 +67,9 @@ def print_compact(i, model, species, fit, theta):
         symbol='@')
 
 
-def print_best(i, best, species, fit, theta):
+def print_best(i, species, fit, theta):
     n0, T1, T3, gamma1, gamma3 = theta
-    log_info('Best #{} of {}'.format(i, best))
+    log_info('Best #{}'.format(i))
     click.echo(click.style(' -   perm:', bold=True) + ' {}'.format(', '.join(species)))
     click.echo(click.style(' -    fit:', bold=True) + ' {:.3f}'.format(fit))
     click.echo(click.style(' -     n0:', bold=True) + ' {:.3f}'.format(n0))

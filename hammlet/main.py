@@ -45,12 +45,16 @@ from version import __version__
                    ' initial theta components (n0 T1 T3 gamma1 gamma3)')
 @click.option('--only-first', is_flag=True,
               help='Do calculations only for first (initial) permutation')
+@click.option('--only-permutation', nargs=4, metavar='<name...>',
+              help='Do calculations only for given permutation')
 @click.option('--only-a', is_flag=True,
               help='Do only a_ij calculations')
 @click.option('--no-polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--compact', is_flag=True,
-              help='Compact results (for batch-mode')
+              help='Compact results (for batch-mode)')
+@click.option('--show-permutation', nargs=4, metavar='<name...>',
+              help='Show morphed y`s for given permutation')
 @click.option('-p', '--parallel', type=int, metavar='<int>',
               default=1, show_default=True,
               help='Number of parallel optimizing processes')
@@ -59,7 +63,7 @@ from version import __version__
 @click.option('--debug', is_flag=True,
               help='Debug')
 @click.version_option(__version__)
-def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_first, only_a, no_polytomy, compact, parallel, test, debug):
+def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_first, only_permutation, only_a, no_polytomy, compact, show_permutation, parallel, test, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -97,6 +101,14 @@ def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_fir
         if debug:
             log_debug('Default theta0: {}'.format(theta0))
 
+    if show_permutation:
+        perm = tuple(species.index(s) for s in show_permutation)
+        log_info('{}, {}'.format(', '.join(show_permutation),
+                                 ', '.join(map(str, [data[morph(pattern, perm)]
+                                                     for pattern in sorted(data, key=pattern2ij)]))),
+                 symbol='@')
+        return
+
     if only_a:
         log_info('Doing only a_ij calculations...')
         time_start = time.time()
@@ -125,6 +137,8 @@ def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_fir
 
             if only_first:
                 perms = [tuple(range(len(species)))]
+            elif only_permutation:
+                perms = [tuple(species.index(s) for s in only_permutation)]
             else:
                 perms = permutations(range(len(species)))
 
@@ -172,7 +186,7 @@ def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_fir
                         print_compact(i, model_name, morph(species, permutation), fit, theta)
                     else:
                         a = get_a(model_func, theta, r)
-                        print_best(i, best, morph(species, permutation), fit, theta)
+                        print_best(i, morph(species, permutation), fit, theta)
                         print_rock(a, data, permutation)
 
         click.echo('=' * 70)
