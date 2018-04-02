@@ -1,8 +1,9 @@
-__all__ = ('all_models', 'morph', 'ij2pattern', 'pattern2ij', 'get_model_theta_bounds',
-           'get_model_func', 'get_a', 'likelihood', 'Worker')
+__all__ = ('all_models', 'morph4', 'morph10', 'ij2pattern', 'pattern2ij',
+           'get_model_theta_bounds', 'get_model_func', 'get_a', 'likelihood', 'Worker')
 
 import re
 import signal
+from itertools import starmap
 
 import click
 import numpy as np
@@ -15,15 +16,7 @@ regex_model1 = re.compile(r'1(?:P|T|PH)[12]|1H[P1-4]|2H1|PL1')
 regex_model2 = re.compile(r'2(?:P|PH|T)[12]|2H[PAB2]|PL2')
 
 
-def morph(iterable, permutation):
-    """Return morphed iterable with given permutation applied.
-
-    Examples:
-        morph('-+++', (1,0,2,3)) -> '+-++'
-        morph('+--+', (0,2,3,1)) -> '+-+-'
-        morph(['Dog','Cow','Horse','Bat'], (1,2,3,0)) -> ['Cow','Horse','Bat','Dog']
-        morph(['Human','Colugo','Tupaia','Mouse'], (1,2,0,3)) -> ['Colugo','Tupaia','Human','Mouse']
-    """
+def morph4(iterable, permutation):
     if permutation is None:
         return iterable
     if isinstance(iterable, str):
@@ -32,11 +25,22 @@ def morph(iterable, permutation):
         return list(iterable[i] for i in permutation)
     elif isinstance(iterable, tuple):
         return tuple(iterable[i] for i in permutation)
-    elif isinstance(iterable, dict):
-        raise NotImplementedError
-        return {morph(key, permutation): value for key, value in iterable.items()}
+    # elif isinstance(iterable, dict):
+    #     return {morph(key, permutation): value for key, value in iterable.items()}
     else:
-        raise ValueError('Iterable type <{}> is not supported'.format(type(iterable)))
+        raise NotImplementedError('iterable type <{}> is not supported'.format(type(iterable)))
+
+
+def morph10(iterable, permutation):
+    if permutation is None:
+        return iterable
+    A = {}
+    it = iter(iterable)
+    for i in range(4):
+        for j in range(i, 4):
+            A[i, j] = A[j, i] = next(it)
+
+    return [A[permutation[i], permutation[j]] for i in range(4) for j in range(i, 4)]
 
 
 def ij2pattern(i, j):
@@ -102,36 +106,36 @@ def get_model_func(model_name):
 
 def get_a(model_func, theta, r):
     """Return `a` values from model."""
-    return {ij2pattern(i, j): a_ij
-            for (i, j), a_ij in model_func(theta, r).items()}
+    return [a_ij for _, a_ij in sorted(model_func(theta, r).items())]
 
 
 def poisson(a, y):
     return y * np.log(a) - a
 
 
-def likelihood(model_func, data, permutation, theta, r):
+def likelihood(model_func, ys_, theta, r):
     """L(theta | y) = sum_{i,j} y_ij * ln( a_ij(theta) ) - a_ij(theta)"""
+    # ys_ is morphed
+    # Note: do not morph `a`!!!
     a = get_a(model_func, theta, r)
-    return sum(poisson(a[morph(pattern, permutation)], y_ij) for pattern, y_ij in data.items())
+    return sum(starmap(poisson, zip(a, ys_)))
 
 
 class Worker:
-    def __init__(self, model_func, data, r, theta0, theta_bounds, method, options):
+    def __init__(self, model_func, ys, theta0, theta_bounds, r, method, options):
         self.model_func = model_func
-        self.data = data
-        self.r = r
+        self.ys = ys
         self.theta0 = theta0
         self.theta_bounds = theta_bounds
+        self.r = r
         self.method = method
         self.options = options
 
-    def __call__(self, permutation):
-        result = minimize(lambda theta: -likelihood(self.model_func, self.data, permutation, theta, self.r),
+    def __call__(self, perm):
+        result = minimize(lambda theta: -likelihood(self.model_func, morph10(self.ys, perm), theta, self.r),
                           self.theta0, bounds=self.theta_bounds, method=self.method, options=self.options)
-        return permutation, result
+        return perm, result
 
-    @staticmethod
     def ignore_sigint():
         def sigint_handler(signum, frame):
             pass

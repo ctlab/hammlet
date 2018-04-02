@@ -1,15 +1,13 @@
 from __future__ import division
 
 import time
-from multiprocessing import Pool
-from itertools import permutations
-from collections import OrderedDict
 
 import click
 
 from .parsers import *
 from .printers import *
 from .utils import *
+from .instance import *
 from version import __version__
 
 
@@ -34,7 +32,7 @@ from version import __version__
 @click.option('-m', '--model', 'model_names', multiple=True, metavar='<int|all>', callback=parse_models,
               help='Which model to use. Pass multiple times to use many models. '
                    'Pass "all" to use all available models (default behaviour)')
-@click.option('--best', metavar='<int|all>', callback=parse_best,
+@click.option('--best', 'number_of_best', metavar='<int|all>', callback=parse_best,
               default='all', show_default=True,
               help='Number of best models to show')
 @click.option('--method', type=click.Choice(['SLSQP', 'L-BFGS-B', 'TNC']),
@@ -63,17 +61,27 @@ from version import __version__
 @click.option('--debug', is_flag=True,
               help='Debug')
 @click.version_option(__version__)
-def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_first, only_permutation, only_a, no_polytomy, compact, show_permutation, parallel, test, debug):
+def cli(filename, laur, names, y, r, model_names, number_of_best, method, theta0, only_first, only_permutation, only_a, no_polytomy, compact, show_permutation, parallel, test, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
     """
+
+    time_start = time.time()
 
     if debug:
         for arg, value in list(locals().items())[::-1]:
             log_debug('{} = {}'.format(arg, value))
 
     if test:
+        if filename:
+            log_warn('Ignoring specified filename due to test mode!')
+        if names and names != ('Name1', 'Name2', 'Name3', 'Name4'):
+            log_warn('Ignoring specified species names due to test mode!')
+        if y:
+            log_warn('Ignoring specified `y` values due to test mode!')
+        if model_names and model_names != all_models:
+            log_warn('Ignoring specified models due to test mode!')
         filename = None
         names = 'Dog Cow Horse Bat'
         y = '22 21 7 11 14 12 18 16 17 24'
@@ -91,107 +99,45 @@ def cli(filename, laur, names, y, r, model_names, best, method, theta0, only_fir
         names = tuple('Dog Cow Horse Bat'.split())
         y = tuple(map(int, '22 21 7 11 14 12 18 16 17 24'.split()))
 
-    species, data = parse_input(filename, names, y, verbose=not compact)
+    species, ys = parse_input(filename, names, y, verbose=not compact)
     if not compact:
-        print_data(data)
-        print_species(species)
+        print_input(species, ys)
 
     if len(theta0) == 0:
-        theta0 = (0.6 * sum(data.values()), 0.5, 0.5, 0.5, 0.5)
+        theta0 = (0.6 * sum(ys), 0.5, 0.5, 0.5, 0.5)
         if debug:
-            log_debug('Default theta0: {}'.format(theta0))
+            log_debug('Using default theta0: {}'.format(theta0))
+
+    inst = Instance(
+        species=species,
+        ys=ys,
+        model_names=model_names,
+        theta0=theta0,
+        r=r,
+        method=method,
+        parallel=parallel,
+        compact=compact,
+        no_polytomy=no_polytomy,
+        number_of_best=number_of_best,
+        debug=debug
+    )
+
+    if only_first:
+        if only_permutation:
+            log_warn('Ignoring specified permutation due to --only-first flag')
+        only_permutation = inst.species
 
     if show_permutation:
-        perm = tuple(species.index(s) for s in show_permutation)
-        log_info('{}, {}'.format(', '.join(show_permutation),
-                                 ', '.join(map(str, [data[morph(pattern, perm)]
-                                                     for pattern in sorted(data, key=pattern2ij)]))),
-                 symbol='@')
-        return
-
-    if only_a:
-        log_info('Doing only a_ij calculations...')
-        time_start = time.time()
-
-        for model_name in model_names:
-            model_func = get_model_func(model_name)
-            a = get_a(model_func, theta0, r)
-            print_results(a, data, model_name, theta0, r)
-
-        time_total = time.time() - time_start
-        log_success('Done in {:.1f} s.'.format(time_total))
+        if only_permutation:
+            log_warn('Only showing permutation without doing calculations due to --show-permutation flag')
+        inst.only_show_permutation(show_permutation)
+    elif only_a:
+        inst.run_only_a(only_permutation)
     else:
-        log_info('Doing calculations (method: {})...'.format(method))
-        time_start = time.time()
+        inst.run(only_permutation)
 
-        for model_name in model_names:
-            click.echo('=' * 70)
-            log_info('Optimizing model {}...'.format(model_name))
-            time_solve_start = time.time()
-
-            theta_bounds = get_model_theta_bounds(model_name)
-            model_func = get_model_func(model_name)
-            options = {'maxiter': 500}
-
-            results = OrderedDict()  # {permutation: result}
-
-            if only_first:
-                perms = [tuple(range(len(species)))]
-            elif only_permutation:
-                perms = [tuple(species.index(s) for s in only_permutation)]
-            else:
-                perms = permutations(range(len(species)))
-
-            worker = Worker(model_func, data, r, theta0, theta_bounds, method, options)
-            if parallel > 1:
-                pool = Pool(parallel, Worker.ignore_sigint)
-                it = pool.imap(worker, perms)
-                pool.close()
-            else:
-                it = map(worker, perms)
-
-            for permutation, result in it:
-                results[permutation] = result
-                if debug:
-                    log_debug('Permutation [{}] done after {} iterations'
-                              .format(", ".join(morph(species, permutation)), result.nit))
-                if not result.success:
-                    log_error('Optimization for model {} failed on permutation [{}] with message: {}'
-                              .format(model_name, ', '.join(morph(species, permutation)), result.message))
-                    if debug:
-                        log_debug('result:\n{}'.format(result))
-                    break
-            else:
-                time_solve = time.time() - time_solve_start
-                log_success('Done optimizing model {} in {:.1f} s.'.format(model_name, time_solve))
-
-            if parallel > 1:
-                pool.join()
-
-            assert all(result.success for result in results.values()), "Something gone wrong"
-
-            tmp = sorted(results.items(), key=lambda t: t[1].fun)[:best]
-            if tmp:
-                if not compact:
-                    log_info('Hybridization model {}'.format(model_name))
-                for i, (permutation, result) in enumerate(tmp, start=1):
-                    fit = -result.fun
-                    theta = result.x
-
-                    # Do not print polytomy (all parameters except n0 are zero)
-                    if no_polytomy and all(abs(x) < 1e-3 for x in theta[1:]):
-                        continue
-
-                    if compact:
-                        print_compact(i, model_name, morph(species, permutation), fit, theta)
-                    else:
-                        a = get_a(model_func, theta, r)
-                        print_best(i, morph(species, permutation), fit, theta)
-                        print_rock(a, data, permutation)
-
-        click.echo('=' * 70)
-        time_total = time.time() - time_start
-        log_success('All done in {:.1f} s.'.format(time_total))
+    log_br()
+    log_success('All done in {:.1f} s.'.format(time.time() - time_start))
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
-__all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error',
-           'print_data', 'print_species', 'print_results', 'print_compact', 'print_best', 'print_rock')
+__all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error', 'log_br',
+           'print_input', 'print_compact', 'print_best', 'print_a')
 
 import click
 
-from .utils import morph, pattern2ij
+from .utils import morph10
 
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):
@@ -34,30 +34,13 @@ def log_error(text, symbol='!', fg='red', bg=None, bold=True, nl=True):
     log(text, symbol, fg=fg, bg=bg, bold=bold, nl=nl)
 
 
-def print_data(data):
-    log_info('Data:')
-    click.secho('  pattern ij  y_ij', bold=True)
-    for pattern in sorted(data.keys(), key=pattern2ij):
-        y_ij = data[pattern]
-        i, j = pattern2ij(pattern)
-        click.echo('    {}  {}{}  {: >3}'.format(pattern, i, j, y_ij))
+def log_br(fg='white', bg=None, bold=False, nl=True):
+    log(' '.join('=' * 30), symbol=None, fg=fg, bg=bg, bold=bold, nl=nl)
 
 
-def print_species(species):
-    log_info('{} species: {}'
-             .format(len(species), ", ".join(species)))
-
-
-def print_results(a, data, model, theta, r):
-    log_success('Result for hybridization model {} with theta = {}, r = {}:'
-                .format(model, theta, r))
-    click.secho('  pattern ij  y_ij  a_ij', bold=True)
-    for pattern in sorted(a.keys(), key=pattern2ij):
-        a_ij = a[pattern]
-        y_ij = data[pattern]
-        i, j = pattern2ij(pattern)
-        click.echo('    {}  {}{}  {: >3}  {: >6.3f}'
-                   .format(pattern, i, j, y_ij, a_ij))
+def print_input(species, ys):
+    log_info('Species: ' + ', '.join(species))
+    log_info('y values: ' + ' '.join(map(str, ys)))
 
 
 def print_compact(i, model, species, fit, theta):
@@ -79,13 +62,10 @@ def print_best(i, species, fit, theta):
     click.echo(click.style(' - gamma3:', bold=True) + ' {:.4f}'.format(gamma3))
 
 
-def print_rock(a, data, permutation):
-    log_info('For those about to rock:')
-    click.secho('  pattern ij  y_ij  a_ij', bold=True)
-    morphed_data = {morph(pattern, permutation): y_ij for pattern, y_ij in data.items()}
-    for pattern in sorted(morphed_data.keys(), key=pattern2ij):
-        a_ij = a[pattern]
-        y_ij = morphed_data[pattern]
-        i, j = pattern2ij(pattern)
-        click.echo('    {}  {}{}  {: >3}  {: >6.3f}'
-                   .format(pattern, i, j, y_ij, a_ij))
+def print_a(a, ys, perm):
+    ij = [(i + 1, j + 1) for i in range(4) for j in range(i, 4)]
+    ij_ = morph10(ij, perm)
+    ys_ = morph10(ys, perm)
+    log(' ij  y_ij ~ij~~y_ij~  a_ij', symbol=None, bold=True)
+    for (i, j), y_ij, (i_, j_), y_ij_, a_ij in zip(ij, ys, ij_, ys_, a):
+        log(' {}{}  {:>3}   {}{}  {:>3}  {:>7.3f}'.format(i, j, y_ij, i_, j_, y_ij_, a_ij), symbol=None)
