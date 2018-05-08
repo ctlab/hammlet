@@ -37,7 +37,7 @@ def parse_input(filename, names, y, verbose=False):
 def parse_models(ctx, param, value):
     if len(value) == 0:
         # Default value
-        value = '2H1,2H2'
+        value = ('2H1', '2H2')
         # return tuple()
     model_names = tuple(m for s in value for m in regex_separator.split(s))
     if 'all' in map(str.lower, model_names):

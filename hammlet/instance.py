@@ -137,7 +137,7 @@ class Instance:
                 if self.compact:
                     print_compact(i, model, morph4(self.species, perm), fit, theta)
                 else:
-                    a = get_a(model_func, theta, self.r)
+                    a = get_a(model, theta, self.r)
                     print_best(i, morph4(self.species, perm), fit, theta)
                     print_a(a, self.ys, perm)
 
