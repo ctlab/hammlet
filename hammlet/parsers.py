@@ -1,9 +1,13 @@
 __all__ = ('parse_input', 'parse_models', 'parse_best')
 
+import re
 import click
 
 from .printers import log_info
-from .utils import all_models, pattern2ij
+from .utils import pattern2ij
+from .models import *
+
+regex_separator = re.compile(r'[,;]')
 
 
 def parse_input(filename, names, y, verbose=False):
@@ -33,15 +37,23 @@ def parse_input(filename, names, y, verbose=False):
 def parse_models(ctx, param, value):
     if len(value) == 0:
         # Default value
-        # return ('2H1', '2H2')
-        return tuple()
-    elif 'all' in value:
+        value = '2H1,2H2'
+        # return tuple()
+    model_names = tuple(m for s in value for m in regex_separator.split(s))
+    if 'all' in map(str.lower, model_names):
         return all_models
-    else:
-        for model in value:
-            if model not in all_models:
-                raise click.BadParameter('unknown model name: {}'.format(model))
-        return value
+    elif 'H1' in model_names:
+        model_names += tuple(m.name for m in models_H1)
+    elif 'H2' in model_names:
+        model_names += tuple(m.name for m in models_H2)
+    # seen = set()
+    seen = {'H1', 'H2'}
+    seen_add = seen.add
+    unique_names = tuple(m for m in model_names if not (m in seen or seen_add(m)))
+    for m in unique_names:
+        if m not in models_mapping:
+            raise click.BadParameter('unknown model name: {}'.format(m))
+    return tuple(models_mapping[m] for m in unique_names)
 
 
 def parse_best(ctx, param, value):

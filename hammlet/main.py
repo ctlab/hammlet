@@ -1,5 +1,3 @@
-from __future__ import division
-
 import time
 
 import click
@@ -8,6 +6,7 @@ from .parsers import *
 from .printers import *
 from .utils import *
 from .instance import *
+from .models import all_models
 from version import __version__
 
 
@@ -19,7 +18,7 @@ from version import __version__
               type=click.Path(exists=True, allow_dash=True),
               help='File with markers presence/absence data')
 @click.option('--laur', is_flag=True,
-              help='Use laurasiatherian data')
+              help='Use laurasiatherian preset data')
 @click.option('-n', '--names', nargs=4, metavar='<name...>',
               default=('Name1', 'Name2', 'Name3', 'Name4'),
               help='Space-separated list of ' + click.style('four', bold=True) + ' species names')
@@ -29,7 +28,7 @@ from version import __version__
 @click.option('-r', nargs=4, metavar='<float...>', type=float,
               default=(1, 1, 1, 1), show_default=True,
               help='Space-separated list of ' + click.style('four', bold=True) + ' r values')
-@click.option('-m', '--model', 'model_names', multiple=True, metavar='<int|all>', callback=parse_models,
+@click.option('-m', '--model', 'models', multiple=True, metavar='<int|all>', callback=parse_models,
               help='Which model to use. Pass multiple times to use many models. '
                    'Pass "all" to use all available models (default behaviour)')
 @click.option('--best', 'number_of_best', metavar='<int|all>', callback=parse_best,
@@ -61,7 +60,7 @@ from version import __version__
 @click.option('--debug', is_flag=True,
               help='Debug')
 @click.version_option(__version__)
-def cli(filename, laur, names, y, r, model_names, number_of_best, method, theta0, only_first, only_permutation, only_a, no_polytomy, compact, show_permutation, parallel, test, debug):
+def cli(filename, laur, names, y, r, models, number_of_best, method, theta0, only_first, only_permutation, only_a, no_polytomy, compact, show_permutation, parallel, test, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -80,22 +79,23 @@ def cli(filename, laur, names, y, r, model_names, number_of_best, method, theta0
             log_warn('Ignoring specified species names due to test mode!')
         if y:
             log_warn('Ignoring specified `y` values due to test mode!')
-        if model_names and model_names != all_models:
+        if models and set(models) != set(all_models):
             log_warn('Ignoring specified models due to test mode!')
         filename = None
         names = 'Dog Cow Horse Bat'
         y = '22 21 7 11 14 12 18 16 17 24'
-        model_names = all_models
+        models = all_models
         if compact:
             log_info('Running in test mode...')
         else:
             log_info('Running in test mode equivalent to the following invocation:\n'
-                     '$ hammlet --names {} -y {} {}'
-                     .format(names, y, ' '.join(map(lambda m: '-m {}'.format(m), model_names))))
+                     '$ hammlet --names {} -y {} -m {}'
+                     .format(names, y, ','.join(map(str, models))))
         names = tuple(names.split())
         y = tuple(map(int, y.split()))
     elif laur:
         log_info('Using laurasiatherian preset data')
+        filename = None
         names = tuple('Dog Cow Horse Bat'.split())
         y = tuple(map(int, '22 21 7 11 14 12 18 16 17 24'.split()))
 
@@ -108,10 +108,13 @@ def cli(filename, laur, names, y, r, model_names, number_of_best, method, theta0
         if debug:
             log_debug('Using default theta0: {}'.format(theta0))
 
+    if len(models) == 0:
+        raise click.BadParameter('no models specified')
+
     inst = Instance(
         species=species,
         ys=ys,
-        model_names=model_names,
+        models=models,
         theta0=theta0,
         r=r,
         method=method,
