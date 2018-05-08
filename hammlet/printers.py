@@ -45,7 +45,7 @@ def print_input(species, ys):
 
 def print_compact(i, model, species, fit, theta):
     n0, T1, T3, gamma1, gamma3 = theta
-    log('{}, {: >2}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+    log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
         .format(model, i, ', '.join(species), fit, n0, T1, T3, gamma1, gamma3),
         symbol='@')
 
