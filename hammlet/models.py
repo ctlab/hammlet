@@ -20,7 +20,7 @@ def summarize_a(a, n0, r):
 
 class Model(object):
 
-    mapping = OrderedDict()
+    mapping = OrderedDict()  # {name: model} :: {str: Model}
 
     def __init__(self, name, n0=(0, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
         self.name = name
@@ -45,13 +45,13 @@ class Model(object):
         return self.name
 
     def __repr__(self):
-        return '{}(name={}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})'.format(self.__class__.__name__,
-                                                                               self.name,
-                                                                               self.n0_bounds,
-                                                                               self.T1_bounds,
-                                                                               self.T3_bounds,
-                                                                               self.gamma1_bounds,
-                                                                               self.gamma3_bounds)
+        return '{}(name={!r}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})'.format(self.__class__.__name__,
+                                                                                 self.name,
+                                                                                 self.n0_bounds,
+                                                                                 self.T1_bounds,
+                                                                                 self.T3_bounds,
+                                                                                 self.gamma1_bounds,
+                                                                                 self.gamma3_bounds)
 
 
 class ModelH1(Model):
@@ -253,31 +253,33 @@ class ModelH2(Model):
         return a
 
 
-models_H1 = (ModelH1('PL1', T1=0, T3=0, gamma1=0, gamma3=0),
-             ModelH1('1P1', T1=0, gamma1=0, gamma3=0),
-             ModelH1('1P2', T3=0, gamma1=0, gamma3=0),
-             ModelH1('1T1', gamma1=1, gamma3=0),
-             ModelH1('1T2', gamma1=0, gamma3=0),
-             ModelH1('1PH1', T1=0, gamma1=0),
-             ModelH1('1PH2', T3=0, gamma3=0),
+# Note: first model in list must be the most complex, last model must be the simplest
+models_H1 = (ModelH1('2H1'),
              ModelH1('1H1', gamma3=0),
              ModelH1('1H2', gamma1=1),
              ModelH1('1H3', gamma1=0),
              ModelH1('1H4', gamma3=1),
-             ModelH1('2H1'))
-models_H2 = (ModelH2('PL2', T1=0, T3=0, gamma1=0, gamma3=0),
-             ModelH2('2P1', T1=0, gamma1=0, gamma3=0),
-             ModelH2('2P2', T3=0, gamma1=0, gamma3=0),
-             ModelH2('2T1', gamma1=0, gamma3=1),
-             ModelH2('2T2', gamma1=0, gamma3=0),
-             ModelH2('2PH1', T1=0, gamma1=0),
-             ModelH2('2PH2', T3=0, gamma3=0),
-             ModelH2('2HP', T3=0),
+             ModelH1('1HP', T3=0),
+             ModelH1('1T1', gamma1=1, gamma3=0),
+             ModelH1('1T2', gamma1=0, gamma3=0),
+             ModelH1('1PH1', T1=0, gamma1=0),
+             ModelH1('1PH2', T3=0, gamma3=0),
+             ModelH1('1P1', T1=0, gamma1=0, gamma3=0),
+             ModelH1('1P2', T3=0, gamma1=0, gamma3=0),
+             ModelH1('PL1', T1=0, T3=0, gamma1=0, gamma3=0))
+models_H2 = (ModelH2('2H2'),
              ModelH2('2HA1', gamma3=0),
              ModelH2('2HA2', gamma3=1),
              ModelH2('2HB1', gamma1=0),
              ModelH2('2HB2', gamma1=1),
-             ModelH2('2H2'))
+             ModelH2('2HP', T3=0),
+             ModelH2('2T1', gamma1=0, gamma3=1),
+             ModelH2('2T2', gamma1=0, gamma3=0),
+             ModelH2('2PH1', T1=0, gamma1=0),
+             ModelH2('2PH2', T3=0, gamma3=0),
+             ModelH2('2P1', T1=0, gamma1=0, gamma3=0),
+             ModelH2('2P2', T3=0, gamma1=0, gamma3=0),
+             ModelH2('PL2', T1=0, T3=0, gamma1=0, gamma3=0))
 all_models = models_H1 + models_H2
 
 models_mapping = Model.mapping

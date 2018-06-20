@@ -1,10 +1,8 @@
-__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'Worker')
+__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood')
 
-import signal
 from itertools import starmap
 
 import numpy as np
-from scipy.optimize import minimize
 
 
 def morph4(iterable, permutation):
@@ -73,25 +71,3 @@ def likelihood(model, ys_, theta, r):
     # Note: do not morph `a`!!!
     a = get_a(model, theta, r)
     return sum(starmap(poisson, zip(a, ys_)))
-
-
-class Worker:
-    def __init__(self, model, ys, theta0, theta_bounds, r, method, options):
-        self.model = model
-        self.ys = ys
-        self.theta0 = theta0
-        self.theta_bounds = theta_bounds
-        self.r = r
-        self.method = method
-        self.options = options
-
-    def __call__(self, perm):
-        result = minimize(lambda theta: -likelihood(self.model, morph10(self.ys, perm), theta, self.r),
-                          self.theta0, bounds=self.theta_bounds, method=self.method, options=self.options)
-        return perm, result
-
-    def ignore_sigint():
-        def sigint_handler(signum, frame):
-            pass
-
-        signal.signal(signal.SIGINT, sigint_handler)

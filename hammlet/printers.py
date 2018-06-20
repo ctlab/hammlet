@@ -1,9 +1,9 @@
 __all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error', 'log_br',
-           'print_input', 'print_compact', 'print_best', 'print_a')
+           'print_input', 'print_permutation', 'print_a', 'print_model_results', 'print_model_best_result')
 
 import click
 
-from .utils import morph10
+from .utils import morph4, morph10
 
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):
@@ -43,23 +43,10 @@ def print_input(species, ys):
     log_info('y values: ' + ' '.join(map(str, ys)))
 
 
-def print_compact(i, model, species, fit, theta):
-    n0, T1, T3, gamma1, gamma3 = theta
-    log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
-        .format(model, i, ', '.join(species), fit, n0, T1, T3, gamma1, gamma3),
-        symbol='@')
-
-
-def print_best(i, species, fit, theta):
-    n0, T1, T3, gamma1, gamma3 = theta
-    log_info('Best #{}'.format(i))
-    click.echo(click.style(' -   perm:', bold=True) + ' {}'.format(', '.join(species)))
-    click.echo(click.style(' -    fit:', bold=True) + ' {:.3f}'.format(fit))
-    click.echo(click.style(' -     n0:', bold=True) + ' {:.3f}'.format(n0))
-    click.echo(click.style(' -     T1:', bold=True) + ' {:.4f}'.format(T1))
-    click.echo(click.style(' -     T3:', bold=True) + ' {:.4f}'.format(T3))
-    click.echo(click.style(' - gamma1:', bold=True) + ' {:.4f}'.format(gamma1))
-    click.echo(click.style(' - gamma3:', bold=True) + ' {:.4f}'.format(gamma3))
+def print_permutation(species, ys, permutation):
+    perm = tuple(species.index(s) for s in permutation)
+    ys_ = morph10(ys, perm)
+    log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@')
 
 
 def print_a(a, ys, perm):
@@ -69,3 +56,23 @@ def print_a(a, ys, perm):
     log(' ij  y_ij ~ij~~y_ij~  a_ij', symbol=None, bold=True)
     for (i, j), y_ij, (i_, j_), y_ij_, a_ij in zip(ij, ys, ij_, ys_, a):
         log(' {}{}  {:>3}   {}{}  {:>3}  {:>7.3f}'.format(i, j, y_ij, i_, j_, y_ij_, a_ij), symbol=None)
+
+
+def print_model_results(model, species, results, number_of_best):
+    best_results = sorted(results.items(), key=lambda t: t[1].fun)[:number_of_best]
+    for i, (perm, result) in enumerate(best_results, start=1):
+        fit = -result.fun
+        theta = result.x
+        n0, T1, T3, gamma1, gamma3 = theta
+        log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+            .format(model, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
+            symbol='@')
+
+
+def print_model_best_result(model, result):
+    fit = -result.fun
+    theta = result.x
+    n0, T1, T3, gamma1, gamma3 = theta
+    log('{}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+        .format(model, fit, n0, T1, T3, gamma1, gamma3),
+        symbol='@')
