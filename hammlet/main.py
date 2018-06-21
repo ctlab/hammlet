@@ -97,10 +97,10 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         if chain == 'H1':
             models = models_H1
             hierarchy = {'2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
-                         '1H1': '1T1 1T2 1PH2'.split(),  # 1T1 ???
+                         '1H1': '1T1 1T2 1PH2'.split(),
                          '1H2': '1T1 1T2 1PH1'.split(),
-                         '1H3': '1T1 1T2 1PH1'.split(),  # 1T1 ???
-                         '1H4': '1T1 1T2 1PH2'.split(),  # 1T1, 1PH2 ???
+                         '1H3': '1T1 1T2 1PH1'.split(),
+                         '1H4': '1T1 1T2 1PH2'.split(),
                          '1HP': '1PH2'.split(),
                          '1T1': '1P1 1P2'.split(),
                          '1T2': '1P1 1P2'.split(),
@@ -177,7 +177,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 any_child = False
                 for simple in hierarchy[complex]:  # more simple model
                     LLsimple = -results[simple].fun
-                    stat = (LLcomplex - LLsimple)
+                    stat = 2 * (LLcomplex - LLsimple)
                     # crit = 3.841458821  # qchisq(p=0.05, df=1, lower.tail=FALSE)
                     # crit = chi2.ppf(1 - pvalue, 1)
                     crit = chdtri(1, pvalue)  # faster
