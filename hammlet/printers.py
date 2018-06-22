@@ -58,12 +58,15 @@ def print_a(a, ys, perm):
         log(' {}{}  {:>3}   {}{}  {:>3}  {:>7.3f}'.format(i, j, y_ij, i_, j_, y_ij_, a_ij), symbol=None)
 
 
-def print_model_results(model, species, results, number_of_best):
+def print_model_results(model, species, results, number_of_best, is_no_polytomy=False):
     best_results = sorted(results.items(), key=lambda t: t[1].fun)[:number_of_best]
     for i, (perm, result) in enumerate(best_results, start=1):
         fit = -result.fun
         theta = result.x
         n0, T1, T3, gamma1, gamma3 = theta
+        # Do not print polytomy (when all parameters except n0 are near to zero)
+        if is_no_polytomy and all(abs(x) < 1e-3 for x in (T1, T3, gamma1, gamma3)):
+            continue
         log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
             .format(model, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
             symbol='@')

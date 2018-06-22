@@ -247,7 +247,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
                 log_success('Done optimizing model {} in {:.1f} s.'
                             .format(model, time.time() - time_start_optimize))
-                print_model_results(model, species, results, number_of_best)
+                print_model_results(model, species, results, number_of_best, is_no_polytomy)
 
     log_br()
     log_success('All done in {:.1f} s.'.format(time.time() - time_start))
