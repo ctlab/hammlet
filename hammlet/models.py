@@ -8,13 +8,30 @@ import numpy as np
 
 
 def ensure_interval(x):
+    """
+    >>> ensure_interval(1)
+    (1, 1)
+    >>> ensure_interval(0.2)
+    (0.2, 0.2)
+    >>> ensure_interval((0.2, 0.8))
+    (0.2, 0.8)
+    >>> ensure_interval([0.3, 0.5])
+    (0.3, 0.5)
+    """
+
     if isinstance(x, (int, float)):
         return (x, x)
     return tuple(x)
 
 
 def summarize_a(a, n0, r):
-    """a = n0 * (a0 + r1*a1 + r2*r2 + r3*a3 + r4*a4)"""
+    """a = n0 * (a0 + r1*a1 + r2*r2 + r3*a3 + r4*a4)
+
+    >>> round(summarize_a((0.15, 0.04, 0.05, 0, 0.05), 97.2, (1,1,1,1)), 3)
+    28.188
+    >>> round(summarize_a((0.21, 0, 0.01, 0, 0.003), 96.8, (1,1,1,1)), 4)
+    21.5864
+    """
     return n0 * (a[0] + sum(ri * ai for ri, ai in zip(r, a[1:])))
 
 
@@ -45,13 +62,10 @@ class Model(object):
         return self.name
 
     def __repr__(self):
-        return '{}(name={!r}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})'.format(self.__class__.__name__,
-                                                                                 self.name,
-                                                                                 self.n0_bounds,
-                                                                                 self.T1_bounds,
-                                                                                 self.T3_bounds,
-                                                                                 self.gamma1_bounds,
-                                                                                 self.gamma3_bounds)
+        return ('{}(name={!r}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})'.format(
+            self.__class__.__name__, self.name,
+            self.n0_bounds, self.T1_bounds, self.T3_bounds,
+            self.gamma1_bounds, self.gamma3_bounds))
 
 
 class ModelH1(Model):
