@@ -1,6 +1,5 @@
 __all__ = ('Instance', )
 
-from itertools import permutations
 from collections import OrderedDict
 
 from scipy.optimize import minimize
