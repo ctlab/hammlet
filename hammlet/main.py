@@ -132,7 +132,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         inst_complex = Instance(species=species, ys=ys, model=model_complex,
                                 theta0=theta0, r=r, method=method, debug=debug)
         if is_only_first:
-            perms = [tuple(ranger(len(species)))]
+            perms = [tuple(range(len(species)))]
         elif only_permutation:
             perms = [tuple(species.index(s) for s in only_permutation)]
         else:
