@@ -77,7 +77,7 @@ def parse_models(ctx, param, value):
 
 def parse_best(ctx, param, value):
     if value == 'all':
-        return 24
+        return len(all_models)
     try:
         return int(value)
     except ValueError:
