@@ -1,7 +1,5 @@
 __all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood')
 
-from itertools import starmap
-
 import numpy as np
 
 
@@ -70,4 +68,4 @@ def likelihood(model, ys_, theta, r):
     # ys_ is morphed
     # Note: do not morph `a`!!!
     a = get_a(model, theta, r)
-    return sum(starmap(poisson, zip(a, ys_)))
+    return poisson(a, ys_).sum()
