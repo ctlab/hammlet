@@ -3,8 +3,6 @@ __all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error', 'log
 
 import click
 
-from .utils import morph4, morph10
-
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):
     if symbol is None:
@@ -44,12 +42,14 @@ def print_input(species, ys):
 
 
 def print_permutation(species, ys, permutation):
+    from .utils import morph10
     perm = tuple(species.index(s) for s in permutation)
     ys_ = morph10(ys, perm)
     log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@')
 
 
 def print_a(a, ys, perm):
+    from .utils import morph10
     ij = [(i + 1, j + 1) for i in range(4) for j in range(i, 4)]
     ij_ = morph10(ij, perm)
     ys_ = morph10(ys, perm)
@@ -59,6 +59,7 @@ def print_a(a, ys, perm):
 
 
 def print_model_results(model, species, results, number_of_best, is_no_polytomy=False):
+    from .utils import morph4
     best_results = sorted(results.items(), key=lambda t: t[1].fun)[:number_of_best]
     for i, (perm, result) in enumerate(best_results, start=1):
         fit = -result.fun
