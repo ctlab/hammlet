@@ -1,16 +1,14 @@
 import time
 import itertools
-from collections import deque, OrderedDict
+from collections import OrderedDict
 
 import click
-# from scipy.stats import chi2
-from scipy.special import chdtri  # faster
 
 from .utils import *
 from .models import *
 from .parsers import *
 from .printers import *
-from .instance import *
+from .optimizer import *
 from version import __version__
 
 
@@ -129,15 +127,14 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         if debug:
             log_debug('Optimizing complex model {}...'.format(model_complex))
             time_start_optimize_complex = time.time()
-        inst_complex = Instance(species=species, ys=ys, model=model_complex,
-                                theta0=theta0, r=r, method=method, debug=debug)
+        optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
         if is_only_first:
-            perms = [tuple(range(len(species)))]
+            perms = [None]
         elif only_permutation:
             perms = [tuple(species.index(s) for s in only_permutation)]
         else:
             perms = list(itertools.permutations(range(len(species))))
-        results_complex = inst_complex.optimize_all(perms)
+        results_complex = optimizer.many_perms(model_complex, perms)  # {perm: result}
         best_complex_perm, best_complex_result = max(results_complex.items(), key=lambda t: -t[1].fun)  # (perm, result)
         if debug:
             log_debug('Done optimizing complex model {} in {:.1f} s.'
@@ -145,19 +142,12 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         log_info('Best complex permutation: {}'
                  .format(', '.join(morph4(species, best_complex_perm))))
 
-        results = OrderedDict()  # {model_name: result}
-        results[model_complex.name] = best_complex_result
-
         if debug:
             log_debug('Optimizing other models...')
             time_start_optimize_other = time.time()
-        for model in models:
-            if model is model_complex:
-                continue
-            inst = Instance(species=species, ys=ys, model=model,
-                            theta0=theta0, r=r, method=method, debug=debug)
-            result = inst.optimize_one(best_complex_perm)
-            results[model.name] = result
+        results = OrderedDict({model_complex.name: best_complex_result})
+        results_other = optimizer.many_models(models[1:], best_complex_perm)  # {model_name: result}
+        results.update(results_other)
         if debug:
             log_debug('Done optimizing other models for permutation [{}] in {:.1f} s.'
                       .format(', '.join(morph4(species, best_complex_perm)),
@@ -165,31 +155,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
             for m, result in results.items():
                 print_model_results(m, species, {best_complex_perm: result}, 1)
 
-        chains = []
-        q = deque([[models[0].name]])
-        while q:
-            path = q.popleft()
-            complex = path[-1]  # more complex model
-            if complex == models[-1].name:
-                chains.append(tuple(path))
-            else:
-                LLcomplex = -results[complex].fun
-                any_child = False
-                for simple in hierarchy[complex]:  # more simple model
-                    LLsimple = -results[simple].fun
-                    stat = 2 * (LLcomplex - LLsimple)
-                    # crit = 3.841458821  # qchisq(p=0.05, df=1, lower.tail=FALSE)
-                    # crit = chi2.ppf(1 - pvalue, 1)
-                    crit = chdtri(1, pvalue)  # faster
-                    if stat < crit:
-                        # log_debug('{}->{}, LLcomplex={:.3f}, LLsimple={:.3f}, stat={:.3f}, extended-path=[{}]'
-                        #           .format(complex, simple, LLcomplex, LLsimple, stat, ' '.join(path + [simple])))
-                        q.append(path + [simple])
-                        any_child = True
-                if not any_child:
-                    chains.append(tuple(path))
-
-        chains = sorted(set(chains), key=lambda p: (len(p), p))
+        chains = get_chains(results, models, hierarchy, pvalue)
         if debug:
             log_info('Total {} chains:'.format(len(chains)))
             for path in chains:
@@ -224,26 +190,25 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 print_a(a, ys, perm)
 
                 if debug:
-                    inst = Instance(species=species, ys=ys, model=model,
-                                    theta0=theta0, r=r, method=method, debug=debug)
-                    result = inst.optimize_one(perm)
+                    optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
+                    result = optimizer.one(model, perm)
                     log_debug('result:\n{}'.format(result), symbol=None)
         # if is_only_a
         else:
+            optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
+            if is_only_first:
+                perms = [None]
+            elif only_permutation:
+                perms = [tuple(species.index(s) for s in only_permutation)]
+            else:
+                perms = list(itertools.permutations(range(len(species))))
+
             for model in models:
                 log_br()
                 log_info('Optimizing model {}...'.format(model))
                 time_start_optimize = time.time()
 
-                inst = Instance(species=species, ys=ys, model=model,
-                                theta0=theta0, r=r, method=method, debug=debug)
-                if is_only_first:
-                    perms = [None]
-                elif only_permutation:
-                    perms = [tuple(species.index(s) for s in only_permutation)]
-                else:
-                    perms = list(itertools.permutations(range(len(species))))
-                results = inst.optimize_all(perms)  # {perm: result}
+                results = optimizer.many_perms(model, perms)  # {perm: result}
 
                 log_success('Done optimizing model {} in {:.1f} s.'
                             .format(model, time.time() - time_start_optimize))
