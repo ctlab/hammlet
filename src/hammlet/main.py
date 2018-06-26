@@ -82,6 +82,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
             log_debug('Using default theta0: {}'.format(theta0))
 
     if show_permutation:
+        if set(show_permutation) != set(species):
+            raise click.BadParameter('must be equal to species ({})'.format(', '.join(species)), param_hint='show_permutation')
+
         log_br()
         print_permutation(species, ys, show_permutation)
     elif chain:
@@ -171,6 +174,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
     else:
         if len(models) == 0:
             raise click.BadParameter('no models specified', param_hint='models')
+
+        if only_permutation and set(only_permutation) != set(species):
+            raise click.BadParameter('must be equal to species ({})'.format(', '.join(species)), param_hint='only_permutation')
 
         if is_only_a:
             log_br()
