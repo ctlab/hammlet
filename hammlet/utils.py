@@ -1,6 +1,10 @@
-__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood')
+__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains')
+
+from collections import deque
 
 import numpy as np
+# from scipy.stats import chi2
+from scipy.special import chdtri  # faster
 
 
 def morph4(iterable, permutation):
@@ -113,3 +117,34 @@ def likelihood(model, ys_, theta, r):
     # Note: do not morph `a`!!!
     a = get_a(model, theta, r)
     return poisson(a, ys_).sum()
+
+
+def get_chains(results, models, hierarchy, pvalue):
+    # from .printers import log_debug
+    chains = []
+    q = deque([[models[0].name]])
+    while q:
+        path = q.popleft()
+        complex = path[-1]  # more complex model
+        if complex == models[-1].name:
+            chains.append(tuple(path))
+        else:
+            LLcomplex = -results[complex].fun
+            any_child = False
+            for simple in hierarchy[complex]:  # more simple model
+                LLsimple = -results[simple].fun
+                stat = 2 * (LLcomplex - LLsimple)
+                # crit = 3.841458821  # qchisq(p=0.05, df=1, lower.tail=FALSE)
+                # crit = chi2.ppf(1 - pvalue, 1)
+                crit = chdtri(1, pvalue)  # faster
+                if stat < crit:
+                    # log_debug('{}->{}, LLcomplex={:.3f}, LLsimple={:.3f}, stat={:.3f}, extended-path=[{}]'
+                    #           .format(complex, simple, LLcomplex, LLsimple, stat, ' '.join(path + [simple])))
+                    q.append(path + [simple])
+                    any_child = True
+            if not any_child:
+                # log_debug('{}->{}, LLcomplex={:.3f}, LLsimple={:.3f}, stat={:.3f}, chain=[{}]'
+                #           .format(complex, simple, LLcomplex, LLsimple, stat, ' '.join(path)))
+                chains.append(tuple(path))
+
+    return sorted(set(chains), key=lambda p: (len(p), p))
