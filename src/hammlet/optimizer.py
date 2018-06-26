@@ -17,7 +17,8 @@ class Optimizer:
         self.r = r
         self.method = method
         self.debug = debug
-        self.options = {'maxiter': 500, **kwargs}
+        self.options = {'maxiter': 500}
+        self.options.update(kwargs)
 
     def one(self, model, perm):
         if self.debug:
