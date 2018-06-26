@@ -1,5 +1,5 @@
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def main():
@@ -23,9 +23,10 @@ def main():
         author_email='lipen00@gmail.com',
         license='GNU GPLv3',
         python_requires='>=2.7, !=3.0.*',
-        packages=['hammlet'],
+        package_dir={'': 'src'},
+        packages=find_packages('src'),
         use_scm_version={
-            'write_to': 'hammlet/version.py',
+            'write_to': 'src/hammlet/version.py',
             'version_scheme': 'post-release',
             # 'local_scheme': lambda _: '',
             'local_scheme': 'dirty-tag',
