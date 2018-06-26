@@ -9,7 +9,7 @@ from .models import *
 from .parsers import *
 from .printers import *
 from .optimizer import *
-from version import __version__
+from .version import version as __version__
 
 
 @click.command(context_settings=dict(
