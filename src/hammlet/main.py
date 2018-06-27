@@ -89,7 +89,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         print_permutation(species, ys, show_permutation)
     elif chain:
         log_br()
-        log_info('Doing stuff for chain {}...'.format(chain))
+        log_info('Searching for simplest models from {}...'.format(chain))
         time_start_chain = time.time()
 
         if models:
@@ -142,8 +142,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         if debug:
             log_debug('Done optimizing complex model {} in {:.1f} s.'
                       .format(model_complex, time.time() - time_start_optimize_complex))
-        log_info('Best complex permutation: {}'
-                 .format(', '.join(morph4(species, best_complex_perm))))
+        log_info('{} complex permutation: {}'
+                 .format('Selected' if is_only_first or only_permutation else 'Best',
+                         ', '.join(morph4(species, best_complex_perm))))
 
         if debug:
             log_debug('Optimizing other models...')
