@@ -159,10 +159,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 print_model_results(m, species, {best_complex_perm: result}, 1)
 
         chains = get_chains(results, models, hierarchy, pvalue)
-        if debug:
-            log_info('Total {} chains:'.format(len(chains)))
-            for path in chains:
-                log_debug('    ' + ' -> '.join(path), symbol=None)
+        log_info('Total {} chains:'.format(len(chains)))
+        for path in chains:
+            log_debug('    ' + ' -> '.join(path), symbol=None)
 
         simplest = sorted(set(p[-1] for p in chains))
         log_success('Done calculating {} simplest model(s) in {:.1f} s.'
