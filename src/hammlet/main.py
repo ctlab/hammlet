@@ -97,32 +97,36 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
         if chain == 'H1':
             models = models_H1
-            hierarchy = {'2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
-                         '1H1': '1T1 1T2 1PH2'.split(),
-                         '1H2': '1T1 1T2 1PH1'.split(),
-                         '1H3': '1T1 1T2 1PH1'.split(),
-                         '1H4': '1T1 1T2 1PH2'.split(),
-                         '1HP': '1PH2'.split(),
-                         '1T1': '1P1 1P2'.split(),
-                         '1T2': '1P1 1P2'.split(),
-                         '1PH1': '1P1'.split(),
-                         '1PH2': '1P2'.split(),
-                         '1P1': 'PL1'.split(),
-                         '1P2': 'PL1'.split()}
+            hierarchy = {
+                '2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
+                '1H1': '1T1 1T2 1PH2'.split(),
+                '1H2': '1T1 1T2 1PH1'.split(),
+                '1H3': '1T1 1T2 1PH1'.split(),
+                '1H4': '1T1 1T2 1PH2'.split(),
+                '1HP': '1PH2'.split(),
+                '1T1': '1P1 1P2'.split(),
+                '1T2': '1P1 1P2'.split(),
+                '1PH1': '1P1'.split(),
+                '1PH2': '1P2'.split(),
+                '1P1': 'PL1'.split(),
+                '1P2': 'PL1'.split(),
+            }
         elif chain == 'H2':
             models = models_H2
-            hierarchy = {'2H2': '2HA1 2HA2 2HB1 2HB2 2HP'.split(),
-                         '2HA1': '2T1 2T2 2PH2'.split(),
-                         '2HA2': '2T1 2T2 2PH2'.split(),
-                         '2HB1': '2T1 2T2 2PH1'.split(),
-                         '2HB2': '2T1 2T2 2PH1'.split(),
-                         '2HP': '2PH2'.split(),
-                         '2T1': '2PH1 2PH2'.split(),
-                         '2T2': '2PH1 2PH2'.split(),
-                         '2PH1': '2P1'.split(),
-                         '2PH2': '2P2'.split(),
-                         '2P1': 'PL2'.split(),
-                         '2P2': 'PL2'.split()}
+            hierarchy = {
+                '2H2': '2HA1 2HA2 2HB1 2HB2 2HP'.split(),
+                '2HA1': '2T1 2T2 2PH2'.split(),
+                '2HA2': '2T1 2T2 2PH2'.split(),
+                '2HB1': '2T1 2T2 2PH1'.split(),
+                '2HB2': '2T1 2T2 2PH1'.split(),
+                '2HP': '2PH2'.split(),
+                '2T1': '2PH1 2PH2'.split(),
+                '2T2': '2PH1 2PH2'.split(),
+                '2PH1': '2P1'.split(),
+                '2PH2': '2P2'.split(),
+                '2P1': 'PL2'.split(),
+                '2P2': 'PL2'.split(),
+            }
         else:
             raise NotImplementedError('unsupported chain "{}"'.format(chain))
 

@@ -1,4 +1,4 @@
-__all__ = ('Optimizer', )
+__all__ = ('Optimizer',)
 
 from collections import OrderedDict
 
