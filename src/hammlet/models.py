@@ -1,10 +1,10 @@
 from __future__ import division
 
-__all__ = ('all_models', 'models_H1', 'models_H2', 'models_mapping')
-
 from collections import OrderedDict
 
 import numpy as np
+
+__all__ = ('all_models', 'models_H1', 'models_H2', 'models_mapping')
 
 
 def ensure_interval(x):

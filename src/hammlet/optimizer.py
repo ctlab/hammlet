@@ -1,11 +1,11 @@
-__all__ = ('Optimizer',)
-
 from collections import OrderedDict
 
 from scipy.optimize import minimize
 
-from .utils import morph4, morph10, likelihood
 from .printers import log_debug
+from .utils import likelihood, morph4, morph10
+
+__all__ = ('Optimizer', )
 
 
 class Optimizer:

@@ -1,7 +1,7 @@
+import click
+
 __all__ = ('log_debug', 'log_info', 'log_success', 'log_warn', 'log_error', 'log_br',
            'print_input', 'print_permutation', 'print_a', 'print_model_results', 'print_model_best_result')
-
-import click
 
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):

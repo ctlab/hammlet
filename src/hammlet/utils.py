@@ -1,10 +1,10 @@
-__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains')
-
 from collections import deque
 
 import numpy as np
 # from scipy.stats import chi2
 from scipy.special import chdtri  # faster
+
+__all__ = ('morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains')
 
 
 def morph4(iterable, permutation):

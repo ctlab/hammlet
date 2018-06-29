@@ -1,13 +1,12 @@
-__all__ = ('parse_input', 'parse_models', 'parse_best')
-
 import re
+
 import click
 
+from .models import all_models, models_H1, models_H2, models_mapping
 from .printers import log_info
 from .utils import pattern2ij
-from .models import *
 
-regex_separator = re.compile(r'[,;]')
+__all__ = ('parse_input', 'parse_models', 'parse_best')
 
 
 def parse_input(preset, filename, names, y, verbose=False):
@@ -61,7 +60,7 @@ def parse_models(ctx, param, value):
         # Default value
         # value = ('2H1', '2H2')
         return tuple()
-    model_names = tuple(m for s in value for m in regex_separator.split(s))
+    model_names = tuple(m for s in value for m in re.split(r'[,;]', s))
     if 'all' in map(lambda s: s.lower(), model_names):
         return all_models
     elif 'H1' in model_names:
