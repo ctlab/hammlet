@@ -121,6 +121,7 @@ def likelihood(model, ys_, theta, r):
 
 def get_chains(results, models, hierarchy, pvalue):
     # from .printers import log_debug
+    # results :: {model_name: (perm, result)}
     chains = []
     q = deque([[models[0].name]])
     while q:
@@ -129,10 +130,10 @@ def get_chains(results, models, hierarchy, pvalue):
         if complex == models[-1].name:
             chains.append(tuple(path))
         else:
-            LLcomplex = -results[complex].fun
+            LLcomplex = -results[complex][1].fun
             any_child = False
             for simple in hierarchy[complex]:  # more simple model
-                LLsimple = -results[simple].fun
+                LLsimple = -results[simple][1].fun
                 stat = 2 * (LLcomplex - LLsimple)
                 # crit = 3.841458821  # qchisq(p=0.05, df=1, lower.tail=FALSE)
                 # crit = chi2.ppf(1 - pvalue, 1)

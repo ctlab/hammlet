@@ -131,10 +131,6 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         else:
             raise NotImplementedError('unsupported chain "{}"'.format(chain))
 
-        model_complex = models[0]
-        if debug:
-            log_debug('Optimizing complex model {}...'.format(model_complex))
-            time_start_optimize_complex = time.time()
         optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
         if is_only_first:
             perms = [None]
@@ -142,29 +138,16 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
             perms = [tuple(species.index(s) for s in only_permutation)]
         else:
             perms = list(itertools.permutations(range(len(species))))
-        results_complex = optimizer.many_perms(model_complex, perms)  # {perm: result}
-        best_complex_perm, best_complex_result = max(results_complex.items(), key=lambda t: -t[1].fun)  # (perm, result)
-        if debug:
-            log_debug('Done optimizing complex model {} in {:.1f} s.'
-                      .format(model_complex, time.time() - time_start_optimize_complex))
-        log_info('{} complex permutation: {}'
-                 .format('Selected' if is_only_first or only_permutation else 'Best',
-                         ', '.join(morph4(species, best_complex_perm))))
 
-        if debug:
-            log_debug('Optimizing other models...')
-            time_start_optimize_other = time.time()
-        results = OrderedDict({model_complex.name: best_complex_result})
-        results_other = optimizer.many_models(models[1:], best_complex_perm)  # {model_name: result}
-        results.update(results_other)
-        if debug:
-            log_debug('Done optimizing other models for permutation [{}] in {:.1f} s.'
-                      .format(', '.join(morph4(species, best_complex_perm)),
-                              time.time() - time_start_optimize_other))
-            for m, result in results.items():
-                print_model_results(m, species, {best_complex_perm: result}, 1)
+        best_results = {}  # {model_name: (best_perm, best_result)}
+        for model in models:
+            results = optimizer.many_perms(model, perms)  # {perm: result}
+            best_perm, best_result = max(results.items(), key=lambda t: -t[1].fun)
+            best_results[model.name] = (best_perm, best_result)
+            if debug:
+                print_model_results(model, species, {best_perm: best_result}, 1)
 
-        chains = get_chains(results, models, hierarchy, pvalue)
+        chains = get_chains(best_results, models, hierarchy, pvalue)
         log_info('Total {} chains:'.format(len(chains)))
         for path in chains:
             log_debug('    ' + ' -> '.join(path), symbol=None)
@@ -173,7 +156,8 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         log_success('Done calculating {} simplest model(s) in {:.1f} s.'
                     .format(len(simplest), time.time() - time_start_chain))
         for m in simplest:
-            print_model_results(m, species, {best_complex_perm: results[m]}, 1)
+            perm, result = best_results[m]
+            print_model_results(m, species, {perm: result}, 1)
     # if show_permutation
     # elif chain
     else:
