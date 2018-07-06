@@ -73,7 +73,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         for arg, value in list(locals().items())[::-1]:
             log_debug('{} = {}'.format(arg, value))
 
-    species, ys = parse_input(preset, filename, names, y, verbose=True)
+    species, ys = parse_input(preset, filename, names, y, verbose=True, is_only_a=is_only_a)
     print_input(species, ys)
     del preset, filename, names, y
 

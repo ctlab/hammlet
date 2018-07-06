@@ -3,13 +3,13 @@ import re
 import click
 
 from .models import all_models, models_H1, models_H2, models_mapping
-from .printers import log_info
+from .printers import log_info, log_warn
 from .utils import pattern2ij
 
 __all__ = ('parse_input', 'parse_models', 'parse_best')
 
 
-def parse_input(preset, filename, names, y, verbose=False):
+def parse_input(preset, filename, names, y, verbose=False, is_only_a=False):
     if preset:
         if preset == 'laur':
             species = 'Dog Cow Horse Bat'.split()
@@ -45,7 +45,12 @@ def parse_input(preset, filename, names, y, verbose=False):
         ys = tuple(y_ij for _, y_ij in sorted(data))
     else:
         if not y:
-            raise click.BadParameter('missing y values', param_hint='y')
+            if is_only_a:
+                if verbose:
+                    log_warn('Using ad-hoc default y values!')
+                y = tuple(16 for _ in range(10))
+            else:
+                raise click.BadParameter('missing y values', param_hint='y')
         if not names:
             # Default names
             names = 'A B C D'.split()
