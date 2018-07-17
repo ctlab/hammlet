@@ -68,8 +68,8 @@ def print_model_results(model, species, results, number_of_best, is_no_polytomy=
         # Do not print polytomy (when all parameters except n0 are near to zero)
         if is_no_polytomy and all(abs(x) < 1e-3 for x in (T1, T3, gamma1, gamma3)):
             continue
-        log('{}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
-            .format(model, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
+        log('{}, {}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+            .format(model.name, model.mnemonic_name, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
             symbol='@')
 
 
