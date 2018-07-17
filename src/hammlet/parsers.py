@@ -6,7 +6,7 @@ from .models import all_models, models_H1, models_H2, models_mapping
 from .printers import log_info, log_warn
 from .utils import pattern2ij
 
-__all__ = ('parse_input', 'parse_models', 'parse_best')
+__all__ = ['parse_input', 'parse_models', 'parse_best']
 
 
 def parse_input(preset, filename, names, y, verbose=False, is_only_a=False):

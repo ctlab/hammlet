@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 from .printers import log_debug
 from .utils import likelihood, morph4, morph10
 
-__all__ = ('Optimizer', )
+__all__ = ['Optimizer']
 
 
 class Optimizer:

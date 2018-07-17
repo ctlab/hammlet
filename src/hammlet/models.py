@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-__all__ = ('all_models', 'models_H1', 'models_H2', 'models_mapping')
+__all__ = ['all_models', 'models_H1', 'models_H2', 'models_mapping', 'models_mapping_mnemonic']
 
 
 def ensure_interval(x):
