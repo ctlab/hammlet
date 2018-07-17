@@ -61,7 +61,7 @@ def parse_input(preset, filename, names, y, verbose=False, is_only_a=False):
 
 
 def parse_models(ctx, param, value):
-    if len(value) == 0:
+    if not value:
         # Default value
         # value = ('2H1', '2H2')
         return tuple()

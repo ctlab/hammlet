@@ -25,7 +25,7 @@ from .version import version as __version__
               help='Space-separated list of ' + click.style('four', bold=True) + ' species names')
 @click.option('-y', nargs=10, metavar='<int...>', type=int,
               help='Space-separated list of ' + click.style('ten', bold=True) +
-                   ' y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)')
+              ' y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)')
 @click.option('-r', nargs=4, metavar='<float...>', type=float,
               default=(1, 1, 1, 1), show_default=True,
               help='Space-separated list of ' + click.style('four', bold=True) + ' r values')
@@ -42,7 +42,7 @@ from .version import version as __version__
               help='Optimization method')
 @click.option('--theta0', nargs=5, type=float, metavar='<n0 T1 T3 g1 g3>',
               help='Space-separated list of ' + click.style('five', bold=True) +
-                   ' initial theta components (n0 T1 T3 gamma1 gamma3)')
+              ' initial theta components (n0 T1 T3 gamma1 gamma3)')
 @click.option('--only-first', 'is_only_first', is_flag=True,
               help='Do calculations only for first (initial) permutation')
 @click.option('--only-permutation', nargs=4, metavar='<name...>',
@@ -76,7 +76,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
     print_input(species, ys)
     del preset, filename, names, y
 
-    if len(theta0) == 0:
+    if not theta0:
         theta0 = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
         if debug:
             log_debug('Using default theta0: {}'.format(theta0))
