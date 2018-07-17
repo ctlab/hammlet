@@ -7,6 +7,62 @@ import numpy as np
 __all__ = ['all_models', 'models_H1', 'models_H2', 'models_mapping', 'models_mapping_mnemonic']
 
 
+class CaseInsensitiveOrderedDict(OrderedDict):
+
+    class Key(str):
+        def __init__(self, key):
+            str.__init__(key)
+
+        def __hash__(self):
+            return hash(self.lower())
+
+        def __eq__(self, other):
+            return self.lower() == other.lower()
+
+    def __init__(self, items=None):
+        super(CaseInsensitiveOrderedDict, self).__init__()
+        if items is None:
+            items = []
+        for key, val in items:
+            self[key] = val
+
+    def __contains__(self, key):
+        key = self.Key(key)
+        return super(CaseInsensitiveOrderedDict, self).__contains__(key)
+
+    def __setitem__(self, key, value):
+        key = self.Key(key)
+        super(CaseInsensitiveOrderedDict, self).__setitem__(key, value)
+
+    def __getitem__(self, key):
+        key = self.Key(key)
+        return super(CaseInsensitiveOrderedDict, self).__getitem__(key)
+
+
+def get_mnemo_name(T1, T3, gamma1, gamma3):
+    """
+    >>> get_mnemo_name((0, 10), (0, 10), (0, 1), (0, 1))
+    'TTgg'
+    >>> get_mnemo_name(0, (0, 10), 1, None)
+    '0T1N'
+    """
+    def _T(x):
+        if x == 0 or x == (0, 0):
+            return '0'
+        return 'T'
+
+    def _G(x):
+        if x is None:
+            return 'N'
+        if x == 0 or x == (0, 0):
+            return '0'
+        if x == 1 or x == (1, 1):
+            return '1'
+        return 'g'
+
+    return _T(T1) + _T(T3) + _G(gamma1) + _G(gamma3)
+
+
 def ensure_interval(x):
     """
     >>> ensure_interval(1)
@@ -18,6 +74,8 @@ def ensure_interval(x):
     >>> ensure_interval([0.3, 0.5])
     (0.3, 0.5)
     """
+    if x is None:
+        return (0, 0)
     if isinstance(x, (int, float)):
         return (x, x)
     return tuple(x)
@@ -37,15 +95,17 @@ def summarize_a(a, n0, r):
 class Model(object):
 
     mapping = OrderedDict()  # {name: model} :: {str: Model}
+    mapping_mnemonic = CaseInsensitiveOrderedDict()  # {mnemonic_name: model} :: {str: Model}
 
     def __init__(self, name, n0=(0, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
         self.name = name
+        self.mnemonic_name = get_mnemo_name(T1, T3, gamma1, gamma3)
         self.n0_bounds = ensure_interval(n0)
         self.T1_bounds = ensure_interval(T1)
         self.T3_bounds = ensure_interval(T3)
         self.gamma1_bounds = ensure_interval(gamma1)
         self.gamma3_bounds = ensure_interval(gamma3)
-        self.mapping[name] = self
+        self.mapping[name] = self.mapping_mnemonic[self.mnemonic_name] = self
 
     @property
     def bounds(self):
@@ -309,3 +369,4 @@ models_H2 = (
 all_models = models_H1 + models_H2
 
 models_mapping = Model.mapping
+models_mapping_mnemonic = Model.mapping_mnemonic
