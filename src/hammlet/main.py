@@ -99,17 +99,24 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
             models = models_H1
             hierarchy = {
                 '2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
-                '1H1': '1T1 1T2 1PH2'.split(),
-                '1H2': '1T1 1T2 1PH1'.split(),
-                '1H3': '1T1 1T2 1PH1'.split(),
-                '1H4': '1T1 1T2 1PH2'.split(),
-                '1HP': '1PH2'.split(),
-                '1T1': '1P1 1P2'.split(),
+                '1H1': '1T1 1T2 1P1 1PH3'.split(),
+                '1H2': '1PH1 1T2B 1T1 1PH1A'.split(),
+                '1H3': '1T2A 1T2'.split(),
+                '1H4': '1T2B 1T2A 1T2'.split(),
+                '1HP': 'PL1 1P2 1PH2 1PH3 1T1'.split(),
+                '1T1': '1P1 1P3'.split(),
                 '1T2': '1P1 1P2'.split(),
-                '1PH1': '1P1'.split(),
-                '1PH2': '1P2'.split(),
+                '1T2A': '1P2 1P2A'.split(),
+                '1T2B': '1P2A 1P2B'.split(),
+                '1PH1': '1P1 1P2A'.split(),
+                '1PH1A': '1P1 1P1'.split(),
+                '1PH2': '1P2 1P3 PL1'.split(),
+                '1PH3': '1P2 PL1'.split(),
                 '1P1': 'PL1'.split(),
                 '1P2': 'PL1'.split(),
+                '1P2A': 'PL1'.split(),
+                '1P2B': 'PL1'.split(),
+                '1P3': 'PL1'.split(),
             }
         elif chain == 'H2':
             models = models_H2
