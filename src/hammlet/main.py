@@ -52,7 +52,7 @@ from .version import version as __version__
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--show-permutation', nargs=4, metavar='<name...>',
-              help='Show morphed y`s for given permutation')
+              help='Show morphed y values for given permutation')
 @click.option('-p', '--pvalue', type=float, metavar='<float>',
               default=0.05, show_default=True,
               help='p-value for statistical tests')
