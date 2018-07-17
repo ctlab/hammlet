@@ -1,10 +1,9 @@
 import itertools
 import time
-from collections import OrderedDict
 
 import click
 
-from .models import models_H1, models_H2
+from .models import models_H1, models_H2, models_mapping
 from .optimizer import Optimizer
 from .parsers import parse_best, parse_input, parse_models
 from .printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
@@ -156,8 +155,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         log_success('Done calculating {} simplest model(s) in {:.1f} s.'
                     .format(len(simplest), time.time() - time_start_chain))
         for m in simplest:
+            model = models_mapping[m]
             perm, result = best_results[m]
-            print_model_results(m, species, {perm: result}, 1)
+            print_model_results(model, species, {perm: result}, 1)
     # if show_permutation
     # elif chain
     else:
