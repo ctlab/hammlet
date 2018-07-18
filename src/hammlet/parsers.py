@@ -14,6 +14,9 @@ def parse_input(preset, filename, names, y, verbose=False, is_only_a=False):
         if preset == 'laur':
             species = 'Dog Cow Horse Bat'.split()
             ys = tuple(map(int, '22 21 7 11 14 12 18 16 17 24'.split()))
+        elif preset == 'hctm':
+            species = 'Human Colugo Tupaia Mouse'.split()
+            ys = tuple(map(int, '10 8 7 4 21 7 2 39 30 28'.split()))
         elif preset == '12-200':
             species = 'A B C D'.split()
             ys = tuple(map(int, '12 12 200 12 12 12 12 12 12 12'.split()))

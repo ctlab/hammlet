@@ -17,7 +17,7 @@ from .version import version as __version__
     help_option_names=['-h', '--help'],
 ))
 @click.option('--preset', metavar='<preset>',
-              help='Preset data (laur/12-200/12-200-70-50/5-10/...)')
+              help='Preset data (laur/hctm/12-200/12-200-70-50/5-10/...)')
 @click.option('-i', '--input', 'filename', metavar='<path|->',
               type=click.Path(exists=True, allow_dash=True),
               help='File with markers presence/absence data')
