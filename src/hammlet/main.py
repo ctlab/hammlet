@@ -29,11 +29,10 @@ from .version import version as __version__
 @click.option('-r', nargs=4, metavar='<float...>', type=float,
               default=(1, 1, 1, 1), show_default=True,
               help='Space-separated list of ' + click.style('four', bold=True) + ' r values')
-@click.option('-m', '--model', 'models', multiple=True, metavar='<int...|all>', callback=parse_models,
-              help='Comma-separated list of models to do calculations for. '
-                   'Pass "all" to use all available models')
+@click.option('-m', '--model', 'models', multiple=True, metavar='<name...|all>', callback=parse_models,
+              help='Comma-separated list of models')
 @click.option('--chain', type=click.Choice(['H1', 'H2']),
-              help='Chain.')
+              help='Model group for simplest models computation')
 @click.option('--best', 'number_of_best', metavar='<int|all>', callback=parse_best,
               default='all', show_default=True,
               help='Number of best models to show')
