@@ -22,7 +22,8 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
 
 ## Usage
 
-λ **`hammlet --help`**
+<details>
+<summary>**`hammlet --help`**</summary>
 
     Usage: hammlet [OPTIONS]
 
@@ -52,12 +53,16 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
       --version                      Show the version and exit.
       -h, --help                     Show this message and exit.
 
+</details>
+
 ### Use cases
 
 Hammlet can be used to do following things:
 
-* Calculate a_ij values for specified hybridization models<br>
-    λ **`hammlet --only-a -m 2H1`**
+* Calculate a_ij values for specified hybridization models
+
+    <details>
+    <summary>**`hammlet --only-a -m 2H1`**</summary>
 
         [*] Doing only a_ij calculations...
         [+] Result for model 2H1, permutation [A, B, C, D], theta=(96.0, 0.5, 0.5, 0.5, 0.5), r=(1, 1, 1, 1):
@@ -73,8 +78,11 @@ Hammlet can be used to do following things:
          34   16   34   16    8.546
          44   16   44   16    7.044
 
-* Optimize model parameters to maximize likelihood for all possible permutations (reorderings) of species<br>
-    λ **`hammlet --preset laur -m 2H1 --best 3`**
+    </details>
+
+* Optimize model parameters to maximize likelihood for all possible permutations (reorderings) of species
+    <details>
+    <summary>**`hammlet --preset laur -m 2H1 --best 3`**</summary>
 
         [*] Using preset "laur"
         [*] Species: Dog, Cow, Horse, Bat
@@ -86,20 +94,25 @@ Hammlet can be used to do following things:
         [@] 2H1, TTgg, 3, Bat, Dog, Horse, Cow, LL=292.327, n0=95.717, T1=0.177, T3=0.000, g1=0.468, g3=0.114
         [+] All done in 0.4 s.
 
-* Optimize a group of models and infer chains of simpler models having insignificantly lower (worse) likelihood<br>
-    λ **`hammlet --preset 12-200 --chain H1`**
+    </details>
+
+* Optimize a group of models and infer chains of simpler models having insignificantly lower (worse) likelihood
+    <details>
+    <summary>**`hammlet --preset 12-200 --chain H1`**</summary>
 
         [*] Using preset "12-200"
         [*] Species: A, B, C, D
         [*] y values: 12 12 200 12 12 12 12 12 12 12
         [*] Searching for simplest models from H1...
-        [*] Total 2 chains:
-            2H1 -> 1H3
+        [*] Total 3 chain(s):
+            2H1 -> 1PH1
             2H1 -> 1H2 -> 1PH1
-        [+] Done calculating 2 simplest model(s) in 6.7 s.
-        [@] 1H3, TT0g, 1, A, C, B, D, LL=965.392, n0=132.069, T1=0.000, T3=1.425, g1=0.000, g3=0.935
-        [@] 1PH1, 0TNg, 1, A, B, C, D, LL=965.392, n0=132.074, T1=0.000, T3=1.425, g1=0.000, g3=0.065
+            2H1 -> 1H3 -> 1PH1
+        [+] Done calculating 1 simplest model(s) in 0.8 s.
+        [@] 1PH1, 0TNg, 1, A, C, B, D, LL=965.392, n0=132.076, T1=0.000, T3=1.425, g1=0.000, g3=0.935
         [+] All done in 6.7 s.
+
+    </details>
 
 ### Input
 
@@ -112,11 +125,11 @@ Hammlet can be used to do following things:
         `hammlet --input data/data_laurasiatherian ...`
 
     - or simply use one of the built-in presets using `--preset`:<br>
-    `hammlet --preset laur ...`<br>
+        `hammlet --preset laur ...`
 
 * Also, Hammlet requires a _model(s)_ to be specified
 
-    - Pass them by names using `-m/--model`:<br>
+    - Pass them by name using `-m/--model`:<br>
         `hammlet ... -m 2H1`<br>
         `hammlet ... -m 1H2,1T2A,1T1,PL1`
 
@@ -172,7 +185,7 @@ Hammlet can be used to do following things:
 
 * To show only few best permutations among 24 possible use `--best <int>` option
 
-* To suppress polytomy results (T1=T3=g1=g3 ~ 0) use `--no-polytomy` flag
+* To suppress polytomy results (T1=T3=g1=g3 &asymp; 0) use `--no-polytomy` flag
 
 ## Testing
 
