@@ -59,7 +59,10 @@ def print_a(a, ys, perm):
 
 
 def print_model_results(model, species, results, number_of_best, is_no_polytomy=False):
+    from .models import models_mapping
     from .utils import morph4
+    if isinstance(model, str):
+        model = models_mapping[model]
     best_results = sorted(results.items(), key=lambda t: t[1].fun)[:number_of_best]
     for i, (perm, result) in enumerate(best_results, start=1):
         fit = -result.fun
