@@ -23,7 +23,7 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
 ## Usage
 
 <details>
-<summary>**`hammlet --help`**</summary>
+<summary><b><code>hammlet --help</code></b></summary>
 
     Usage: hammlet [OPTIONS]
 
@@ -62,7 +62,7 @@ Hammlet can be used to do following things:
 * Calculate a_ij values for specified hybridization models
 
     <details>
-    <summary>**`hammlet --only-a -m 2H1`**</summary>
+    <summary><b><code>hammlet --only-a -m 2H1</code></b></summary>
 
         [*] Doing only a_ij calculations...
         [+] Result for model 2H1, permutation [A, B, C, D], theta=(96.0, 0.5, 0.5, 0.5, 0.5), r=(1, 1, 1, 1):
@@ -81,8 +81,9 @@ Hammlet can be used to do following things:
     </details>
 
 * Optimize model parameters to maximize likelihood for all possible permutations (reorderings) of species
+
     <details>
-    <summary>**`hammlet --preset laur -m 2H1 --best 3`**</summary>
+    <summary><b><code>hammlet --preset laur -m 2H1 --best 3</code></b></summary>
 
         [*] Using preset "laur"
         [*] Species: Dog, Cow, Horse, Bat
@@ -98,7 +99,7 @@ Hammlet can be used to do following things:
 
 * Optimize a group of models and infer chains of simpler models having insignificantly lower (worse) likelihood
     <details>
-    <summary>**`hammlet --preset 12-200 --chain H1`**</summary>
+    <summary><b><code>hammlet --preset 12-200 --chain H1</code></b></summary>
 
         [*] Using preset "12-200"
         [*] Species: A, B, C, D
