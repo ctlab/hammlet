@@ -3,7 +3,7 @@ import time
 
 import click
 
-from .models import models_H1, models_H2, models_mapping
+from .models import models_H1, models_H2
 from .optimizer import Optimizer
 from .parsers import parse_best, parse_input, parse_models
 from .printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
@@ -46,6 +46,8 @@ from .version import version as __version__
               help='Do calculations only for first (initial) permutation')
 @click.option('--only-permutation', nargs=4, metavar='<name...>',
               help='Do calculations only for given permutation')
+@click.option('--free-permutation', 'is_free_permutation', is_flag=True,
+              help='[chain] Use best permutations for each simpler model')
 @click.option('--only-a', 'is_only_a', is_flag=True,
               help='Do only a_ij calculations')
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
@@ -58,7 +60,7 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
-def cli(preset, filename, names, y, r, models, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_only_a, is_no_polytomy, show_permutation, pvalue, debug):
+def cli(preset, filename, names, y, r, models, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_no_polytomy, show_permutation, pvalue, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -96,43 +98,85 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
         if chain == 'H1':
             models = models_H1
-            hierarchy = {
-                '2H1': '1H1 1H2 1H3 1H4 1HP 1PH1'.split(),
-                '1H1': '1T1 1T2 1P1 1PH2'.split(),
-                '1H2': '1PH1 1T2B 1T1 1PH1A'.split(),
-                '1H3': '1T2A 1T2 1PH1 1P2'.split(),
-                '1H4': '1T2B 1T2A 1PH3 1P2A'.split(),
-                '1HP': 'PL1 1P2 1PH2 1PH3 1PH1A'.split(),
-                '1T1': '1P1 1P3'.split(),
-                '1T2': '1P1 1P2'.split(),
-                '1T2A': '1P2 1P2A'.split(),
-                '1T2B': '1P2A 1P2B'.split(),
-                '1PH1': '1P2A PL1'.split(),
-                '1PH1A': '1P2B 1P3 PL1'.split(),
-                '1PH2': '1P2 1P3 PL1'.split(),
-                '1PH3': '1P2 1P2B PL1'.split(),
-                '1P1': 'PL1'.split(),
-                '1P2': 'PL1'.split(),
-                '1P2A': 'PL1'.split(),
-                '1P2B': 'PL1'.split(),
-                '1P3': 'PL1'.split(),
-            }
+            if is_free_permutation:
+                hierarchy = {
+                    '2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
+                    '1H1': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
+                    '1H2': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
+                    '1H3': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
+                    '1H4': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
+                    '1HP': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
+                    '1T1': '1P1 1P2 1P3'.split(),
+                    '1T2': '1P1 1P2 1P3'.split(),
+                    '1PH1': '1P1 1P2 1P3'.split(),
+                    '1PH2': '1P1 1P2 1P3'.split(),
+                    '1PH3': '1P1 1P2 1P3'.split(),
+                    '1P1': 'PL1'.split(),
+                    '1P2': 'PL1'.split(),
+                    '1P3': 'PL1'.split(),
+                }
+            else:
+                hierarchy = {
+                    '2H1': '1H1 1H2 1H3 1H4 1HP 1PH1'.split(),
+                    '1H1': '1T1 1T2 1P1 1PH2'.split(),
+                    '1H2': '1PH1 1T2B 1T1 1PH1A'.split(),
+                    '1H3': '1T2A 1T2 1PH1 1P2'.split(),
+                    '1H4': '1T2B 1T2A 1PH3 1P2A'.split(),
+                    '1HP': 'PL1 1P2 1PH2 1PH3 1PH1A'.split(),
+                    '1T1': '1P1 1P3'.split(),
+                    '1T2': '1P1 1P2'.split(),
+                    '1T2A': '1P2 1P2A'.split(),
+                    '1T2B': '1P2A 1P2B'.split(),
+                    '1PH1': '1P2A PL1'.split(),
+                    '1PH1A': '1P2B 1P3 PL1'.split(),
+                    '1PH2': '1P2 1P3 PL1'.split(),
+                    '1PH3': '1P2 1P2B PL1'.split(),
+                    '1P1': 'PL1'.split(),
+                    '1P2': 'PL1'.split(),
+                    '1P2A': 'PL1'.split(),
+                    '1P2B': 'PL1'.split(),
+                    '1P3': 'PL1'.split(),
+                }
         elif chain == 'H2':
             models = models_H2
-            hierarchy = {
-                '2H2': '2HA1 2HA2 2HB1 2HB2 2HP'.split(),
-                '2HA1': '2T1 2T2 2PH2'.split(),
-                '2HA2': '2T1 2T2 2PH2'.split(),
-                '2HB1': '2T1 2T2 2PH1'.split(),
-                '2HB2': '2T1 2T2 2PH1'.split(),
-                '2HP': '2PH2'.split(),
-                '2T1': '2PH1 2PH2'.split(),
-                '2T2': '2PH1 2PH2'.split(),
-                '2PH1': '2P1'.split(),
-                '2PH2': '2P2'.split(),
-                '2P1': 'PL2'.split(),
-                '2P2': 'PL2'.split(),
-            }
+            if is_free_permutation:
+                hierarchy = {
+                    '2H2': '2HA1 2HB1 2HP'.split(),
+                    '2HA1': '2T1 2T2 2PH1 2PH2'.split(),
+                    '2HB1': '2T1 2T2 2PH1 2PH2'.split(),
+                    '2HP': '2T1 2T2 2PH1 2PH2'.split(),
+                    '2T1': '2P1 2P2 2P3'.split(),
+                    '2T2': '2P1 2P2 2P3'.split(),
+                    '2PH1': '2P1 2P2 2P3'.split(),
+                    '2PH2': '2P1 2P2 2P3'.split(),
+                    '2P1': 'PL2'.split(),
+                    '2P2': 'PL2'.split(),
+                    '2P3': 'PL2'.split(),
+                }
+            else:
+                hierarchy = {
+                    '2H2': '2HA1 2HA2 2HB1 2HB2 2HP'.split(),
+                    '2HA1': '2PH2 2T2 2T1'.split(),
+                    '2HA2': '2P1A 2T2B 2T2A 2PH2C'.split(),
+                    '2HB1': '2T2A 2PH1 2PH2B 2PH2A'.split(),
+                    '2HB2': '2T1 2T2B 2PH1 2PH2B'.split(),
+                    '2HP': '2PH2 2PH2A 2PH2B 2PH2C PL2'.split(),
+                    '2T1': '2P3 2P1'.split(),
+                    '2T2': '2P1 2P2'.split(),
+                    '2T2A': '2P1A 2P3A'.split(),
+                    '2T2B': '2P1A 2P2A'.split(),
+                    '2PH1': '2P1 2P1A PL2'.split(),
+                    '2PH2': '2P2 2P3 PL2'.split(),
+                    '2PH2A': '2P2 2P3A PL2'.split(),
+                    '2PH2B': '2P1 2P3'.split(),
+                    '2PH2C': '2P2A 2P3A'.split(),
+                    '2P1': 'PL2'.split(),
+                    '2P1A': 'PL2'.split(),
+                    '2P2': 'PL2'.split(),
+                    '2P2A': 'PL2'.split(),
+                    '2P3': 'PL2'.split(),
+                    '2P3A': 'PL2'.split(),
+                }
         else:
             raise NotImplementedError('unsupported chain "{}"'.format(chain))
 
@@ -144,16 +188,29 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         else:
             perms = list(itertools.permutations(range(len(species))))
 
-        best_results = {}  # {model_name: (best_perm, best_result)}
-        for model in models:
-            results = optimizer.many_perms(model, perms)  # {perm: result}
-            best_perm, best_result = max(results.items(), key=lambda t: -t[1].fun)
-            best_results[model.name] = (best_perm, best_result)
+        results = {}  # {model_name: (perm, result)}
+        if is_free_permutation:
+            for model in models:
+                res = optimizer.many_perms(model, perms)  # {perm: result}
+                best_perm, best_result = max(res.items(), key=lambda t: -t[1].fun)
+                results[model.name] = (best_perm, best_result)
+                if debug:
+                    print_model_results(model, species, {best_perm: best_result}, 1)
+        else:
+            model_complex = models[0]
+            results_complex = optimizer.many_perms(model_complex, perms)  # {perm: result}
+            best_complex_perm, best_complex_result = max(results_complex.items(),
+                                                         key=lambda t: -t[1].fun)  # (perm, result)
+            results[model_complex.name] = (best_complex_perm, best_complex_result)
             if debug:
-                print_model_results(model, species, {best_perm: best_result}, 1)
+                log_debug('Best complex permutation: [{}]'.format(', '.join(morph4(species, best_complex_perm))))
+            for m, res in optimizer.many_models(models[1:], best_complex_perm).items():
+                results[m] = (best_complex_perm, res)
+                if debug:
+                    print_model_results(m, species, {best_complex_perm: res}, 1)
 
-        chains = get_chains(best_results, models, hierarchy, pvalue)
-        log_info('Total {} chains:'.format(len(chains)))
+        chains = get_chains(results, models, hierarchy, pvalue)
+        log_info('Total {} chain(s):'.format(len(chains)))
         for path in chains:
             log_debug('    ' + ' -> '.join(path), symbol=None)
 
@@ -161,9 +218,8 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         log_success('Done calculating {} simplest model(s) in {:.1f} s.'
                     .format(len(simplest), time.time() - time_start_chain))
         for m in simplest:
-            model = models_mapping[m]
-            perm, result = best_results[m]
-            print_model_results(model, species, {perm: result}, 1)
+            perm, result = results[m]
+            print_model_results(m, species, {perm: result}, 1)
     # if show_permutation
     # elif chain
     else:

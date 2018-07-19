@@ -367,11 +367,20 @@ models_H2 = (
     ModelH2('2HP', T3=0),
     ModelH2('2T1', gamma1=0, gamma3=1),
     ModelH2('2T2', gamma1=0, gamma3=0),
-    ModelH2('2PH1', T1=0, gamma1=0),
+    ModelH2('2T2A', gamma1=0, gamma3=1),
+    ModelH2('2T2B', gamma1=1, gamma3=1),
+    ModelH2('2PH1', T1=0, gamma1=None),
     ModelH2('2PH2', T3=0, gamma3=0),
-    ModelH2('2P1', T1=0, gamma1=0, gamma3=0),
+    ModelH2('2PH2A', T3=0, gamma1=0),
+    ModelH2('2PH2B', T3=0, gamma1=1),
+    ModelH2('2PH2C', T3=0, gamma3=1),
+    ModelH2('2P1', T1=0, gamma1=None, gamma3=0),
+    ModelH2('2P1A', T1=0, gamma1=None, gamma3=1),
     ModelH2('2P2', T3=0, gamma1=0, gamma3=0),
-    ModelH2('PL2', T1=0, T3=0, gamma1=0, gamma3=0),
+    ModelH2('2P2A', T3=0, gamma1=1, gamma3=1),
+    ModelH2('2P3', T3=0, gamma1=1, gamma3=0),
+    ModelH2('2P3A', T3=0, gamma1=0, gamma3=1),
+    ModelH2('PL2', T1=0, T3=0, gamma1=None, gamma3=None),
 )
 all_models = models_H1 + models_H2
 
