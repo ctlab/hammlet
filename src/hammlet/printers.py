@@ -48,7 +48,7 @@ def print_permutation(species, ys, permutation):
     log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@')
 
 
-def print_a(a, ys, perm):
+def print_a(a, ys, perm, is_poisson=False):
     from .utils import morph10
     ij = [(i + 1, j + 1) for i in range(4) for j in range(i, 4)]
     ij_ = morph10(ij, perm)
@@ -56,6 +56,11 @@ def print_a(a, ys, perm):
     log(' ij  y_ij ~ij~~y_ij~  a_ij', symbol=None, bold=True)
     for (i, j), y_ij, (i_, j_), y_ij_, a_ij in zip(ij, ys, ij_, ys_, a):
         log(' {}{}  {:>3}   {}{}  {:>3}  {:>7.3f}'.format(i, j, y_ij, i_, j_, y_ij_, a_ij), symbol=None)
+    if is_poisson:
+        from numpy.random import poisson
+        pa = poisson(a)
+        log(', '.join(map('{:.3f}'.format, a)), symbol='@')
+        log(', '.join(map(str, pa)), symbol='@')
 
 
 def print_model_results(model, species, results, number_of_best, is_no_polytomy=False):

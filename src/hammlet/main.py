@@ -50,6 +50,8 @@ from .version import version as __version__
               help='[chain] Use best permutations for each simpler model')
 @click.option('--only-a', 'is_only_a', is_flag=True,
               help='Do only a_ij calculations')
+@click.option('--poisson', 'is_poisson', is_flag=True,
+              help='[only-a] Apply poisson to calculated a_ij')
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--show-permutation', nargs=4, metavar='<name...>',
@@ -60,7 +62,7 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
-def cli(preset, filename, names, y, r, models, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_no_polytomy, show_permutation, pvalue, debug):
+def cli(preset, filename, names, y, r, models, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_poisson, is_no_polytomy, show_permutation, pvalue, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -167,12 +169,13 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 log_success('Result for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
                                     ', '.join(morph4(species, perm)), theta0, r))
-                print_a(a, ys, perm)
+                print_a(a, ys, perm, is_poisson)
 
                 if debug:
                     optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
                     result = optimizer.one(model, perm)
                     log_debug('result:\n{}'.format(result), symbol=None)
+
         # if is_only_a
         else:
             optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
