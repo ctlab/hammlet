@@ -96,7 +96,8 @@ def summarize_a(a, n0, r):
 class Model(object):
 
     mapping = OrderedDict()  # {name: model} :: {str: Model}
-    mapping_mnemonic = CaseInsensitiveOrderedDict()  # {mnemonic_name: model} :: {str: Model}
+    mapping_mnemonic = {'H1': CaseInsensitiveOrderedDict(),
+                        'H2': CaseInsensitiveOrderedDict()}  # each {mnemonic_name: model} :: {str: Model}
 
     def __init__(self, name, n0=(0, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
         self.name = name
@@ -140,6 +141,11 @@ class Model(object):
 
 
 class ModelH1(Model):
+
+    def __init__(self, *args, **kwargs):
+        super(ModelH1, self).__init__(*args, **kwargs)
+        self.mapping_mnemonic['H1'][self.mnemonic_name] = self
+
     @staticmethod
     def __call__(theta, r):
         n0, T1, T3, gamma1, gamma3 = theta
@@ -239,6 +245,11 @@ class ModelH1(Model):
 
 
 class ModelH2(Model):
+
+    def __init__(self, *args, **kwargs):
+        super(ModelH2, self).__init__(*args, **kwargs)
+        self.mapping_mnemonic['H2'][self.mnemonic_name] = self
+
     @staticmethod
     def __call__(theta, r):
         n0, T1, T3, gamma1, gamma3 = theta
