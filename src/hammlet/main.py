@@ -131,7 +131,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 if debug:
                     print_model_results(m, species, {best_complex_perm: res}, 1)
 
-        chains = get_chains(results, models, hierarchy, pvalue)
+        chains = get_chains(results, models, hierarchy, pvalue)  # [path::[model_name]]
         log_info('Total {} chain(s):'.format(len(chains)))
         for path in chains:
             log_debug('    ' + ' -> '.join(path), symbol=None)
@@ -164,8 +164,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
             for model in models:
                 a = get_a(model, theta0, r)
-                log_success('Result for model {}, permutation [{}], theta={}, r={}:'
-                            .format(model, ', '.join(morph4(species, perm)), theta0, r))
+                log_success('Result for model {} ({}), permutation [{}], theta={}, r={}:'
+                            .format(model.name, model.mnemonic_name,
+                                    ', '.join(morph4(species, perm)), theta0, r))
                 print_a(a, ys, perm)
 
                 if debug:
@@ -184,13 +185,13 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
             for model in models:
                 log_br()
-                log_info('Optimizing model {}...'.format(model))
+                log_info('Optimizing model {} ({})...'.format(model.name, model.mnemonic_name))
                 time_start_optimize = time.time()
 
                 results = optimizer.many_perms(model, perms)  # {perm: result}
 
-                log_success('Done optimizing model {} in {:.1f} s.'
-                            .format(model, time.time() - time_start_optimize))
+                log_success('Done optimizing model {} ({}) in {:.1f} s.'
+                            .format(model.name, model.mnemonic_name, time.time() - time_start_optimize))
                 print_model_results(model, species, results, number_of_best, is_no_polytomy)
 
     log_br()
