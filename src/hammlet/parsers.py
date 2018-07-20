@@ -2,7 +2,7 @@ import re
 
 import click
 
-from .models import all_models, models_H1, models_H2, models_mapping
+from .models import all_models, models_H1, models_H2, models_mapping, models_mapping_mnemonic
 from .printers import log_info, log_warn
 from .utils import pattern2ij
 
@@ -68,7 +68,17 @@ def parse_models(ctx, param, value):
         # Default value
         # value = ('2H1', '2H2')
         return tuple()
-    model_names = tuple(m for s in value for m in re.split(r'[,;]', s))
+
+    def _get_model_names(s):
+        if ':' in s:
+            assert s.count(':') == 1
+            group, mnemos = s.split(':')
+            return (models_mapping_mnemonic[group][mnemo].name
+                    for mnemo in re.split(r'[,;]', mnemos))
+        else:
+            return re.split(r'[,;]', s)
+
+    model_names = tuple(m for s in value for m in _get_model_names(s))
     if 'all' in map(lambda s: s.lower(), model_names):
         return all_models
     elif 'H1' in model_names:
