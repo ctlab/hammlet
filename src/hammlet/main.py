@@ -3,7 +3,7 @@ import time
 
 import click
 
-from .models import models_H1, models_H2
+from .models import models_H1, models_H2, models_hierarchy
 from .optimizer import Optimizer
 from .parsers import parse_best, parse_input, parse_models
 from .printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
@@ -98,87 +98,9 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
         if chain == 'H1':
             models = models_H1
-            if is_free_permutation:
-                hierarchy = {
-                    '2H1': '1H1 1H2 1H3 1H4 1HP'.split(),
-                    '1H1': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
-                    '1H2': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
-                    '1H3': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
-                    '1H4': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
-                    '1HP': '1T1 1T2 1PH1 1PH2 1PH3'.split(),
-                    '1T1': '1P1 1P2 1P3'.split(),
-                    '1T2': '1P1 1P2 1P3'.split(),
-                    '1PH1': '1P1 1P2 1P3'.split(),
-                    '1PH2': '1P1 1P2 1P3'.split(),
-                    '1PH3': '1P1 1P2 1P3'.split(),
-                    '1P1': 'PL1'.split(),
-                    '1P2': 'PL1'.split(),
-                    '1P3': 'PL1'.split(),
-                }
-            else:
-                hierarchy = {
-                    '2H1': '1H1 1H2 1H3 1H4 1HP 1PH1'.split(),
-                    '1H1': '1T1 1T2 1P1 1PH2'.split(),
-                    '1H2': '1PH1 1T2B 1T1 1PH1A'.split(),
-                    '1H3': '1T2A 1T2 1PH1 1P2'.split(),
-                    '1H4': '1T2B 1T2A 1PH3 1P2A'.split(),
-                    '1HP': 'PL1 1P2 1PH2 1PH3 1PH1A'.split(),
-                    '1T1': '1P1 1P3'.split(),
-                    '1T2': '1P1 1P2'.split(),
-                    '1T2A': '1P2 1P2A'.split(),
-                    '1T2B': '1P2A 1P2B'.split(),
-                    '1PH1': '1P2A PL1'.split(),
-                    '1PH1A': '1P2B 1P3 PL1'.split(),
-                    '1PH2': '1P2 1P3 PL1'.split(),
-                    '1PH3': '1P2 1P2B PL1'.split(),
-                    '1P1': 'PL1'.split(),
-                    '1P2': 'PL1'.split(),
-                    '1P2A': 'PL1'.split(),
-                    '1P2B': 'PL1'.split(),
-                    '1P3': 'PL1'.split(),
-                }
-        elif chain == 'H2':
-            models = models_H2
-            if is_free_permutation:
-                hierarchy = {
-                    '2H2': '2HA1 2HB1 2HP'.split(),
-                    '2HA1': '2T1 2T2 2PH1 2PH2'.split(),
-                    '2HB1': '2T1 2T2 2PH1 2PH2'.split(),
-                    '2HP': '2T1 2T2 2PH1 2PH2'.split(),
-                    '2T1': '2P1 2P2 2P3'.split(),
-                    '2T2': '2P1 2P2 2P3'.split(),
-                    '2PH1': '2P1 2P2 2P3'.split(),
-                    '2PH2': '2P1 2P2 2P3'.split(),
-                    '2P1': 'PL2'.split(),
-                    '2P2': 'PL2'.split(),
-                    '2P3': 'PL2'.split(),
-                }
-            else:
-                hierarchy = {
-                    '2H2': '2HA1 2HA2 2HB1 2HB2 2HP'.split(),
-                    '2HA1': '2PH2 2T2 2T1'.split(),
-                    '2HA2': '2P1A 2T2B 2T2A 2PH2C'.split(),
-                    '2HB1': '2T2A 2PH1 2PH2B 2PH2A'.split(),
-                    '2HB2': '2T1 2T2B 2PH1 2PH2B'.split(),
-                    '2HP': '2PH2 2PH2A 2PH2B 2PH2C PL2'.split(),
-                    '2T1': '2P3 2P1'.split(),
-                    '2T2': '2P1 2P2'.split(),
-                    '2T2A': '2P1A 2P3A'.split(),
-                    '2T2B': '2P1A 2P2A'.split(),
-                    '2PH1': '2P1 2P1A PL2'.split(),
-                    '2PH2': '2P2 2P3 PL2'.split(),
-                    '2PH2A': '2P2 2P3A PL2'.split(),
-                    '2PH2B': '2P1 2P3'.split(),
-                    '2PH2C': '2P2A 2P3A'.split(),
-                    '2P1': 'PL2'.split(),
-                    '2P1A': 'PL2'.split(),
-                    '2P2': 'PL2'.split(),
-                    '2P2A': 'PL2'.split(),
-                    '2P3': 'PL2'.split(),
-                    '2P3A': 'PL2'.split(),
-                }
         else:
-            raise NotImplementedError('unsupported chain "{}"'.format(chain))
+            models = models_H2
+        hierarchy = models_hierarchy[chain]['free' if is_free_permutation else 'non-free']
 
         optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
         if is_only_first:
