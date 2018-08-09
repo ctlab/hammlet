@@ -119,6 +119,16 @@ class Model(object):
             self.gamma3_bounds,
         )
 
+    def apply_bounds(self, theta):
+        n0, T1, T3, gamma1, gamma3 = theta
+        return (
+            min(max(n0, self.n0_bounds[0]), self.n0_bounds[1]),
+            min(max(T1, self.T1_bounds[0]), self.T1_bounds[1]),
+            min(max(T3, self.T3_bounds[0]), self.T3_bounds[1]),
+            min(max(gamma1, self.gamma1_bounds[0]), self.gamma1_bounds[1]),
+            min(max(gamma3, self.gamma3_bounds[0]), self.gamma3_bounds[1]),
+        )
+
     def __eq__(self, other):
         return self.name == other.name
 

@@ -165,10 +165,11 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
                 perm = None
 
             for model in models:
-                a = get_a(model, theta0, r)
+                theta = model.apply_bounds(theta0)
+                a = get_a(model, theta, r)
                 log_success('Result for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
-                                    ', '.join(morph4(species, perm)), theta0, r))
+                                    ', '.join(morph4(species, perm)), theta, r))
                 print_a(a, ys, perm, is_poisson)
 
                 if debug:
