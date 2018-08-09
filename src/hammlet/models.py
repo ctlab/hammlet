@@ -99,7 +99,7 @@ class Model(object):
     mapping_mnemonic = {'H1': CaseInsensitiveOrderedDict(),
                         'H2': CaseInsensitiveOrderedDict()}  # each {mnemonic_name: model} :: {str: Model}
 
-    def __init__(self, name, n0=(0, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
+    def __init__(self, name, n0=(1e-12, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
         self.name = name
         self.mnemonic_name = get_mnemo_name(T1, T3, gamma1, gamma3)
         self.n0_bounds = ensure_interval(n0)
