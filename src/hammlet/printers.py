@@ -48,27 +48,22 @@ def print_permutation(species, ys, permutation):
     log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@')
 
 
-def print_a(a, ys, perm, is_poisson=False):
-    from .utils import morph10
-    ij = [(i + 1, j + 1) for i in range(4) for j in range(i, 4)]
-    ij_ = morph10(ij, perm)
-    ys_ = morph10(ys, perm)
-    log(' ij  y_ij ~ij~~y_ij~  a_ij', symbol=None, bold=True)
-    for (i, j), y_ij, (i_, j_), y_ij_, a_ij in zip(ij, ys, ij_, ys_, a):
-        log(' {}{}  {:>3}   {}{}  {:>3}  {:>7.3f}'.format(i, j, y_ij, i_, j_, y_ij_, a_ij), symbol=None)
-    if is_poisson:
+def print_a(a, poisson_times=0):
+    log(', '.join(map('{:.3f}'.format, a)), symbol='a_ij')
+    if poisson_times:
         from numpy.random import poisson
-        pa = poisson(a)
-        log(', '.join(map('{:.3f}'.format, a)), symbol='@')
-        log(', '.join(map(str, pa)), symbol='@')
+        for _ in range(poisson_times):
+            pa = poisson(a)
+            log(', '.join(map(str, pa)), symbol='poisson')
 
 
-def print_model_results(model, species, results, number_of_best, is_no_polytomy=False):
+def print_model_results(model, species, results, number_of_best, poisson_times=0, is_no_polytomy=False):
     from .models import models_mapping
     from .utils import morph4
     if isinstance(model, str):
         model = models_mapping[model]
     best_results = sorted(results.items(), key=lambda t: t[1].fun)[:number_of_best]
+
     for i, (perm, result) in enumerate(best_results, start=1):
         fit = -result.fun
         theta = result.x
@@ -78,13 +73,20 @@ def print_model_results(model, species, results, number_of_best, is_no_polytomy=
             continue
         log('{}, {}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
             .format(model.name, model.mnemonic_name, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
-            symbol='@')
+            symbol='result')
+
+    if poisson_times:
+        from .utils import get_a
+        best_result = best_results[0][1]
+        a = get_a(model, best_result.x, best_result.r)
+        log_info('Applying Poisson on the best result:')
+        print_a(a, poisson_times)
 
 
-def print_model_best_result(model, result):
-    fit = -result.fun
-    theta = result.x
-    n0, T1, T3, gamma1, gamma3 = theta
-    log('{}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
-        .format(model, fit, n0, T1, T3, gamma1, gamma3),
-        symbol='@')
+# def print_model_best_result(model, result):
+#     fit = -result.fun
+#     theta = result.x
+#     n0, T1, T3, gamma1, gamma3 = theta
+#     log('{}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+#         .format(model, fit, n0, T1, T3, gamma1, gamma3),
+#         symbol='@')

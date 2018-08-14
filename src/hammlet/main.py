@@ -50,8 +50,9 @@ from .version import version as __version__
               help='[chain] Use best permutations for each simpler model')
 @click.option('--only-a', 'is_only_a', is_flag=True,
               help='Do only a_ij calculations')
-@click.option('--poisson', 'is_poisson', is_flag=True,
-              help='[only-a] Apply poisson to calculated a_ij')
+@click.option('--poisson', 'poisson_times', type=int, metavar='<int>',
+              default=0, show_default=False,
+              help='[only-a] Apply poisson mutliple times to the calculated a_ij values')
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--show-permutation', nargs=4, metavar='<name...>',
@@ -62,7 +63,9 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
-def cli(preset, filename, names, y, r, models, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_poisson, is_no_polytomy, show_permutation, pvalue, debug):
+def cli(preset, filename, names, y, r, models, chain, number_of_best, method,
+        theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
+        poisson_times, is_no_polytomy, show_permutation, pvalue, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -136,7 +139,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
         chains = get_chains(results, models, hierarchy, pvalue)  # [path::[model_name]]
         log_info('Total {} chain(s):'.format(len(chains)))
         for path in chains:
-            log_debug('    ' + ' -> '.join(path), symbol=None)
+            log_debug(' -> '.join(path), symbol='chain')
 
         simplest = sorted(set(p[-1] for p in chains))
         log_success('Done calculating {} simplest model(s) in {:.1f} s.'
@@ -147,7 +150,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
     # if show_permutation
     # elif chain
     else:
-        if len(models) == 0:
+        if not models:
             raise click.BadParameter('no models specified', param_hint='models')
 
         if only_permutation and set(only_permutation) != set(species):
@@ -166,16 +169,15 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
             for model in models:
                 a = get_a(model, theta0, r)
-                log_success('Result for model {} ({}), permutation [{}], theta={}, r={}:'
+                log_success('a_ij for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
                                     ', '.join(morph4(species, perm)), theta0, r))
-                print_a(a, ys, perm, is_poisson)
+                print_a(a, poisson_times)
 
                 if debug:
                     optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
                     result = optimizer.one(model, perm)
                     log_debug('result:\n{}'.format(result), symbol=None)
-
         # if is_only_a
         else:
             optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
@@ -195,7 +197,7 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method, th
 
                 log_success('Done optimizing model {} ({}) in {:.1f} s.'
                             .format(model.name, model.mnemonic_name, time.time() - time_start_optimize))
-                print_model_results(model, species, results, number_of_best, is_no_polytomy)
+                print_model_results(model, species, results, number_of_best, poisson_times, is_no_polytomy)
 
     log_br()
     log_success('All done in {:.1f} s.'.format(time.time() - time_start))
