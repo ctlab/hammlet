@@ -52,7 +52,7 @@ from .version import version as __version__
               help='Do only a_ij calculations')
 @click.option('--poisson', 'poisson_times', type=int, metavar='<int>',
               default=0, show_default=False,
-              help='[only-a] Apply poisson mutliple times to the calculated a_ij values')
+              help='Apply poisson mutliple times to the calculated a_ij values')
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--show-permutation', nargs=4, metavar='<name...>',
