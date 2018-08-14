@@ -95,7 +95,9 @@ def parse_models(ctx, param, value):
     unique_names = tuple(m for m in model_names if not (m in seen or seen_add(m)))
     for m in unique_names:
         if m not in models_mapping:
-            raise click.BadParameter('unknown model name "{}"'.format(m), param_hint='models')
+            raise click.BadParameter('unknown model name "{}", possible values are: {}'
+                                     .format(m, ','.join(models_mapping.keys())),
+                                     param_hint='models')
     return tuple(models_mapping[m] for m in unique_names)
 
 
