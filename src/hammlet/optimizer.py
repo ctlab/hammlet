@@ -24,8 +24,10 @@ class Optimizer:
         if self.debug:
             log_debug('Optimizing model {} for permutation [{}]...'
                       .format(model, ', '.join(morph4(self.species, perm))))
-        return minimize(lambda theta: -likelihood(model, morph10(self.ys, perm), theta, self.r),
-                        self.theta0, bounds=model.bounds, method=self.method, options=self.options)
+        result = minimize(lambda theta: -likelihood(model, morph10(self.ys, perm), theta, self.r),
+                          self.theta0, bounds=model.bounds, method=self.method, options=self.options)
+        result.r = self.r  # FIXME: dirty augment
+        return result
 
     def many_perms(self, model, perms):
         results = OrderedDict()  # {perm: result} for model
