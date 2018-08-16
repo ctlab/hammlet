@@ -1,7 +1,7 @@
 import click
 
 __all__ = ['log_debug', 'log_info', 'log_success', 'log_warn', 'log_error', 'log_br',
-           'print_input', 'print_permutation', 'print_a', 'print_model_results', 'print_model_best_result']
+           'print_input', 'print_permutation', 'print_a', 'print_model_results']
 
 
 def log(text, symbol, fg=None, bg=None, bold=None, nl=True):
@@ -45,16 +45,16 @@ def print_permutation(species, ys, permutation):
     from .utils import morph10
     perm = tuple(species.index(s) for s in permutation)
     ys_ = morph10(ys, perm)
-    log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@')
+    log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@permutation')
 
 
 def print_a(a, poisson_times=0):
-    log(', '.join(map('{:.3f}'.format, a)), symbol='a_ij')
+    log(', '.join(map('{:.3f}'.format, a)), symbol='@a_ij')
     if poisson_times:
         from numpy.random import poisson
         for _ in range(poisson_times):
             pa = poisson(a)
-            log(', '.join(map(str, pa)), symbol='poisson')
+            log(', '.join(map(str, pa)), symbol='@poisson')
 
 
 def print_model_results(model, species, results, number_of_best, poisson_times=0, is_no_polytomy=False):
@@ -73,7 +73,7 @@ def print_model_results(model, species, results, number_of_best, poisson_times=0
             continue
         log('{}, {}, {}, {}, LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
             .format(model.name, model.mnemonic_name, i, ', '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
-            symbol='result')
+            symbol='@result')
 
     if poisson_times:
         from .utils import get_a
