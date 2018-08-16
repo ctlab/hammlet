@@ -49,7 +49,7 @@ def print_permutation(species, ys, permutation):
 
 
 def print_a(a, poisson_times=0):
-    a = tuple(map(int, a))
+    a = tuple(int(round(a_ij)) for a_ij in a)
     log(', '.join(map(str, a)), symbol='@a_ij')
     if poisson_times:
         from numpy.random import poisson
