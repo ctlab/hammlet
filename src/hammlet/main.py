@@ -31,6 +31,9 @@ from .version import version as __version__
               help='Space-separated list of ' + click.style('four', bold=True) + ' r values')
 @click.option('-m', '--model', 'models', multiple=True, metavar='<name...|all>', callback=parse_models,
               help='Comma-separated list of models')
+@click.option('--theta', nargs=5, type=float, metavar='<n0 T1 T3 g1 g3>',
+              help='Space-separated list of ' + click.style('five', bold=True) +
+              ' theta components for a_ij (n0 T1 T3 gamma1 gamma3)')
 @click.option('--chain', type=click.Choice(['H1', 'H2']),
               help='Model group for simplest models computation')
 @click.option('--best', 'number_of_best', metavar='<int|all>', callback=parse_best,
@@ -63,9 +66,13 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
+<<<<<<< HEAD
 def cli(preset, filename, names, y, r, models, chain, number_of_best, method,
         theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
         poisson_times, is_no_polytomy, show_permutation, pvalue, debug):
+=======
+def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_poisson, is_no_polytomy, show_permutation, pvalue, debug):
+>>>>>>> Add separate --theta option for a_ij calculations
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -81,6 +88,11 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method,
     species, ys = parse_input(preset, filename, names, y, verbose=True, is_only_a=is_only_a)
     print_input(species, ys)
     del preset, filename, names, y
+
+    if not theta:
+        theta = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
+        if debug:
+            log_debug('Using default theta: {}'.format(theta0))
 
     if not theta0:
         theta0 = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
@@ -168,11 +180,11 @@ def cli(preset, filename, names, y, r, models, chain, number_of_best, method,
                 perm = None
 
             for model in models:
-                theta = model.apply_bounds(theta0)
+                theta_ = model.apply_bounds(theta)
                 a = get_a(model, theta, r)
                 log_success('a_ij for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
-                                    ', '.join(morph4(species, perm)), theta, r))
+                                    ', '.join(morph4(species, perm)), theta_, r))
                 print_a(a, poisson_times)
 
                 if debug:
