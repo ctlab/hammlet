@@ -99,7 +99,7 @@ class Model(object):
     mapping_mnemonic = {'H1': CaseInsensitiveOrderedDict(),
                         'H2': CaseInsensitiveOrderedDict()}  # each {mnemonic_name: model} :: {str: Model}
 
-    def __init__(self, name, n0=(0, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
+    def __init__(self, name, n0=(1e-12, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
         self.name = name
         self.mnemonic_name = get_mnemo_name(T1, T3, gamma1, gamma3)
         self.n0_bounds = ensure_interval(n0)
@@ -117,6 +117,16 @@ class Model(object):
             self.T3_bounds,
             self.gamma1_bounds,
             self.gamma3_bounds,
+        )
+
+    def apply_bounds(self, theta):
+        n0, T1, T3, gamma1, gamma3 = theta
+        return (
+            min(max(n0, self.n0_bounds[0]), self.n0_bounds[1]),
+            min(max(T1, self.T1_bounds[0]), self.T1_bounds[1]),
+            min(max(T3, self.T3_bounds[0]), self.T3_bounds[1]),
+            min(max(gamma1, self.gamma1_bounds[0]), self.gamma1_bounds[1]),
+            min(max(gamma3, self.gamma3_bounds[0]), self.gamma3_bounds[1]),
         )
 
     def __eq__(self, other):
