@@ -66,13 +66,9 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
-<<<<<<< HEAD
-def cli(preset, filename, names, y, r, models, chain, number_of_best, method,
+def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, method,
         theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
         poisson_times, is_no_polytomy, show_permutation, pvalue, debug):
-=======
-def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a, is_poisson, is_no_polytomy, show_permutation, pvalue, debug):
->>>>>>> Add separate --theta option for a_ij calculations
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
