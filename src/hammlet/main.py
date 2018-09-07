@@ -180,7 +180,9 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
                 a = get_a(model, theta_, r)
                 log_success('a_ij for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
-                                    ', '.join(morph4(species, perm)), theta_, r))
+                                    ', '.join(morph4(species, perm)),
+                                    '(' + ','.join(str(x).rstrip('0').rstrip('.') for x in theta_) + ')',
+                                    '(' + ','.join(str(x).rstrip('0').rstrip('.') for x in r) + ')'))
                 print_a(a, poisson_times)
 
                 if debug:
