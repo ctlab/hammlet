@@ -177,7 +177,7 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
 
             for model in models:
                 theta_ = model.apply_bounds(theta)
-                a = get_a(model, theta, r)
+                a = get_a(model, theta_, r)
                 log_success('a_ij for model {} ({}), permutation [{}], theta={}, r={}:'
                             .format(model.name, model.mnemonic_name,
                                     ', '.join(morph4(species, perm)), theta_, r))
