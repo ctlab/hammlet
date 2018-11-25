@@ -48,12 +48,12 @@ def print_permutation(species, ys, permutation):
     log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@permutation')
 
 
-def print_a(a, poisson_times=0):
+def print_a(a, bootstrap_times=0):
     log(', '.join(map('{:.3f}'.format, a)), symbol='@a_ij')
-    if poisson_times:
+    if bootstrap_times:
         from numpy.random import poisson
         a = tuple(int(round(a_ij)) for a_ij in a)
-        for _ in range(poisson_times):
+        for _ in range(bootstrap_times):
             pa = poisson(a)
             log(', '.join(map(str, pa)), symbol='@poisson')
 
@@ -82,6 +82,19 @@ def print_model_results(model, species, results, number_of_best, poisson_times=0
         a = get_a(model, best_result.x, best_result.r)
         log_info('Applying Poisson on the best result:')
         print_a(a, poisson_times)
+
+def print_model_result_boot(model, species, ys, perm, result):
+    from .models import models_mapping
+    from .utils import morph4
+    if isinstance(model, str):
+        model = models_mapping[model]
+
+    fit = -result.fun
+    theta = result.x
+    n0, T1, T3, gamma1, gamma3 = theta
+    log('{}, {}, ys=[{}], s=[{}], LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+        .format(model.name, model.mnemonic_name, ' '.join(map(str, ys)), ' '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
+        symbol='@boot')
 
 
 # def print_model_best_result(model, result):

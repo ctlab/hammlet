@@ -7,7 +7,7 @@ from .models import models_H1, models_H2, models_hierarchy
 from .optimizer import Optimizer
 from .parsers import parse_best, parse_input, parse_models
 from .printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
-                       print_model_results, print_permutation)
+                       print_model_results, print_permutation, print_model_result_boot)
 from .utils import get_a, get_chains, morph4
 from .version import version as __version__
 
@@ -53,9 +53,9 @@ from .version import version as __version__
               help='[chain] Use best permutations for each simpler model')
 @click.option('--only-a', 'is_only_a', is_flag=True,
               help='Do only a_ij calculations')
-@click.option('--poisson', 'poisson_times', type=int, metavar='<int>',
+@click.option('--bootstrap', 'bootstrap_times', type=int, metavar='<int>',
               default=0, show_default=False,
-              help='Apply poisson mutliple times to the calculated a_ij values')
+              help='Bootstrap a_ij values by applying Poisson to the input ys')
 @click.option('--no-polytomy', 'is_no_polytomy', is_flag=True,
               help='Do not show polytomy results')
 @click.option('--show-permutation', nargs=4, metavar='<name...>',
@@ -68,7 +68,7 @@ from .version import version as __version__
 @click.version_option(__version__)
 def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, method,
         theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
-        poisson_times, is_no_polytomy, show_permutation, pvalue, debug):
+        bootstrap_times, is_no_polytomy, show_permutation, pvalue, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
@@ -97,7 +97,8 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
 
     if show_permutation:
         if set(show_permutation) != set(species):
-            raise click.BadParameter('must be equal to species ({})'.format(', '.join(species)), param_hint='show_permutation')
+            raise click.BadParameter('must be equal to species ({})'.format(', '.join(species)),
+                                     param_hint='show_permutation')
 
         log_br()
         print_permutation(species, ys, show_permutation)
@@ -183,7 +184,7 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
                                     ', '.join(morph4(species, perm)),
                                     '(' + ','.join(str(x).rstrip('0').rstrip('.') for x in theta_) + ')',
                                     '(' + ','.join(str(x).rstrip('0').rstrip('.') for x in r) + ')'))
-                print_a(a, poisson_times)
+                print_a(a)
 
                 if debug:
                     optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
@@ -208,7 +209,18 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
 
                 log_success('Done optimizing model {} ({}) in {:.1f} s.'
                             .format(model.name, model.mnemonic_name, time.time() - time_start_optimize))
-                print_model_results(model, species, results, number_of_best, poisson_times, is_no_polytomy)
+                # print_model_results(model, species, results, number_of_best, poisson_times, is_no_polytomy)
+                print_model_results(model, species, results, number_of_best, 0, is_no_polytomy)
+
+                if bootstrap_times > 0:
+                    log_info('Bootstraping best result {} times...'.format(bootstrap_times))
+                    best_perm = sorted(results.items(), key=lambda t: t[1].fun)[0][0]
+                    from numpy.random import poisson
+                    for _ in range(bootstrap_times):
+                        ys_poissoned = [poisson(y) for y in ys]
+                        optimizer_boot = Optimizer(species, ys_poissoned, theta0, r, method, debug=debug)
+                        result_boot = optimizer_boot.one(model, best_perm)
+                        print_model_result_boot(model, species, ys_poissoned, best_perm, result_boot)
 
     log_br()
     log_success('All done in {:.1f} s.'.format(time.time() - time_start))
