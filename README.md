@@ -32,12 +32,13 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
       Author: Konstantin Chukharev (lipen00@gmail.com)
 
     Options:
-      --preset <preset>              Preset data (laur/hctm/12-200/12-200-70-50/5-10/...)
+      --preset <preset>              Preset data (laur/12-200/12-200-70-50/5-10/...)
       -i, --input <path|->           File with markers presence/absence data
       -n, --names <name...>          Space-separated list of four species names
       -y <int...>                    Space-separated list of ten y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)
       -r <float...>                  Space-separated list of four r values  [default: 1, 1, 1, 1]
       -m, --model <name...|all>      Comma-separated list of models
+      --theta <n0 T1 T3 g1 g3>       Space-separated list of five theta components for a_ij (n0 T1 T3 gamma1 gamma3)
       --chain [H1|H2]                Model group for simplest models computation
       --best <int|all>               Number of best models to show  [default: all]
       --method [SLSQP|L-BFGS-B|TNC]  Optimization method  [default: SLSQP]
@@ -46,6 +47,7 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
       --only-permutation <name...>   Do calculations only for given permutation
       --free-permutation             [chain] Use best permutations for each simpler model
       --only-a                       Do only a_ij calculations
+      --bootstrap <int>              Bootstrap a_ij values by applying Poisson to the input ys
       --no-polytomy                  Do not show polytomy results
       --show-permutation <name...>   Show morphed y values for given permutation
       -p, --pvalue <float>           p-value for statistical tests  [default: 0.05]
@@ -146,7 +148,6 @@ Hammlet can be used to do following things:
 |    Preset    |       Species names       |            y values            |
 |:------------:|:-------------------------:|:------------------------------:|
 |     laur     |     Dow Cow Horse Bat     |  22 21 7 11 14 12 18 16 17 24  |
-|     hctm     | Human Colugo Tupaia Mouse |    10 8 7 4 21 7 2 39 30 28    |
 |    12-200    |          A B C D          | 12 12 200 12 12 12 12 12 12 12 |
 | 12-200-70-50 |          A B C D          | 12 200 12 70 12 12 12 50 12 12 |
 |     5-10     |          A B C D          |  5 10 59 3 5 20 68 125 72 10   |
