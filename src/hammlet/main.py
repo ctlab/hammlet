@@ -1,9 +1,10 @@
+import csv
 import itertools
 import time
 
 import click
 
-from .models import models_H1, models_H2, models_hierarchy
+from .models import models_H1, models_H2, models_mapping_mnemonic, models_hierarchy
 from .optimizer import Optimizer
 from .parsers import parse_best, parse_input, parse_models
 from .printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
@@ -18,7 +19,7 @@ from .version import version as __version__
 ))
 @click.option('--preset', metavar='<preset>',
               help='Preset data (laur/12-200/12-200-70-50/5-10/...)')
-@click.option('-i', '--input', 'filename', metavar='<path|->',
+@click.option('-i', '--input', 'input_filename', metavar='<path|->',
               type=click.Path(exists=True, allow_dash=True),
               help='File with markers presence/absence data')
 @click.option('-n', '--names', nargs=4, metavar='<name...>',
@@ -36,6 +37,9 @@ from .version import version as __version__
               ' theta components for a_ij (n0 T1 T3 gamma1 gamma3)')
 @click.option('--chain', type=click.Choice(['H1', 'H2']),
               help='Model group for simplest models computation')
+@click.option('--levels', 'levels_filename', metavar='<path|->',
+              type=click.Path(exists=True, allow_dash=True),
+              help='File with levels data')
 @click.option('--best', 'number_of_best', metavar='<int|all>', callback=parse_best,
               default='all', show_default=True,
               help='Number of best models to show')
@@ -66,8 +70,8 @@ from .version import version as __version__
 @click.option('--debug', is_flag=True,
               help='Debug.')
 @click.version_option(__version__)
-def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, method,
-        theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
+def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filename,
+        number_of_best, method, theta0, is_only_first, only_permutation, is_free_permutation, is_only_a,
         bootstrap_times, is_no_polytomy, show_permutation, pvalue, debug):
     """Hybridization Models Maximum Likelihood Estimator
 
@@ -81,9 +85,9 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
         for arg, value in list(locals().items())[::-1]:
             log_debug('{} = {}'.format(arg, value))
 
-    species, ys = parse_input(preset, filename, names, y, verbose=True, is_only_a=is_only_a)
+    species, ys = parse_input(preset, input_filename, names, y, verbose=True, is_only_a=is_only_a)
     print_input(species, ys)
-    del preset, filename, names, y
+    del preset, input_filename, names, y
 
     if not theta:
         theta = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
@@ -158,6 +162,61 @@ def cli(preset, filename, names, y, r, models, theta, chain, number_of_best, met
             print_model_results(m, species, {perm: result}, 1)
     # if show_permutation
     # elif chain
+    elif levels_filename:
+        log_br()
+        log_info('Processing levels...'.format())
+        time_start_levels = time.time()
+
+        if models:
+            log_warn('Ignoring specified models due to --levels flag!')
+
+        def parse_perm(perm):
+            if perm.startswith('{') or perm.startswith('('):
+                perm = perm[1:]
+            if perm.endswith('}') or perm.endswith(')'):
+                perm = perm[:-1]
+            return tuple(int(s) - 1 for s in perm.split(','))
+
+        levels_data = {level: [] for level in range(5)}  # {level: [(model, perm)]}
+        with open(levels_filename, newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                level = int(row['Level'])
+                assert 0 <= level <= 4
+                model = models_mapping_mnemonic[row['Branch']][row['Case']]
+                if model.name != row['Type']:
+                    log_warn('Model name mismatch: model.name={}, Type={}'.format(model.name, row['Type']))
+                perm = parse_perm(row['Permut'])
+                levels_data[level].append((model, perm))
+
+        from .models import all_models
+        missed_models = set(all_models) - set(model for (model, perm) in sum(levels_data.values(), []))
+        if missed_models:
+            log_warn('Missed models:')
+            for model in missed_models:
+                log_warn(' -  {}'.format(model), symbol=None)
+
+        log_info('Optimizing...')
+        optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
+        levels_results = {level: [] for level in levels_data}  # {level: [(model, perm, result)]}
+        for (level, data) in levels_data.items():
+            for (model, perm) in data:
+                result = optimizer.one(model, perm)
+                levels_results[level].append((model, perm, result))
+                if debug:
+                    print_model_results(model, species, {perm: result}, 1)
+        levels_best = {level: min(results, key=lambda t: t[2].fun)
+                       for level, results in levels_results.items()}
+
+        for (level, (model, perm, result)) in levels_best.items():
+            log_info('Best on level {}:'.format(level))
+            print_model_results(model, species, {perm: result}, 1)
+
+        log_success('Done calculating levels in {:.1f} s.'
+                    .format(time.time() - time_start_levels))
+    # if show_permutation
+    # elif chain
+    # elif levels_filename
     else:
         if not models:
             raise click.BadParameter('no models specified', param_hint='models')
