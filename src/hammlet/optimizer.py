@@ -25,7 +25,7 @@ class Optimizer:
             log_debug('Optimizing model {} for permutation [{}]...'
                       .format(model, ', '.join(morph4(self.species, perm))))
         result = minimize(lambda theta: -likelihood(model, morph10(self.ys, perm), theta, self.r),
-                          self.theta0, bounds=model.bounds, method=self.method, options=self.options)
+                          self.theta0, bounds=model.get_safe_bounds(), method=self.method, options=self.options)
         result.r = self.r  # FIXME: dirty augment
         return result
 

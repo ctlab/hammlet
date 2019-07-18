@@ -40,28 +40,53 @@ class CaseInsensitiveOrderedDict(OrderedDict):
         return super(CaseInsensitiveOrderedDict, self).__getitem__(key)
 
 
-def get_mnemo_name(T1, T3, gamma1, gamma3):
+def constraint_bounds(xs, low, high):
     """
-    >>> get_mnemo_name((0, 10), (0, 10), (0, 1), (0, 1))
-    'TTgg'
-    >>> get_mnemo_name(0, (0, 10), 1, None)
-    '0T1N'
+    >>> constraint_bounds((0, 10), 1, 5)
+    (1, 5)
+    >>> constraint_bounds((5, 10), 0, 20)
+    (5, 10)
+    >>> constraint_bounds((0, 10), 1, None)
+    (1, 10)
+    >>> constraint_bounds((0, 10), None, 8)
+    (0, 8)
     """
-    def _T(x):
-        if x == 0 or x == (0, 0):
-            return '0'
-        return 'T'
+    if xs is None:
+        xs = (None, None)
+    a, b = xs
+    if low is not None:
+        if a is None or a < low:
+            a = low
+    if high is not None:
+        if b is None or b > high:
+            b = high
+    return (a, b)
 
-    def _G(x):
-        if x is None:
-            return 'N'
-        if x == 0 or x == (0, 0):
-            return '0'
-        if x == 1 or x == (1, 1):
-            return '1'
-        return 'g'
 
-    return _T(T1) + _T(T3) + _G(gamma1) + _G(gamma3)
+def constraint_value(x, bounds):
+    """
+    >>> constraint_value(42, (0, 50))
+    42
+    >>> constraint_value(42, (0, 10))
+    10
+    >>> constraint_value(10, (42, 50))
+    42
+    >>> constraint_value(42, (0, None))
+    42
+    >>> constraint_value(42, (None, 50))
+    42
+    >>> constraint_value(42, None)
+    42
+    """
+    assert x is not None
+    if bounds is None:
+        return x
+    low, high = bounds
+    if low is not None and x < low:
+        x = low
+    if high is not None and x > high:
+        x = high
+    return x
 
 
 def ensure_interval(x):
@@ -75,22 +100,22 @@ def ensure_interval(x):
     >>> ensure_interval([0.3, 0.5])
     (0.3, 0.5)
     """
-    if x is None:
-        return (0, 0)
     if isinstance(x, (int, float)):
         return (x, x)
     return tuple(x)
 
 
-def summarize_a(a, n0, r):
-    """a = n0 * (a0 + r1*a1 + r2*r2 + r3*a3 + r4*a4)
+def summarize_a(a, r, n0):
+    """Returns `n0 * (a0 + r1*a1 + r2*a2 + r3*a3 + r4*a4)`
 
-    >>> round(summarize_a((0.15, 0.04, 0.05, 0, 0.05), 97.2, (1,1,1,1)), 3)
-    28.188
-    >>> round(summarize_a((0.21, 0, 0.01, 0, 0.003), 96.8, (1,1,1,1)), 4)
-    21.5864
+    >>> round(summarize_a((0.75, 0.2, 0.05, 0.11, 0.051), (1,1,1,1), 100), 1)
+    116.1
+    >>> round(summarize_a((0.2, 0, 0.063, 0, 0.03), (1,1,1,1), 50), 2)
+    14.65
     """
-    return n0 * (a[0] + sum(ri * ai for ri, ai in zip(r, a[1:])))
+    a0, a1, a2, a3, a4 = a
+    r1, r2, r3, r4 = r
+    return n0 * (a0 + r1 * a1 + r2 * a2 + r3 * a3 + r4 * a4)
 
 
 class Model(object):
@@ -99,15 +124,37 @@ class Model(object):
     mapping_mnemonic = {'H1': CaseInsensitiveOrderedDict(),
                         'H2': CaseInsensitiveOrderedDict()}  # each {mnemonic_name: model} :: {str: Model}
 
-    def __init__(self, name, n0=(1e-12, 1000), T1=(0, 10), T3=(0, 10), gamma1=(0, 1), gamma3=(0, 1)):
+    def __init__(self, name, mnemonic_name):
+        assert len(mnemonic_name) == 4, "Mnemonic name must consist of exactly 4 characters"
+        assert mnemonic_name[0] in 'T01N', "Bad symbol in mnemonic_name"
+        assert mnemonic_name[1] in 'T01N', "Bad symbol in mnemonic_name"
+        assert mnemonic_name[2] in 'g01N', "Bad symbol in mnemonic_name"
+        assert mnemonic_name[3] in 'g01N', "Bad symbol in mnemonic_name"
+
+        def to_bound(c):
+            if c == 'T':
+                return (0, None)
+            elif c == 'g':
+                return (0, 1)
+            elif c == '0':
+                return (0, 0)
+            elif c == '1':
+                return (1, 1)
+            elif c == 'N':
+                return None
+            else:
+                raise ValueError("Bad symbol in mnemonic name: '{}'".format(c))
+
         self.name = name
-        self.mnemonic_name = get_mnemo_name(T1, T3, gamma1, gamma3)
-        self.n0_bounds = ensure_interval(n0)
-        self.T1_bounds = ensure_interval(T1)
-        self.T3_bounds = ensure_interval(T3)
-        self.gamma1_bounds = ensure_interval(gamma1)
-        self.gamma3_bounds = ensure_interval(gamma3)
-        self.mapping[name] = self.mapping_mnemonic[self.mnemonic_name] = self
+        self.mnemonic_name = mnemonic_name
+        self.n0_bounds = (0, None)
+        self.T1_bounds = to_bound(mnemonic_name[0])
+        self.T3_bounds = to_bound(mnemonic_name[1])
+        self.gamma1_bounds = to_bound(mnemonic_name[2])
+        self.gamma3_bounds = to_bound(mnemonic_name[3])
+
+        assert self.name not in self.mapping.keys()
+        self.mapping[self.name] = self
 
     @property
     def bounds(self):
@@ -119,15 +166,25 @@ class Model(object):
             self.gamma3_bounds,
         )
 
+    def get_safe_bounds(self, n0_low=1e-12, n0_high=1000, T_low=0, T_high=10, gamma_low=0, gamma_high=1):
+        n0 = constraint_bounds(self.n0_bounds, n0_low, n0_high)
+        T1 = constraint_bounds(self.T1_bounds, T_low, T_high)
+        T3 = constraint_bounds(self.T3_bounds, T_low, T_high)
+        gamma1 = constraint_bounds(self.gamma1_bounds, gamma_low, gamma_high)
+        gamma3 = constraint_bounds(self.gamma3_bounds, gamma_low, gamma_high)
+
+        return (n0, T1, T3, gamma1, gamma3)
+
     def apply_bounds(self, theta):
-        n0, T1, T3, gamma1, gamma3 = theta
-        return (
-            min(max(n0, self.n0_bounds[0]), self.n0_bounds[1]),
-            min(max(T1, self.T1_bounds[0]), self.T1_bounds[1]),
-            min(max(T3, self.T3_bounds[0]), self.T3_bounds[1]),
-            min(max(gamma1, self.gamma1_bounds[0]), self.gamma1_bounds[1]),
-            min(max(gamma3, self.gamma3_bounds[0]), self.gamma3_bounds[1]),
-        )
+        return tuple(map(constraint_value, theta, self.bounds))
+
+    def get_full_mnemonic_name(self):
+        if isinstance(self, ModelH1):
+            return 'H1:' + self.mnemonic_name
+        elif isinstance(self, ModelH2):
+            return 'H2:' + self.mnemonic_name
+        else:
+            raise ValueError('Model is neither H1 nor H2')
 
     def __eq__(self, other):
         return self.name == other.name
@@ -186,70 +243,70 @@ class ModelH1(Model):
         a2 = 1 / 6 * gamma3 * gamma2**2 * (6 * e4 * tau2 - e3_24 + 9 * e24 - 8 * e4) + gamma2 * (1 / 6 * gamma4 * (6 * tau2 + 6 * e2 - e3_23 + 3 * e23 - 2 * e3 - 6) + 1 / 6 * gamma3 * (-6 * e4 * tau2 + 6 * tau2 + 6 * e2 - 6 * e24 + 6 * e4 - 6))
         a3 = 0
         a4 = 0
-        a[1, 1] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 1] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 6 * gamma3 * gamma1**2 * (2 * e14 - e3_14) + gamma1 * (1 / 6 * gamma3 * (4 * e1 - 4 * e14) + 1 / 3 * gamma2 * gamma3 * e124 + 1 / 6 * gamma4 * e123) + 1 / 6 * gamma2**2 * gamma3 * (2 * e24 - e3_24) + gamma2 * (1 / 6 * gamma3 * (4 * e2 - 4 * e24) + 1 / 6 * gamma4 * (2 * e23 - e3_23))
         a1 = 1 / 6 * gamma3 * gamma1**2 * (e4 * (e3_1 + 2) - 3 * e14) + 1 / 6 * gamma3 * gamma1 * (-6 * e1 + 6 * e14 - 6 * e4 + 6)
         a2 = 1 / 6 * gamma3 * gamma2**2 * (e3_24 - 3 * e24 + 2 * e4) + gamma2 * (1 / 6 * gamma4 * (e3_23 - 3 * e23 + 2 * e3) - gamma3 * (e2 - e24 + e4 - 1))
         a3 = 0
         a4 = gamma3 * (tau4 + e4 - 1)
-        a[1, 2] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 2] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = -1 / 6 * gamma3 * gamma1**2 * e14 + gamma1 * (1 / 3 * gamma3 * e14 + 1 / 6 * gamma2 * gamma3 * (2 * e124 - 4 * e14) + 1 / 6 * gamma4 * (e123 - 2 * e1)) + 1 / 6 * gamma2**2 * gamma3 * (-e3_24 + 6 * e24 - 6 * e4) + 1 / 6 * gamma4 * (6 - 4 * e23) + gamma2 * (1 / 6 * gamma3 * (6 * e4 - 4 * e24) + 1 / 6 * gamma4 * (4 * e2 - e3_23 + 2 * e23 - 6))
         a1 = 0
         a2 = 1 / 6 * gamma3 * gamma2**2 * (-6 * e4 * tau2 + e3_24 - 9 * e24 + 8 * e4) + gamma2 * (1 / 6 * gamma4 * (-6 * tau2 - 6 * e2 + e3_23 - 3 * e23 + 2 * e3 + 6) + 1 / 6 * gamma3 * (6 * (e24 - e4) + 6 * e4 * tau2)) + 1 / 6 * gamma4 * (6 * (e23 - e3) + 6 * tau2)
         a3 = gamma4 * (tau3 + e3 - 1)
         a4 = 0
-        a[1, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = -1 / 6 * gamma3 * gamma1**2 * e14 + gamma1 * (1 / 3 * gamma3 * e14 + 1 / 6 * gamma2 * gamma3 * (2 * e124 - 4 * e14) + 1 / 6 * gamma4 * e123) + 1 / 6 * gamma2**2 * gamma3 * (-e3_24 + 6 * e24 - 6 * e4) + gamma2 * (1 / 6 * gamma3 * (6 * e4 - 4 * e24) + 1 / 6 * gamma4 * (2 * e23 - e3_23))
         a1 = 0
         a2 = 1 / 6 * gamma3 * gamma2**2 * (2 * e4 * (4 - 3 * tau2) + e3_24 - 9 * e24) + gamma2 * (1 / 6 * gamma4 * (e3_23 - 3 * e23 + 2 * e3) + gamma3 * (e4 * (tau2 - 1) + e24))
         a3 = 0
         a4 = 0
-        a[1, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 6 * gamma3 * gamma1**2 * (e3_14 - 6 * e14 + 6 * e4) + gamma1 * (1 / 6 * gamma3 * (-4 * e1 + 4 * e14 - 6 * e4 + 6) + 1 / 6 * gamma2 * gamma3 * (4 * e24 - 2 * e124) + 1 / 6 * gamma4 * (2 * e23 - e123)) + 1 / 6 * gamma2**2 * gamma3 * e24 + gamma2 * (1 / 6 * gamma3 * (2 * e2 - 2 * e24) + 1 / 6 * gamma4 * e23)
         a1 = 1 / 6 * gamma3 * gamma1**2 * (6 * e4 * tau1 - e3_14 + 9 * e14 - 8 * e4) + 1 / 6 * gamma3 * gamma1 * (-6 * e4 * tau1 + 6 * tau1 + 6 * e1 - 6 * e14 + 6 * e4 - 6)
         a2 = 0
         a3 = 0
         a4 = 0
-        a[2, 2] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 2] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 6 * gamma3 * gamma1**2 * (-e3_14 + 6 * e14 - 6 * e4) + gamma1 * (1 / 6 * gamma3 * (6 * e4 - 4 * e14) + 1 / 6 * gamma2 * gamma3 * (2 * e124 - 4 * e24) + 1 / 6 * gamma4 * (e123 - 2 * e23)) - 1 / 6 * gamma2**2 * gamma3 * e24 + 1 / 3 * gamma4 * e23 + gamma2 * (1 / 3 * gamma3 * e24 - 1 / 6 * gamma4 * e23)
         a1 = 1 / 6 * gamma3 * gamma1**2 * e4 * (-6 * tau1 + e3_1 - 9 * e1 + 8) + 1 / 6 * gamma3 * gamma1 * e4 * (6 * (e1 - 1) + 6 * tau1)
         a2 = 0
         a3 = 0
         a4 = 0
-        a[2, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 6 * gamma3 * gamma1**2 * (-e3_14 + 6 * e14 - 6 * e4) + gamma1 * (1 / 6 * gamma3 * (6 * e4 - 4 * e14) + 1 / 6 * gamma2 * gamma3 * (2 * e124 - 4 * e24) + 1 / 6 * gamma4 * (-4 * e1 - 2 * e23 + e123 + 6)) - 1 / 6 * gamma2**2 * gamma3 * e24 + gamma2 * (1 / 3 * gamma3 * e24 + 1 / 6 * gamma4 * (2 * e2 - e23))
         a1 = gamma1 * (gamma3 * (e4 * (tau1 - 1) + e14) + gamma4 * (tau1 + e1 - 1)) - 1 / 6 * gamma1**2 * gamma3 * e4 * (6 * tau1 - e3_1 + 9 * e1 - 8)
         a2 = 0
         a3 = 0
         a4 = 0
-        a[2, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 2 * gamma3 * gamma1**2 * e14 + gamma1 * (-1 / 3 * gamma3 * e14 + 1 / 6 * gamma2 * gamma3 * (4 * e14 + 4 * e24 - 2 * e124) + 1 / 6 * gamma4 * (2 * e1 + 2 * e23 - e123)) + 1 / 2 * gamma2**2 * gamma3 * e24 - 1 / 3 * gamma4 * e23 + gamma2 * (1 / 6 * gamma4 * (2 * e2 + e23) - 1 / 3 * gamma3 * e24)
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[3, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[3, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = -1 / 2 * gamma3 * gamma1**2 * e14 + gamma1 * (1 / 6 * gamma3 * (2 * e1 + 2 * e14) + 1 / 6 * gamma2 * gamma3 * (-4 * e14 - 4 * e24 + 2 * e124) + 1 / 6 * gamma4 * (e123 - 2 * e23)) - 1 / 2 * gamma2**2 * gamma3 * e24 + 1 / 3 * gamma4 * e23 + gamma2 * (1 / 3 * gamma3 * (e2 + e24) - 1 / 6 * gamma4 * e23)
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[3, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[3, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = 1 / 2 * gamma3 * gamma1**2 * e14 + gamma1 * (-1 / 3 * gamma3 * e14 + 1 / 6 * gamma2 * gamma3 * (4 * e14 + 4 * e24 - 2 * e124) + 1 / 6 * gamma4 * (2 * e23 - e123)) + 1 / 2 * gamma2**2 * gamma3 * e24 + gamma2 * (1 / 6 * gamma4 * e23 - 1 / 3 * gamma3 * e24)
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[4, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[4, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         return a
 
@@ -289,120 +346,120 @@ class ModelH2(Model):
         a2 = 1 / 6 * gamma2 * gamma4 * (6 * tau2 + 6 * e2 - e3_23 + 3 * e23 - 2 * e3 - 6)
         a3 = 0
         a4 = 0
-        a[1, 1] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 1] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma1 * (1 / 6 * gamma3 * (2 * e14 - e3_14) + 1 / 6 * gamma4 * e123) + gamma2 * (1 / 6 * gamma3 * e124 + 1 / 6 * gamma4 * (2 * e23 - e3_23))
         a1 = 1 / 6 * gamma1 * gamma3 * e4 * (e3_1 - 3 * e1 + 2)
         a2 = 1 / 6 * gamma2 * gamma4 * e3 * (e3_2 - 3 * e2 + 2)
         a3 = 0
         a4 = 0
-        a[1, 2] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 2] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * e124 + 1 / 6 * gamma4 * (4 * e2 - e3_23 - 2 * e23)) + gamma1 * (1 / 6 * gamma3 * e14 + 1 / 6 * gamma4 * (-2 * e1 - 4 * e23 + e123 + 6))
         a1 = 0
         a2 = 1 / 6 * gamma2 * gamma4 * (-6 * e2 + e3_23 + 3 * e23 - 4 * e3 + 6) + gamma1 * gamma4 * (tau2 + e23 - e3)
         a3 = gamma1 * gamma4 * (tau3 + e3 - 1) + gamma2 * gamma4 * (tau3 + e3 - 1)
         a4 = 0
-        a[1, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma1 * (1 / 6 * gamma3 * (2 * e1 - e14) + 1 / 6 * gamma4 * e123) + gamma2 * (1 / 6 * gamma3 * (-4 * e2 - 2 * e14 + e124 + 6) + 1 / 6 * gamma4 * (2 * e23 - e3_23))
         a1 = 0
         a2 = gamma2 * (1 / 6 * gamma4 * (e3_23 - 3 * e23 + 2 * e3) + gamma3 * (tau2 + e2 - 1))
         a3 = 0
         a4 = 0
-        a[1, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[1, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * (2 * e2 - e124) + 1 / 6 * gamma4 * e23) + gamma1 * (1 / 6 * gamma3 * (-4 * e1 + e3_14 - 2 * e14 + 6) + 1 / 6 * gamma4 * (2 * e23 - e123))
         a1 = 1 / 6 * gamma1 * gamma3 * (3 * e1 * (e4 + 2) - e3_14 - 2 * e4 + 6 * tau1 - 6)
         a2 = 0
         a3 = 0
         a4 = 0
-        a[2, 2] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 2] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * (-2 * e2 - 4 * e14 + e124 + 6) + 1 / 6 * gamma4 * e23) + gamma1 * (1 / 6 * gamma3 * (4 * e1 - e3_14 - 2 * e14) + 1 / 6 * gamma4 * e123)
         a1 = 1 / 6 * gamma1 * gamma3 * (e4 * (e3_1 - 4) + 3 * e1 * (e4 - 2) + 6) + gamma2 * gamma3 * (e4 * (e1 - 1) + tau1)
         a2 = 0
         a3 = 0
         a4 = gamma1 * gamma3 * (tau4 + e4 - 1) + gamma2 * gamma3 * (tau4 + e4 - 1)
-        a[2, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * e124 + 1 / 6 * gamma4 * (2 * e2 - e23)) + gamma1 * (1 / 6 * gamma3 * (2 * e14 - e3_14) + 1 / 6 * gamma4 * (-4 * e1 - 2 * e23 + e123 + 6))
         a1 = gamma1 * (1 / 6 * gamma3 * e4 * (e3_1 - 3 * e1 + 2) + gamma4 * (tau1 + e1 - 1))
         a2 = 0
         a3 = 0
         a4 = 0
-        a[2, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[2, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * (2 * e2 - e124) + 1 / 6 * gamma4 * (2 * e2 - e23)) + gamma1 * (1 / 6 * gamma3 * (2 * e1 - e14) + 1 / 6 * gamma4 * (2 * e1 - e123))
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[3, 3] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[3, 3] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * e124 + 1 / 6 * gamma4 * e23) + gamma1 * (1 / 6 * gamma3 * e14 + 1 / 6 * gamma4 * e123)
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[3, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[3, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         a0 = gamma2 * (1 / 6 * gamma3 * (2 * e14 - e124) + 1 / 6 * gamma4 * e23) + gamma1 * (1 / 6 * gamma3 * e14 + 1 / 6 * gamma4 * (2 * e23 - e123))
         a1 = 0
         a2 = 0
         a3 = 0
         a4 = 0
-        a[4, 4] = summarize_a((a0, a1, a2, a3, a4), n0, r)
+        a[4, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
 
         return a
 
 
 # Note: first model in list must be the most complex, last model must be the simplest
 models_H1 = (
-    ModelH1('2H1'),
-    ModelH1('1H1', gamma3=0),
-    ModelH1('1H2', gamma1=1),
-    ModelH1('1H3', gamma1=0),
-    ModelH1('1H4', gamma3=1),
-    ModelH1('1HP', T3=0),
-    ModelH1('1T1', gamma1=1, gamma3=0),
-    ModelH1('1T2', gamma1=0, gamma3=0),
-    ModelH1('1T2A', gamma1=0, gamma3=1),
-    ModelH1('1T2B', gamma1=1, gamma3=1),
-    ModelH1('1PH1', T1=0, gamma1=None),
-    ModelH1('1PH1A', T3=0, gamma1=1),
-    ModelH1('1PH2', T3=0, gamma3=0),
-    ModelH1('1PH3', T3=0, gamma3=1),
-    ModelH1('1P1', T1=0, gamma1=None, gamma3=0),
-    ModelH1('1P2', T3=0, gamma1=0, gamma3=None),
-    ModelH1('1P2A', T1=0, gamma1=None, gamma3=1),
-    ModelH1('1P2B', T3=0, gamma1=1, gamma3=1),
-    ModelH1('1P3', T3=0, gamma1=1, gamma3=0),
-    ModelH1('PL1', T1=0, T3=0, gamma1=None, gamma3=None),
+    ModelH1('2H1', 'TTgg'),
+    ModelH1('1H1', 'TTg0'),
+    ModelH1('1H2', 'TT1g'),
+    ModelH1('1H3', 'TT0g'),
+    ModelH1('1H4', 'TTg1'),
+    ModelH1('1HP', 'T0gg'),
+    ModelH1('1T1', 'TT10'),
+    ModelH1('1T2', 'TT00'),
+    ModelH1('1T2A', 'TT01'),
+    ModelH1('1T2B', 'TT11'),
+    ModelH1('1PH1', '0TNg'),
+    ModelH1('1PH1A', 'T01g'),
+    ModelH1('1PH2', 'T0g0'),
+    ModelH1('1PH3', 'T0g1'),
+    ModelH1('1P1', '0TN0'),
+    ModelH1('1P2', 'T00N'),
+    ModelH1('1P2A', '0TN1'),
+    ModelH1('1P2B', 'T011'),
+    ModelH1('1P3', 'T010'),
+    ModelH1('PL1', '00NN'),
 )
 models_H2 = (
-    ModelH2('2H2'),
-    ModelH2('2HA1', gamma3=0),
-    ModelH2('2HA2', gamma3=1),
-    ModelH2('2HB1', gamma1=0),
-    ModelH2('2HB2', gamma1=1),
-    ModelH2('2HP', T3=0),
-    ModelH2('2T1', gamma1=0, gamma3=1),
-    ModelH2('2T2', gamma1=0, gamma3=0),
-    ModelH2('2T2A', gamma1=0, gamma3=1),
-    ModelH2('2T2B', gamma1=1, gamma3=1),
-    ModelH2('2PH1', T1=0, gamma1=None),
-    ModelH2('2PH2', T3=0, gamma3=0),
-    ModelH2('2PH2A', T3=0, gamma1=0),
-    ModelH2('2PH2B', T3=0, gamma1=1),
-    ModelH2('2PH2C', T3=0, gamma3=1),
-    ModelH2('2P1', T1=0, gamma1=None, gamma3=0),
-    ModelH2('2P1A', T1=0, gamma1=None, gamma3=1),
-    ModelH2('2P2', T3=0, gamma1=0, gamma3=0),
-    ModelH2('2P2A', T3=0, gamma1=1, gamma3=1),
-    ModelH2('2P3', T3=0, gamma1=1, gamma3=0),
-    ModelH2('2P3A', T3=0, gamma1=0, gamma3=1),
-    ModelH2('PL2', T1=0, T3=0, gamma1=None, gamma3=None),
+    ModelH2('2H2', 'TTgg'),
+    ModelH2('2HA1', 'TTg0'),
+    ModelH2('2HA2', 'TTg1'),
+    ModelH2('2HB1', 'TT0g'),
+    ModelH2('2HB2', 'TT1g'),
+    ModelH2('2HP', 'T0gg'),
+    ModelH2('2T1', 'TT01'),
+    ModelH2('2T2', 'TT00'),
+    ModelH2('2T2A', 'TT01'),
+    ModelH2('2T2B', 'TT11'),
+    ModelH2('2PH1', '0TNg'),
+    ModelH2('2PH2', 'T0g0'),
+    ModelH2('2PH2A', 'T00g'),
+    ModelH2('2PH2B', 'T01g'),
+    ModelH2('2PH2C', 'T0g1'),
+    ModelH2('2P1', '0TN0'),
+    ModelH2('2P1A', '0TN1'),
+    ModelH2('2P2', 'T000'),
+    ModelH2('2P2A', 'T011'),
+    ModelH2('2P3', 'T010'),
+    ModelH2('2P3A', 'T001'),
+    ModelH2('PL2', '00NN'),
 )
 all_models = models_H1 + models_H2
 

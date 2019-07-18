@@ -86,9 +86,12 @@ def get_a(model, theta, r):
     """Return `a` values from model.
 
     >>> from hammlet.models import models_mapping
-    >>> a = get_a(models_mapping['2H1'], (100,1,2,0.6,0.3), (1,1,1,1))
-    >>> [round(x, 3) for x in a]
+    >>> theta = (100, 1, 2, 0.6, 0.3)
+    >>> r = (1,1,1,1)
+    >>> [round(x, 3) for x in get_a(models_mapping['2H1'], theta, r)]
     [49.819, 58.596, 177.022, 2.444, 21.024, 1.816, 51.238, 8.548, 3.715, 1.126]
+    >>> [round(x, 3) for x in get_a(models_mapping['2H2'], theta, r)]
+    [35.737, 1.858, 175.923, 16.526, 21.781, 69.879, 50.482, 11.716, 0.547, 1.113]
     """
     return tuple(a_ij for _, a_ij in sorted(model(theta, r).items()))
 
@@ -110,8 +113,13 @@ def likelihood(model, ys_, theta, r):
     L(theta | y) = sum_{i,j} y_ij * ln( a_ij(theta) ) - a_ij(theta)
 
     >>> from hammlet.models import models_mapping
-    >>> likelihood(models_mapping['2H1'], (9,9,100,9,9,9,9,9,9,9), (100,1,2,.6,.3), (1,1,1,1)).round(5)
+    >>> ys = (9,9,100,9,9,9,9,9,9,9)
+    >>> theta = (100, 1, 2, .6, .3)
+    >>> r = (1,1,1,1)
+    >>> likelihood(models_mapping['2H1'], ys, theta, r).round(5)
     322.53058
+    >>> likelihood(models_mapping['2H2'], ys, theta, r).round(5)
+    313.37015
     """
     # ys_ is morphed
     # Note: do not morph `a`!!!
