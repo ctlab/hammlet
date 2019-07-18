@@ -1,6 +1,7 @@
 import csv
 import itertools
 import time
+import sys
 
 import click
 
@@ -178,7 +179,11 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
             return tuple(int(s) - 1 for s in perm.split(','))
 
         levels_data = {level: [] for level in range(5)}  # {level: [(model, perm)]}
-        with open(levels_filename, newline='') as f:
+        if sys.version > '3':
+            levels_file = open(levels_filename, newline='')
+        else:
+            levels_file = open(levels_filename, 'rb')
+        with levels_file as f:
             reader = csv.DictReader(f)
             for row in reader:
                 level = int(row['Level'])
