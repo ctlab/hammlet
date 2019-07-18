@@ -9,9 +9,9 @@
 ## Requirements
 
 * Python 3.3+ or 2.7
-* NumPy
 * SciPy
 * click
+* tabulate
 * colorama (on Windows)
 
 ## Installation
