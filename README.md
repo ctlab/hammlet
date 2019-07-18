@@ -4,6 +4,8 @@
 
 **H**ybridiz**a**tion **M**odels **M**aximum **L**ikelihood **E**stima**t**or
 
+[![Build Status](https://travis-ci.com/ctlab/hammlet.svg?token=pAKqBLzpb9BxmWFfS6qX&branch=master)](https://travis-ci.com/ctlab/hammlet)
+
 ## Requirements
 
 * Python 3.3+ or 2.7
