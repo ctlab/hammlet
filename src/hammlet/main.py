@@ -4,6 +4,8 @@ import time
 import sys
 
 import click
+from scipy.stats import chi2
+from tabulate import tabulate
 
 from .models import models_H1, models_H2, models_mapping_mnemonic, models_hierarchy
 from .optimizer import Optimizer
@@ -215,34 +217,65 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
                        for level, results in levels_results.items()}
 
         log_info('Best on levels 4-0:')
-        for level in [4, 3, 2, 1, 0]:
-            (model, perm, result) = levels_best[level]
-            print_model_results(model, species, {perm: result}, 1)
+        data_optimize = []
+        for level in reversed(range(5)):
+            model, perm, result = levels_best[level]
+            fit = -result.fun
+            n0, T1, T3, gamma1, gamma3 = result.x
+            data_optimize.append([level, model, model.get_full_mnemonic_name(),
+                                  ','.join(map(lambda t: str(t + 1), perm)),
+                                  fit, n0, T1, T3, gamma1, gamma3])
+        table_optimize = tabulate(data_optimize,
+                                  headers=['Lvl', 'Model', 'Mnemo', 'Perm', 'LL', 'n0', 'T1', 'T3', 'g1', 'g3'],
+                                  colalign=['center', 'center', 'center', 'center', 'center',
+                                            'center', 'center', 'center', 'center', 'center'],
+                                  floatfmt='.3f', numalign='decimal',
+                                  missingval='-', tablefmt='simple')
+        click.echo(table_optimize)
+        click.echo()
 
-        log_info('Calculating chains...')
-        level = 4
-        last_accepted = levels_best[level]
-        while level > 0:
-            (model_complex, perm_complex, result_complex) = last_accepted
-            (model_simple, perm_simple, result_simple) = levels_best[level - 1]
+        log_info('Calculating chains (pvalue = {})...'.format(pvalue))
+        data_chains = []
+        for level in reversed(range(5)):
+            model, perm, result = levels_best[level]
+            fit = -result.fun
+            data_chains.append([level, model, model.get_full_mnemonic_name(),
+                                ','.join(map(lambda t: str(t + 1), perm)), fit, None, None])
+        data_chains[0][6] = click.style('Yes', fg='green')
+        last_accepted = levels_best[4]
+        for level in reversed(range(4)):
+            model_complex, perm_complex, result_complex = last_accepted
+            model_simple, perm_simple, result_simple = levels_best[level]
             LLcomplex = -result_complex.fun
             LLsimple = -result_simple.fun
-            log_debug('Complex model {} has LL={:.3f}, simple model {} has LL={:.3f}'
-                      .format(model_complex, LLcomplex, model_simple, LLsimple))
+            # log_debug('Levels {}-{}: complex model {} has LL={:.3f}, simple model {} has LL={:.3f}'
+            #           .format(level + 1, level, model_complex, LLcomplex, model_simple, LLsimple))
             stat = 2 * (LLcomplex - LLsimple)
-            from scipy.special import chdtri
-            crit = chdtri(1, pvalue)
-            if stat < crit:
-                level -= 1
+            p = 1 - chi2.cdf(stat, 1)
+            data_chains[4 - level][5] = p
+            if p > pvalue:
+                # log_debug('Accepting simple model {} (stat = {:.3f}, p = {})'
+                #           .format(model_simple, stat, p))
                 last_accepted = (model_simple, perm_simple, result_simple)
-                log_debug('Accepting simple model {}'.format(model_simple))
+                data_chains[4 - level][6] = click.style('Yes', fg='green')
             else:
+                # log_debug('Not accepting simple model {} (stat = {:.3f}, p = {})'
+                #           .format(model_simple, stat, p))
+                data_chains[4 - level][6] = click.style('No', fg='red')
                 break
+        table_chains = tabulate(data_chains,
+                                headers=['Lvl', 'Model', 'Mnemo', 'Perm', 'LL', 'p', 'Acc?'],
+                                colalign=['center', 'center', 'center', 'center', 'center', 'center', 'center'],
+                                floatfmt=[None, None, None, None, '.3f', '.5f', None],
+                                numalign='decimal',
+                                missingval='-', tablefmt='simple')
+        click.echo(table_chains)
+        click.echo()
 
-        log_br()
-        log_info('Last accepted level: {}'.format(level))
+        log_info('Last accepted level: {}'.format(level + 1))
         model, perm, result = last_accepted
         print_model_results(model, species, {perm: result}, 1)
+        del model, perm, result
 
         log_success('Done calculating levels in {:.1f} s.'
                     .format(time.time() - time_start_levels))
