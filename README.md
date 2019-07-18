@@ -32,7 +32,7 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
       Author: Konstantin Chukharev (lipen00@gmail.com)
 
     Options:
-      --preset <preset>              Preset data (laur/12-200/12-200-70-50/5-10/...)
+      --preset <preset>              Preset data (laur/12-200/12-200-70-50/5-10/29-8...)
       -i, --input <path|->           File with markers presence/absence data
       -n, --names <name...>          Space-separated list of four species names
       -y <int...>                    Space-separated list of ten y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)
@@ -40,6 +40,7 @@ Simply use [pip](https://pip.pypa.io/en/stable/quickstart/):
       -m, --model <name...|all>      Comma-separated list of models
       --theta <n0 T1 T3 g1 g3>       Space-separated list of five theta components for a_ij (n0 T1 T3 gamma1 gamma3)
       --chain [H1|H2]                Model group for simplest models computation
+      --levels <path|->              File with levels data
       --best <int|all>               Number of best models to show  [default: all]
       --method [SLSQP|L-BFGS-B|TNC]  Optimization method  [default: SLSQP]
       --theta0 <n0 T1 T3 g1 g3>      Space-separated list of five initial theta components (n0 T1 T3 gamma1 gamma3)

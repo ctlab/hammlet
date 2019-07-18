@@ -26,6 +26,9 @@ def parse_input(preset, filename, names, y, verbose=False, is_only_a=False):
         elif preset == '5-10':
             species = 'A B C D'.split()
             ys = tuple(map(int, '5 10 59 3 5 20 68 125 72 10'.split()))
+        elif preset == '29-8':
+            species = 'A B C D'.split()
+            ys = tuple(map(int, '29 8 29 29 23 29 29 2 1 2'.split()))
         else:
             raise click.BadParameter('"{}" is not supported'.format(preset), param_hint='preset')
 
