@@ -232,7 +232,7 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
         click.echo(table_optimize)
         click.echo()
 
-        log_info('Calculating chains (pvalue = {})...'.format(pvalue))
+        log_info('Chains over levels (p = {}):'.format(pvalue))
         data_chains = []
         for level in reversed(range(5)):
             model, perm, result = levels_best[level]
