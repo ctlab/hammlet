@@ -189,12 +189,14 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
                 perm = parse_perm(row['Permut'])
                 levels_data[level].append((model, perm))
 
+        # ================
         from .models import all_models
         missed_models = set(all_models) - set(model for (model, perm) in sum(levels_data.values(), []))
         if missed_models:
             log_warn('Missed models:')
             for model in missed_models:
                 log_warn(' -  {}'.format(model), symbol=None)
+        # ================
 
         log_info('Optimizing...')
         optimizer = Optimizer(species, ys, theta0, r, method, debug=debug)
@@ -203,14 +205,39 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
             for (model, perm) in data:
                 result = optimizer.one(model, perm)
                 levels_results[level].append((model, perm, result))
-                if debug:
-                    print_model_results(model, species, {perm: result}, 1)
+                print_model_results(model, species, {perm: result}, 1)
         levels_best = {level: min(results, key=lambda t: t[2].fun)
                        for level, results in levels_results.items()}
 
-        for (level, (model, perm, result)) in levels_best.items():
-            log_info('Best on level {}:'.format(level))
+        log_info('Best on levels 4-0:')
+        for level in [4, 3, 2, 1, 0]:
+            (model, perm, result) = levels_best[level]
             print_model_results(model, species, {perm: result}, 1)
+
+        log_info('Calculating chains...')
+        level = 4
+        last_accepted = levels_best[level]
+        while level > 0:
+            (model_complex, perm_complex, result_complex) = last_accepted
+            (model_simple, perm_simple, result_simple) = levels_best[level - 1]
+            LLcomplex = -result_complex.fun
+            LLsimple = -result_simple.fun
+            log_debug('Complex model {} has LL={:.3f}, simple model {} has LL={:.3f}'
+                      .format(model_complex, LLcomplex, model_simple, LLsimple))
+            stat = 2 * (LLcomplex - LLsimple)
+            from scipy.special import chdtri
+            crit = chdtri(1, pvalue)
+            if stat < crit:
+                level -= 1
+                last_accepted = (model_simple, perm_simple, result_simple)
+                log_debug('Accepting simple model {}'.format(model_simple))
+            else:
+                break
+
+        log_br()
+        log_info('Last accepted level: {}'.format(level))
+        model, perm, result = last_accepted
+        print_model_results(model, species, {perm: result}, 1)
 
         log_success('Done calculating levels in {:.1f} s.'
                     .format(time.time() - time_start_levels))
