@@ -200,9 +200,7 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
         from .models import all_models
         missed_models = set(all_models) - set(model for (model, perm) in sum(levels_data.values(), []))
         if missed_models:
-            log_warn('Missed models:')
-            for model in missed_models:
-                log_warn(' -  {}'.format(model), symbol=None)
+            log_warn('Missed models: {}'.format(' '.join(map(str, missed_models))))
         # ================
 
         log_info('Optimizing...')
