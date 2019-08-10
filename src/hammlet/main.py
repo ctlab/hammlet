@@ -95,7 +95,7 @@ def cli(preset, input_filename, names, y, r, models, theta, chain, levels_filena
     if not theta:
         theta = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
         if debug:
-            log_debug('Using default theta: {}'.format(theta0))
+            log_debug('Using default theta: {}'.format(theta))
 
     if not theta0:
         theta0 = (round(0.6 * sum(ys), 5), 0.5, 0.5, 0.5, 0.5)
