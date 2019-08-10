@@ -444,7 +444,7 @@ models_H2 = (
     ModelH2('2HB1', 'TT0g'),
     ModelH2('2HB2', 'TT1g'),
     ModelH2('2HP', 'T0gg'),
-    ModelH2('2T1', 'TT01'),
+    ModelH2('2T1', 'TT10'),
     ModelH2('2T2', 'TT00'),
     ModelH2('2T2A', 'TT01'),
     ModelH2('2T2B', 'TT11'),
