@@ -1,10 +1,40 @@
 from collections import deque
+from functools import wraps
+import time
 
 import numpy as np
 # from scipy.stats import chi2
 from scipy.special import chdtri  # faster
 
-__all__ = ['morph4', 'morph10', 'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains']
+__all__ = ['autotimeit', 'pformatf', 'morph4', 'morph10',
+           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains']
+
+
+def autotimeit(func, msg='All done in {:.1f} s.'):
+    from .printers import log_br, log
+
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        time_start = time.time()
+        result = func(*args, **kwargs)
+        log_br()
+        log(msg.format(time.time() - time_start), symbol=None, fg='yellow')
+        return result
+
+    return wrapped
+
+
+def pformatf(x, digits=3):
+    """Pretty format a float.
+
+    >>> pformatf(3.14159, 3)
+    3.142
+    >>> pformatf(3.14159, 0)
+    3
+    >>> pformatf(2.4001, 2)
+    2.4
+    """
+    return '{:.{}f}'.format(x, digits).rstrip('0').rstrip('.')
 
 
 def morph4(iterable, permutation):
@@ -34,22 +64,24 @@ def morph4(iterable, permutation):
 
 
 def morph10(iterable, permutation):
-    """Apply permutation on 10-iterable. (y-values)
+    """
+    Apply permutation on 10-iterable. (y-values)
 
     >>> morph10(42, None)
     42
-    >>> morph10((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), (1, 3, 2, 0))
+    >>> morph10((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), (2, 4, 3, 1))
     (5, 7, 6, 2, 10, 9, 4, 8, 3, 1)
     """
     if permutation is None:
         return iterable
+
     A = {}
     it = iter(iterable)
     for i in range(4):
         for j in range(i, 4):
             A[i, j] = A[j, i] = next(it)
 
-    return tuple(A[permutation[i], permutation[j]] for i in range(4) for j in range(i, 4))
+    return tuple(A[permutation[i] - 1, permutation[j] - 1] for i in range(4) for j in range(i, 4))
 
 
 def ij2pattern(i, j):
@@ -107,24 +139,25 @@ def poisson(a, y):
     return y * np.log(a) - a
 
 
-def likelihood(model, ys_, theta, r):
+def likelihood(model, y_, theta, r):
     """Log-likelihood.
 
     L(theta | y) = sum_{i,j} y_ij * ln( a_ij(theta) ) - a_ij(theta)
+        where (1 <= i <= j <= 4)
 
     >>> from hammlet.models import models_mapping
-    >>> ys = (9,9,100,9,9,9,9,9,9,9)
+    >>> y = (9,9,100,9,9,9,9,9,9,9)
     >>> theta = (100, 1, 2, .6, .3)
     >>> r = (1,1,1,1)
-    >>> likelihood(models_mapping['2H1'], ys, theta, r).round(5)
+    >>> likelihood(models_mapping['2H1'], y, theta, r).round(5)
     322.53058
-    >>> likelihood(models_mapping['2H2'], ys, theta, r).round(5)
+    >>> likelihood(models_mapping['2H2'], y, theta, r).round(5)
     313.37015
     """
-    # ys_ is morphed
+    # y_ is morphed
     # Note: do not morph `a`!!!
     a = get_a(model, theta, r)
-    return poisson(a, ys_).sum()
+    return poisson(a, y_).sum()
 
 
 def get_chains(results, models, hierarchy, pvalue):

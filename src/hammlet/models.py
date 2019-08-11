@@ -1,11 +1,20 @@
 from __future__ import division
 
+from abc import abstractmethod
 from collections import OrderedDict
+import six
+import re
 
 import numpy as np
 
 __all__ = ['all_models', 'models_H1', 'models_H2', 'models_hierarchy',
            'models_mapping', 'models_mapping_mnemonic']
+
+if six.PY2:
+    def fullmatch(regex, string, flags=0):
+        """Emulate python-3.4 re.fullmatch()."""
+        return re.match('(?:' + regex + r')\Z', string, flags=flags)
+    re.fullmatch = fullmatch
 
 
 class CaseInsensitiveOrderedDict(OrderedDict):
@@ -121,15 +130,12 @@ def summarize_a(a, r, n0):
 class Model(object):
 
     mapping = OrderedDict()  # {name: model} :: {str: Model}
-    mapping_mnemonic = {'H1': CaseInsensitiveOrderedDict(),
-                        'H2': CaseInsensitiveOrderedDict()}  # each {mnemonic_name: model} :: {str: Model}
+    mapping_mnemonic = OrderedDict()  # {mnemonic_name: mode} :: {str: Model}
 
     def __init__(self, name, mnemonic_name):
-        assert len(mnemonic_name) == 4, "Mnemonic name must consist of exactly 4 characters"
-        assert mnemonic_name[0] in 'T01N', "Bad symbol in mnemonic_name"
-        assert mnemonic_name[1] in 'T01N', "Bad symbol in mnemonic_name"
-        assert mnemonic_name[2] in 'g01N', "Bad symbol in mnemonic_name"
-        assert mnemonic_name[3] in 'g01N', "Bad symbol in mnemonic_name"
+        assert re.fullmatch(r'H[12]:[T01N]{2}[g01N]{2}', mnemonic_name)
+        assert name not in self.mapping, "Duplicate name '{}'".format(name)
+        assert mnemonic_name not in self.mapping_mnemonic, "Duplicate mnemonic_name '{}'".format(mnemonic_name)
 
         def to_bound(c):
             if c == 'T':
@@ -145,16 +151,17 @@ class Model(object):
             else:
                 raise ValueError("Bad symbol in mnemonic name: '{}'".format(c))
 
+        group, mnemo = mnemonic_name.split(':')
         self.name = name
         self.mnemonic_name = mnemonic_name
         self.n0_bounds = (0, None)
-        self.T1_bounds = to_bound(mnemonic_name[0])
-        self.T3_bounds = to_bound(mnemonic_name[1])
-        self.gamma1_bounds = to_bound(mnemonic_name[2])
-        self.gamma3_bounds = to_bound(mnemonic_name[3])
+        self.T1_bounds = to_bound(mnemo[0])
+        self.T3_bounds = to_bound(mnemo[1])
+        self.gamma1_bounds = to_bound(mnemo[2])
+        self.gamma3_bounds = to_bound(mnemo[3])
 
-        assert self.name not in self.mapping.keys()
         self.mapping[self.name] = self
+        self.mapping_mnemonic[self.mnemonic_name] = self
 
     @property
     def bounds(self):
@@ -186,6 +193,10 @@ class Model(object):
         else:
             raise ValueError('Model is neither H1 nor H2')
 
+    @abstractmethod
+    def __call__(self, theta, r):
+        pass
+
     def __eq__(self, other):
         return self.name == other.name
 
@@ -209,9 +220,9 @@ class Model(object):
 
 class ModelH1(Model):
 
-    def __init__(self, *args, **kwargs):
-        super(ModelH1, self).__init__(*args, **kwargs)
-        self.mapping_mnemonic['H1'][self.mnemonic_name] = self
+    def __init__(self, name, mnemo):
+        mnemonic_name = 'H1:' + mnemo
+        super(ModelH1, self).__init__(name, mnemonic_name)
 
     @staticmethod
     def __call__(theta, r):
@@ -313,9 +324,9 @@ class ModelH1(Model):
 
 class ModelH2(Model):
 
-    def __init__(self, *args, **kwargs):
-        super(ModelH2, self).__init__(*args, **kwargs)
-        self.mapping_mnemonic['H2'][self.mnemonic_name] = self
+    def __init__(self, name, mnemo):
+        mnemonic_name = 'H2:' + mnemo
+        super(ModelH2, self).__init__(name, mnemonic_name)
 
     @staticmethod
     def __call__(theta, r):

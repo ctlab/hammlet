@@ -33,7 +33,7 @@ def log_error(text, symbol='!', fg='red', bg=None, bold=True, nl=True):
 
 
 def log_br(fg='white', bg=None, bold=False, nl=True):
-    log(' '.join('=' * 30), symbol=None, fg=fg, bg=bg, bold=bold, nl=nl)
+    log(' '.join('=' * 40), symbol=None, fg=fg, bg=bg, bold=bold, nl=nl)
 
 
 def print_input(species, ys):
@@ -43,9 +43,9 @@ def print_input(species, ys):
 
 def print_permutation(species, ys, permutation):
     from .utils import morph10
-    perm = tuple(species.index(s) for s in permutation)
+    perm = tuple(p - 1 for p in permutation)
     ys_ = morph10(ys, perm)
-    log('{}, {}'.format(', '.join(permutation), ', '.join(map(str, ys_))), symbol='@permutation')
+    log('{}, {}'.format(', '.join(map(str, permutation)), ', '.join(map(str, ys_))), symbol='@permutation')
 
 
 def print_a(a, bootstrap_times=0):
@@ -83,17 +83,15 @@ def print_model_results(model, species, results, number_of_best, poisson_times=0
         log_info('Applying Poisson on the best result:')
         print_a(a, poisson_times)
 
-def print_model_result_boot(model, species, ys, perm, result):
+
+def print_model_result_boot(model, y, perm, result):
     from .models import models_mapping
-    from .utils import morph4
     if isinstance(model, str):
         model = models_mapping[model]
 
-    fit = -result.fun
-    theta = result.x
-    n0, T1, T3, gamma1, gamma3 = theta
-    log('{}, {}, ys=[{}], s=[{}], LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
-        .format(model.name, model.mnemonic_name, ' '.join(map(str, ys)), ' '.join(morph4(species, perm)), fit, n0, T1, T3, gamma1, gamma3),
+    n0, T1, T3, gamma1, gamma3 = result.theta
+    log('{}, {}, y=[{}], perm=({}), LL={:.3f}, n0={:.3f}, T1={:.3f}, T3={:.3f}, g1={:.3f}, g3={:.3f}'
+        .format(model.name, model.mnemonic_name, ' '.join(map(str, y)), ','.join(map(str, perm)), result.LL, n0, T1, T3, gamma1, gamma3),
         symbol='@boot')
 
 
