@@ -1,9 +1,9 @@
 from __future__ import division
 
-from abc import abstractmethod
-from collections import OrderedDict
 import six
 import re
+from abc import abstractmethod
+from collections import OrderedDict
 
 import numpy as np
 
