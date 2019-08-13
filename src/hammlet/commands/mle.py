@@ -59,8 +59,6 @@ def mle(preset, y, r, models, number_of_best, is_only_first, only_permutation,
         if debug:
             log_debug('Using default theta0: {}'.format(theta0))
 
-    optimizer = Optimizer(y, r, theta0, method, debug=debug)
-
     if is_only_first:
         perms = [(1, 2, 3, 4)]
     elif only_permutation:
@@ -68,9 +66,12 @@ def mle(preset, y, r, models, number_of_best, is_only_first, only_permutation,
     else:
         perms = list(itertools.permutations((1, 2, 3, 4)))
 
+    optimizer = Optimizer(y, r, theta0, method, debug=debug)
+
     log_info('Optimizing...')
     results = optimizer.many_many(models, perms)
     results.sort(key=lambda t: t.LL, reverse=True)
+
     data = []
     for result in results:
         model = result.model
