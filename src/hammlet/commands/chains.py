@@ -13,7 +13,7 @@ from ..utils import autotimeit, pformatf, get_pvalues, get_paths, get_simple_mod
 
 
 @click.command()
-@click.argument('chain', type=click.Choice(['H1', 'H2']), required=True)
+@click.argument('group', type=click.Choice(['H1', 'H2']), required=True)
 @click.option('--preset', type=click.Choice(presets_db), metavar='<preset>',
               help='Data preset ({})'.format('/'.join(presets_db.keys())))
 @click.option('-y', nargs=10, type=int, metavar='<int...>',
@@ -41,13 +41,13 @@ from ..utils import autotimeit, pformatf, get_pvalues, get_paths, get_simple_mod
 @click.option('--debug', is_flag=True, hidden=True,
               help='Debug')
 @autotimeit
-def chains(chain, preset, y, r, is_only_first, only_permutation, is_free_permutation,
+def chains(group, preset, y, r, is_only_first, only_permutation, is_free_permutation,
            critical_pvalue, method, theta0, debug):
-    """Compute chains."""
+    """Compute insignificantly worse simple models."""
 
     y = parse_input(preset, y, verbose=True)
     del preset
-    log_info('Model group: {}'.format(chain))
+    log_info('Model group: {}'.format(group))
     log_info('Hierarchy: {}'.format('free' if is_free_permutation else 'non-free'))
     log_info('y: {}'.format(' '.join(map(str, y))))
     log_info('r: ({})'.format(', '.join(map(pformatf, r))))
@@ -57,13 +57,13 @@ def chains(chain, preset, y, r, is_only_first, only_permutation, is_free_permuta
         if debug:
             log_debug('Using default theta0: {}'.format(theta0))
 
-    if chain == 'H1':
+    if group == 'H1':
         models = models_H1
-    elif chain == 'H2':
+    elif group == 'H2':
         models = models_H2
     else:
-        raise ValueError("Unsupperted chain '{}'".format(chain))
-    hierarchy = models_hierarchy[chain]['free' if is_free_permutation else 'non-free']
+        raise ValueError("Unsupperted group '{}'".format(group))
+    hierarchy = models_hierarchy[group]['free' if is_free_permutation else 'non-free']
 
     if is_only_first:
         perms = [(1, 2, 3, 4)]
