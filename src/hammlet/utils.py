@@ -28,11 +28,11 @@ def pformatf(x, digits=3):
     """Pretty format a float.
 
     >>> pformatf(3.14159, 3)
-    3.142
+    '3.142'
     >>> pformatf(3.14159, 0)
-    3
+    '3'
     >>> pformatf(2.4001, 2)
-    2.4
+    '2.4'
     """
     return '{:.{}f}'.format(x, digits).rstrip('0').rstrip('.')
 
