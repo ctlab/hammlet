@@ -1,13 +1,13 @@
-from collections import deque
-from functools import wraps
 import time
+from collections import deque, OrderedDict
+from functools import wraps
 
 import numpy as np
-# from scipy.stats import chi2
+from scipy.stats import chi2
 from scipy.special import chdtri  # faster
 
 __all__ = ['autotimeit', 'pformatf', 'morph4', 'morph10',
-           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_chains']
+           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_pvalues', 'get_paths']
 
 
 def autotimeit(func, msg='All done in {:.1f} s.'):
@@ -160,33 +160,48 @@ def likelihood(model, y_, theta, r):
     return poisson(a, y_).sum()
 
 
-def get_chains(results, models, hierarchy, pvalue):
-    # from .printers import log_debug
-    # results :: {model_name: (perm, result)}
-    chains = []
-    q = deque([[models[0].name]])
+def get_pvalue(result_complex, result_simple):
+    stat = 2 * (result_complex.LL - result_simple.LL)
+    p = 1 - chi2.cdf(stat, 1)
+    return (stat, p)
+
+
+def get_pvalues(results, hierarchy):
+    # results :: {model: result}
+    pvalues = OrderedDict()  # {(model-complex-name, model-simple-name): (stat, pvalue)}
+    for model_complex in hierarchy:
+        for model_simple in hierarchy[model_complex]:
+            result_complex = results[model_complex]
+            result_simple = results[model_simple]
+            pvalues[model_complex, model_simple] = get_pvalue(result_complex, result_simple)
+    return pvalues
+
+
+def get_paths(initial_model_name, hierarchy):
+    paths = []
+    q = deque([[initial_model_name]])
+
     while q:
         path = q.popleft()
-        complex = path[-1]  # more complex model
-        if complex == models[-1].name:
-            chains.append(tuple(path))
+        model_complex = path[-1]
+        if model_complex in hierarchy:
+            for model_simple in hierarchy[model_complex]:
+                q.append(path + [model_simple])
         else:
-            LLcomplex = -results[complex][1].fun
-            any_child = False
-            for simple in hierarchy[complex]:  # more simple model
-                LLsimple = -results[simple][1].fun
-                stat = 2 * (LLcomplex - LLsimple)
-                # crit = 3.841458821  # qchisq(p=0.05, df=1, lower.tail=FALSE)
-                # crit = chi2.ppf(1 - pvalue, 1)
-                crit = chdtri(1, pvalue)  # faster
-                if stat < crit:
-                    # log_debug('{}->{}, LLcomplex={:.3f}, LLsimple={:.3f}, stat={:.3f}, extended-path=[{}]'
-                    #           .format(complex, simple, LLcomplex, LLsimple, stat, ' '.join(path + [simple])))
-                    q.append(path + [simple])
-                    any_child = True
-            if not any_child:
-                # log_debug('{}->{}, LLcomplex={:.3f}, LLsimple={:.3f}, stat={:.3f}, chain=[{}]'
-                #           .format(complex, simple, LLcomplex, LLsimple, stat, ' '.join(path)))
-                chains.append(tuple(path))
+            paths.append(path)
 
-    return sorted(set(chains), key=lambda p: (len(p), p))
+    return paths
+
+
+def get_simple_models(paths, pvalues, critical_pvalue):
+    simple_models = set()
+    for path in paths:
+        assert len(path) > 1
+        for model_complex, model_simple in zip(path, path[1:]):
+            stat, p = pvalues[model_complex, model_simple]
+            if p < critical_pvalue:
+                simple_models.add(model_complex)
+                break
+        else:
+            simple_models.add(model_simple)
+    return simple_models

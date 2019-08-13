@@ -1,4 +1,5 @@
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
+from operator import attrgetter
 
 from scipy.optimize import minimize
 
@@ -11,6 +12,7 @@ OptimizationResult = namedtuple('OptimizationResult', 'model permutation LL thet
 
 
 class Optimizer:
+    """Maximum Likelihood Estimator."""
 
     def __init__(self, y, r, theta0, method, debug=False, **kwargs):
         self.y = y
@@ -32,19 +34,20 @@ class Optimizer:
         theta = tuple(result.x)
         return OptimizationResult(model, perm, LL, theta)
 
-    def many_perms(self, model, perms):
-        results = OrderedDict()  # {perm: result} for model
-        for perm in perms:
-            results[perm] = self.one(model, perm)
+    def many(self, models, perms, sort=True):
+        results = [self.one(model, perm)
+                   for model in models
+                   for perm in perms]
+        if sort:
+            results.sort(key=attrgetter('LL'), reverse=True)
         return results
 
-    def many_models(self, models, perm):
-        results = OrderedDict()  # {model_name: result} for perms
-        for model in models:
-            results[model.name] = self.one(model, perm)
-        return results
+    def many_many(self, models, perms, sort=True):
+        """DEPRECATED"""
+        return self.many_many(models, perms, sort=sort)
 
-    def many_many(self, models, perms):
-        return [self.one(model, perm)
-                for model in models
-                for perm in perms]
+    def many_perms(self, model, perms, sort=True):
+        return self.many([model], perms, sort=sort)
+
+    def many_models(self, models, perm, sort=True):
+        return self.many(models, [perm], sort=sort)
