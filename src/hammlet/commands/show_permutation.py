@@ -12,11 +12,11 @@ from ..utils import autotimeit, morph10
 @click.option('-y', nargs=10, type=int, metavar='<int...>',
               help='Space-separated list of ' + click.style('ten', bold=True) +
               ' y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)')
-@click.option('-p', '--permutation', nargs=4, type=int, metavar='<int...>',
+@click.option('-p', '--permutation', metavar='<int...>',
               callback=parse_permutation,
-              help='Space-separated list of permutation indices (1 to 4)')
-@click.option('--debug', is_flag=True,
-              help='Debug.')
+              help='Comma-separated permutation of (1,2,3,4) to use for calculations')
+@click.option('--debug', is_flag=True, hidden=True,
+              help='Debug')
 @autotimeit
 def show_permutation(preset, y, permutation, debug):
     """Show permutation."""
