@@ -41,8 +41,8 @@ from ..utils import autotimeit, pformatf
 @click.option('--bootstrap', 'bootstrap_times', type=int, metavar='<int>',
               default=0, show_default=False,
               help='Bootstrap best result n times by applying Poisson to input y values')
-@click.option('--debug', is_flag=True,
-              help='Debug.')
+@click.option('--debug', is_flag=True, hidden=True,
+              help='Debug')
 @autotimeit
 def mle(preset, y, r, models, number_of_best, is_only_first, only_permutation,
         is_no_polytomy, method, theta0, bootstrap_times, debug):
