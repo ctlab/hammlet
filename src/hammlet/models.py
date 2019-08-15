@@ -1,7 +1,7 @@
 from __future__ import division
 
-import six
 import re
+import sys
 from abc import abstractmethod
 from collections import OrderedDict
 
@@ -10,7 +10,8 @@ import numpy as np
 __all__ = ['all_models', 'models_H1', 'models_H2', 'models_hierarchy',
            'models_mapping', 'models_mapping_mnemonic']
 
-if six.PY2:
+if sys.version < '3':
+    # Python 2 has no re.fullmatch
     def fullmatch(regex, string, flags=0):
         """Emulate python-3.4 re.fullmatch()."""
         return re.match('(?:' + regex + r')\Z', string, flags=flags)
