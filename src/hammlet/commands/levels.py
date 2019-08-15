@@ -135,11 +135,8 @@ def levels(levels_filename, preset, y, r,
                      LL, n0, T1, T3, gamma1, gamma3])
         del result, model, perm, LL, n0, T1, T3, gamma1, gamma3
     table = tabulate(data,
-                     headers=['Lvl', 'Model', 'Mnemo', 'Perm', 'LL', 'n0', 'T1', 'T3', 'g1', 'g3'],
-                     # colalign=['center', 'center', 'center', 'center', 'center',
-                     #           'center', 'center', 'center', 'center', 'center'],
-                     numalign='center', stralign='center',
-                     floatfmt='.3f', tablefmt='simple')
+                     headers=[click.style(s, bold=True) for s in ['Lvl', 'Model', 'Mnemo', 'Perm', 'LL', 'n0', 'T1', 'T3', 'g1', 'g3']],
+                     numalign='center', stralign='center', floatfmt='.3f', tablefmt='simple')
     log_success('Best result on each level:')
     click.echo(table)
     del data, table
