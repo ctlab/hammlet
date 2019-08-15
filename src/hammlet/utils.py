@@ -1,5 +1,5 @@
 import time
-from collections import deque, OrderedDict
+from collections import deque
 from functools import wraps
 
 import numpy as np
