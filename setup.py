@@ -8,7 +8,8 @@ def main():
         'numpy',
         'scipy',
         'click',
-        'tabulate'
+        'tabulate',
+        'svgwrite',
     ]
     if sys.platform == 'win32':
         install_requires.append('colorama')
