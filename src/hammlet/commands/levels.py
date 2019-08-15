@@ -1,15 +1,13 @@
 import csv
 import sys
-from collections import OrderedDict
 
 import click
 from tabulate import tabulate
 
 from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_best, parse_input, parse_models, parse_permutation
-from ..printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
-                        print_model_results, print_permutation, print_model_result_boot)
-from ..models import models_H1, models_H2, models_mapping_mnemonic, models_hierarchy
+from ..parsers import presets_db, parse_input
+from ..printers import log_debug, log_info, log_success, log_warn
+from ..models import models_mapping_mnemonic
 from ..utils import autotimeit, pformatf, get_chain
 
 

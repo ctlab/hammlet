@@ -1,13 +1,8 @@
 import click
-from tabulate import tabulate
 
-from ..models import models_H1, models_H2, models_mapping_mnemonic, models_hierarchy
-from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_best, parse_input, parse_models
-from ..printers import (log, log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
-                        print_model_results, print_permutation, print_model_result_boot)
-from ..utils import autotimeit, pformatf, get_a, morph4
-from ..version import version as __version__
+from ..parsers import parse_models
+from ..printers import log_info, log_success
+from ..utils import autotimeit, pformatf, get_a
 
 
 @click.command()
