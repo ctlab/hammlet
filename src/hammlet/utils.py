@@ -5,12 +5,22 @@ from functools import wraps
 import numpy as np
 from scipy.stats import chi2
 
-__all__ = ['autotimeit', 'pformatf', 'morph4', 'morph10',
-           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood',
-           'get_paths', 'get_chain', 'get_chains']
+__all__ = [
+    "autotimeit",
+    "pformatf",
+    "morph4",
+    "morph10",
+    "ij2pattern",
+    "pattern2ij",
+    "get_a",
+    "likelihood",
+    "get_paths",
+    "get_chain",
+    "get_chains",
+]
 
 
-def autotimeit(func, msg='All done in {:.1f} s.'):
+def autotimeit(func, msg="All done in {:.1f} s."):
     from .printers import log_br, log
 
     @wraps(func)
@@ -18,7 +28,7 @@ def autotimeit(func, msg='All done in {:.1f} s.'):
         time_start = time.time()
         result = func(*args, **kwargs)
         log_br()
-        log(msg.format(time.time() - time_start), symbol=None, fg='yellow')
+        log(msg.format(time.time() - time_start), symbol=None, fg="yellow")
         return result
 
     return wrapped
@@ -34,7 +44,7 @@ def pformatf(x, digits=3):
     >>> pformatf(2.4001, 2)
     '2.4'
     """
-    return '{:.{}f}'.format(x, digits).rstrip('0').rstrip('.')
+    return "{:.{}f}".format(x, digits).rstrip("0").rstrip(".")
 
 
 def morph4(iterable, permutation):
@@ -52,7 +62,7 @@ def morph4(iterable, permutation):
     if permutation is None:
         return iterable
     if isinstance(iterable, str):
-        return ''.join(iterable[i] for i in permutation)
+        return "".join(iterable[i] for i in permutation)
     elif isinstance(iterable, list):
         return list(iterable[i] for i in permutation)
     elif isinstance(iterable, tuple):
@@ -60,7 +70,9 @@ def morph4(iterable, permutation):
     # elif isinstance(iterable, dict):
     #     return {morph(key, permutation): value for key, value in iterable.items()}
     else:
-        raise NotImplementedError('iterable type <{}> is not supported'.format(type(iterable)))
+        raise NotImplementedError(
+            "iterable type <{}> is not supported".format(type(iterable))
+        )
 
 
 def morph10(iterable, permutation):
@@ -81,7 +93,9 @@ def morph10(iterable, permutation):
         for j in range(i, 4):
             A[i, j] = A[j, i] = next(it)
 
-    return tuple(A[permutation[i] - 1, permutation[j] - 1] for i in range(4) for j in range(i, 4))
+    return tuple(
+        A[permutation[i] - 1, permutation[j] - 1] for i in range(4) for j in range(i, 4)
+    )
 
 
 def ij2pattern(i, j):
@@ -96,7 +110,7 @@ def ij2pattern(i, j):
     >>> ij2pattern(4, 4)
     '+++-'
     """
-    return ''.join('-' if t + 1 in (i, j) else '+' for t in range(4))
+    return "".join("-" if t + 1 in (i, j) else "+" for t in range(4))
 
 
 def pattern2ij(pattern):
@@ -111,7 +125,7 @@ def pattern2ij(pattern):
     >>> pattern2ij('+++-')
     (4, 4)
     """
-    return (pattern.find('-') + 1, pattern.rfind('-') + 1)
+    return (pattern.find("-") + 1, pattern.rfind("-") + 1)
 
 
 def get_a(model, theta, r):
@@ -168,6 +182,7 @@ def get_pvalue(result_complex, result_simple):
 
 def get_paths(hierarchy, initial_model):
     from .models import Model
+
     if isinstance(initial_model, Model):
         initial_model = initial_model.name
 

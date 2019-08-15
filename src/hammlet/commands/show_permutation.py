@@ -6,16 +6,28 @@ from ..utils import autotimeit, morph10
 
 
 @click.command()
-@click.option('--preset', metavar='<preset>',
-              help='Preset data (laur/12-200/12-200-70-50/5-10/29-8...)')
-@click.option('-y', nargs=10, type=int, metavar='<int...>',
-              help='Space-separated list of ' + click.style('ten', bold=True) +
-              ' y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)')
-@click.option('-p', '--permutation', metavar='<int...>',
-              callback=parse_permutation,
-              help='Comma-separated permutation of (1,2,3,4) to use for calculations')
-@click.option('--debug', is_flag=True, hidden=True,
-              help='Debug')
+@click.option(
+    "--preset",
+    metavar="<preset>",
+    help="Preset data (laur/12-200/12-200-70-50/5-10/29-8...)",
+)
+@click.option(
+    "-y",
+    nargs=10,
+    type=int,
+    metavar="<int...>",
+    help="Space-separated list of "
+    + click.style("ten", bold=True)
+    + " y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)",
+)
+@click.option(
+    "-p",
+    "--permutation",
+    metavar="<int...>",
+    callback=parse_permutation,
+    help="Comma-separated permutation of (1,2,3,4) to use for calculations",
+)
+@click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
 def show_permutation(preset, y, permutation, debug):
     """Show permutation."""
@@ -23,9 +35,9 @@ def show_permutation(preset, y, permutation, debug):
     _, y = parse_input(preset, None, None, y, verbose=True)
     del preset
 
-    log_info('y: {}'.format(' '.join(map(str, y))))
-    log_info('Permutation: ({})'.format(','.join(map(str, permutation))))
+    log_info("y: {}".format(" ".join(map(str, y))))
+    log_info("Permutation: ({})".format(",".join(map(str, permutation))))
 
     perm = tuple(p - 1 for p in permutation)
     y_ = morph10(y, perm)
-    log_success('Permuted y: {}'.format(' '.join(map(str, y_))))
+    log_success("Permuted y: {}".format(" ".join(map(str, y_))))

@@ -2,25 +2,39 @@ import re
 
 import click
 
-from .models import all_models, models_H1, models_H2, models_mapping, models_mapping_mnemonic
+from .models import (
+    all_models,
+    models_H1,
+    models_H2,
+    models_mapping,
+    models_mapping_mnemonic,
+)
 from .printers import log_info, log_warn
 
-__all__ = ['presets_db', 'parse_input', 'parse_models', 'parse_best', 'parse_permutation']
+__all__ = [
+    "presets_db",
+    "parse_input",
+    "parse_models",
+    "parse_best",
+    "parse_permutation",
+]
 
 presets_db = {  # {preset: y}
-    'laur': '22 21 7 11 14 12 18 16 17 24',
-    'hctm': '10 8 7 4 21 7 2 39 30 28',
-    '12-200': '12 12 200 12 12 12 12 12 12 12',
-    '12-200-70-50': '12 200 12 70 12 12 12 50 12 12',
-    '5-10': '5 10 59 3 5 20 68 125 72 10',
-    '29-8': '29 8 29 29 23 29 29 2 1 2',
+    "laur": "22 21 7 11 14 12 18 16 17 24",
+    "hctm": "10 8 7 4 21 7 2 39 30 28",
+    "12-200": "12 12 200 12 12 12 12 12 12 12",
+    "12-200-70-50": "12 200 12 70 12 12 12 50 12 12",
+    "5-10": "5 10 59 3 5 20 68 125 72 10",
+    "29-8": "29 8 29 29 23 29 29 2 1 2",
 }
 
 
 def parse_input(preset, y, verbose=False, is_only_a=False):
     if preset:
         if preset not in presets_db:
-            raise click.BadParameter('"{}" is not supported'.format(preset), param_hint='preset')
+            raise click.BadParameter(
+                '"{}" is not supported'.format(preset), param_hint="preset"
+            )
         y = presets_db[preset]
         y = tuple(map(int, y.split()))
 
@@ -45,10 +59,10 @@ def parse_input(preset, y, verbose=False, is_only_a=False):
         if not y:
             if is_only_a:
                 if verbose:
-                    log_warn('Using ad-hoc default y values!')
+                    log_warn("Using ad-hoc default y values!")
                 y = tuple(16 for _ in range(10))
             else:
-                raise click.BadParameter('missing y values', param_hint='y')
+                raise click.BadParameter("missing y values", param_hint="y")
         # if not names:
         #     # Default names
         #     names = 'A B C D'.split()
@@ -66,51 +80,57 @@ def parse_models(ctx, param, value):
         return tuple()
 
     def _get_model_names(s):
-        if ':' in s:
-            assert s.count(':') == 1
-            group, mnemos = s.split(':')
+        if ":" in s:
+            assert s.count(":") == 1
+            group, mnemos = s.split(":")
             model_names = []
-            for mnemo in re.split(r'[,;]', mnemos):
+            for mnemo in re.split(r"[,;]", mnemos):
                 if mnemo not in models_mapping_mnemonic[group]:
-                    raise click.BadParameter('unknown model mnemonic name "{}"'.format(mnemo), param_hint='models')
+                    raise click.BadParameter(
+                        'unknown model mnemonic name "{}"'.format(mnemo),
+                        param_hint="models",
+                    )
                 model_names.append(models_mapping_mnemonic[group][mnemo].name)
             return model_names
         else:
-            return re.split(r'[,;]', s)
+            return re.split(r"[,;]", s)
 
     model_names = tuple(m for s in value for m in _get_model_names(s))
-    if 'all' in map(lambda s: s.lower(), model_names):
+    if "all" in map(lambda s: s.lower(), model_names):
         return all_models
-    elif 'H1' in model_names:
+    elif "H1" in model_names:
         model_names += tuple(m.name for m in models_H1)
-    elif 'H2' in model_names:
+    elif "H2" in model_names:
         model_names += tuple(m.name for m in models_H2)
     # seen = set()
-    seen = {'H1', 'H2'}
+    seen = {"H1", "H2"}
     seen_add = seen.add
     unique_names = tuple(m for m in model_names if not (m in seen or seen_add(m)))
     for m in unique_names:
         if m not in models_mapping:
-            raise click.BadParameter('unknown model name "{}", possible values are: {}'
-                                     .format(m, ','.join(models_mapping.keys())),
-                                     param_hint='models')
+            raise click.BadParameter(
+                'unknown model name "{}", possible values are: {}'.format(
+                    m, ",".join(models_mapping.keys())
+                ),
+                param_hint="models",
+            )
     return tuple(models_mapping[m] for m in unique_names)
 
 
 def parse_best(ctx, param, value):
-    if value.lower() == 'all':
-        return 'all'
+    if value.lower() == "all":
+        return "all"
     try:
         return int(value)
     except ValueError:
-        raise click.BadParameter('must be a number or "all"', param_hint='best')
+        raise click.BadParameter('must be a number or "all"', param_hint="best")
 
 
 def parse_permutation(ctx, param, value):
     if value:
-        perm = tuple(map(int, value.split(',')))
+        perm = tuple(map(int, value.split(",")))
         if len(perm) != 4 or sorted(perm) != [1, 2, 3, 4]:
-            raise click.BadParameter('must be a permutation of (1,2,3,4)')
+            raise click.BadParameter("must be a permutation of (1,2,3,4)")
         return perm
 
     # if value:

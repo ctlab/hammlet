@@ -6,10 +6,7 @@ from . import commands
 from .version import version as __version__
 
 
-CONTEXT_SETTINGS = dict(
-    max_content_width=999,
-    help_option_names=['-h', '--help'],
-)
+CONTEXT_SETTINGS = dict(max_content_width=999, help_option_names=["-h", "--help"])
 
 
 class GroupWithUnsortedCommands(click.Group):
@@ -41,5 +38,5 @@ cli.add_command(commands.draw)
 cli.add_command(commands.chains)
 cli.add_command(commands.levels)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

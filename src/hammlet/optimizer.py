@@ -6,9 +6,9 @@ from scipy.optimize import minimize
 from .printers import log_debug
 from .utils import likelihood, morph10
 
-__all__ = ['Optimizer']
+__all__ = ["Optimizer"]
 
-OptimizationResult = namedtuple('OptimizationResult', 'model permutation LL theta')
+OptimizationResult = namedtuple("OptimizationResult", "model permutation LL theta")
 
 
 class Optimizer:
@@ -20,26 +20,32 @@ class Optimizer:
         self.theta0 = theta0
         self.method = method
         self.debug = debug
-        self.options = {'maxiter': 500}
+        self.options = {"maxiter": 500}
         self.options.update(kwargs)
 
     def one(self, model, perm):
         if self.debug:
-            log_debug('Optimizing model {} for permutation ({})...'
-                      .format(model, ','.join(map(str, perm))))
+            log_debug(
+                "Optimizing model {} for permutation ({})...".format(
+                    model, ",".join(map(str, perm))
+                )
+            )
         # maximize `likelihood`  ==  minimize `-likelihood`
-        result = minimize(lambda theta: -likelihood(model, morph10(self.y, perm), theta, self.r),
-                          self.theta0, bounds=model.get_safe_bounds(), method=self.method, options=self.options)
+        result = minimize(
+            lambda theta: -likelihood(model, morph10(self.y, perm), theta, self.r),
+            self.theta0,
+            bounds=model.get_safe_bounds(),
+            method=self.method,
+            options=self.options,
+        )
         LL = float(-result.fun)
         theta = tuple(result.x)
         return OptimizationResult(model, perm, LL, theta)
 
     def many(self, models, perms, sort=True):
-        results = [self.one(model, perm)
-                   for model in models
-                   for perm in perms]
+        results = [self.one(model, perm) for model in models for perm in perms]
         if sort:
-            results.sort(key=attrgetter('LL'), reverse=True)
+            results.sort(key=attrgetter("LL"), reverse=True)
         return results
 
     def many_many(self, models, perms, sort=True):

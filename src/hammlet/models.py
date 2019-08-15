@@ -7,19 +7,25 @@ from collections import OrderedDict
 
 import numpy as np
 
-__all__ = ['all_models', 'models_H1', 'models_H2', 'models_hierarchy',
-           'models_mapping', 'models_mapping_mnemonic']
+__all__ = [
+    "all_models",
+    "models_H1",
+    "models_H2",
+    "models_hierarchy",
+    "models_mapping",
+    "models_mapping_mnemonic",
+]
 
-if sys.version < '3':
+if sys.version < "3":
     # Python 2 has no re.fullmatch
     def fullmatch(regex, string, flags=0):
         """Emulate python-3.4 re.fullmatch()."""
-        return re.match('(?:' + regex + r')\Z', string, flags=flags)
+        return re.match("(?:" + regex + r")\Z", string, flags=flags)
+
     re.fullmatch = fullmatch
 
 
 class CaseInsensitiveOrderedDict(OrderedDict):
-
     class Key(str):
         def __init__(self, key):
             str.__init__(key)
@@ -130,31 +136,41 @@ def summarize_a(a, r, n0):
 
 class Model(object):
 
-    mapping = CaseInsensitiveOrderedDict()  # {name: model} :: {str: Model}
-    mapping_mnemonic = CaseInsensitiveOrderedDict()  # {mnemonic_name: mode} :: {str: Model}
+    mapping = CaseInsensitiveOrderedDict()  # {name: Model}
+    mapping_mnemonic = CaseInsensitiveOrderedDict()  # {name: Model}
 
-    __slots__ = ('name', 'mnemonic_name', 'n0_bounds', 'T1_bounds', 'T3_bounds', 'gamma1_bounds', 'gamma3_bounds')
+    __slots__ = (
+        "name",
+        "mnemonic_name",
+        "n0_bounds",
+        "T1_bounds",
+        "T3_bounds",
+        "gamma1_bounds",
+        "gamma3_bounds",
+    )
 
     def __init__(self, name, mnemonic_name):
-        assert re.fullmatch(r'H[12]:[T01N]{2}[g01N]{2}', mnemonic_name)
+        assert re.fullmatch(r"H[12]:[T01N]{2}[g01N]{2}", mnemonic_name)
         assert name not in self.mapping, "Duplicate name '{}'".format(name)
-        assert mnemonic_name not in self.mapping_mnemonic, "Duplicate mnemonic_name '{}'".format(mnemonic_name)
+        assert (
+            mnemonic_name not in self.mapping_mnemonic
+        ), "Duplicate mnemonic_name '{}'".format(mnemonic_name)
 
         def to_bound(c):
-            if c == 'T':
+            if c == "T":
                 return (0, None)
-            elif c == 'g':
+            elif c == "g":
                 return (0, 1)
-            elif c == '0':
+            elif c == "0":
                 return (0, 0)
-            elif c == '1':
+            elif c == "1":
                 return (1, 1)
-            elif c == 'N':
+            elif c == "N":
                 return None
             else:
                 raise ValueError("Bad symbol in mnemonic name: '{}'".format(c))
 
-        group, mnemo = mnemonic_name.split(':')
+        group, mnemo = mnemonic_name.split(":")
         self.name = name
         self.mnemonic_name = mnemonic_name
         self.n0_bounds = (0, None)
@@ -176,7 +192,9 @@ class Model(object):
             self.gamma3_bounds,
         )
 
-    def get_safe_bounds(self, n0_low=1e-12, n0_high=1000, T_low=0, T_high=10, gamma_low=0, gamma_high=1):
+    def get_safe_bounds(
+        self, n0_low=1e-12, n0_high=1000, T_low=0, T_high=10, gamma_low=0, gamma_high=1
+    ):
         n0 = constraint_bounds(self.n0_bounds, n0_low, n0_high)
         T1 = constraint_bounds(self.T1_bounds, T_low, T_high)
         T3 = constraint_bounds(self.T3_bounds, T_low, T_high)
@@ -190,11 +208,11 @@ class Model(object):
 
     def get_full_mnemonic_name(self):
         if isinstance(self, ModelH1):
-            return 'H1:' + self.mnemonic_name
+            return "H1:" + self.mnemonic_name
         elif isinstance(self, ModelH2):
-            return 'H2:' + self.mnemonic_name
+            return "H2:" + self.mnemonic_name
         else:
-            raise ValueError('Model is neither H1 nor H2')
+            raise ValueError("Model is neither H1 nor H2")
 
     @abstractmethod
     def __call__(self, theta, r):
@@ -210,21 +228,20 @@ class Model(object):
         return self.name
 
     def __repr__(self):
-        return '{}(name={!r}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})'.format(
+        return "{}(name={!r}, n0={}, T1={}, T3={}, gamma1={}, gamma3={})".format(
             self.__class__.__name__,
             self.name,
             self.n0_bounds,
             self.T1_bounds,
             self.T3_bounds,
             self.gamma1_bounds,
-            self.gamma3_bounds
+            self.gamma3_bounds,
         )
 
 
 class ModelH1(Model):
-
     def __init__(self, name, mnemo):
-        mnemonic_name = 'H1:' + mnemo
+        mnemonic_name = "H1:" + mnemo
         super(ModelH1, self).__init__(name, mnemonic_name)
 
     @staticmethod
@@ -252,6 +269,7 @@ class ModelH1(Model):
         e3_24 = np.exp(3 * -tau2 - tau4)
         a = dict()
 
+        # fmt: off
         a0 = 1 / 6 * gamma3 * gamma1**2 * e14 + gamma1 * (1 / 6 * gamma3 * (2 * e1 - 2 * e14) + 1 / 6 * gamma2 * gamma3 * (4 * e14 - 2 * e124) + 1 / 6 * gamma4 * (2 * e1 - e123)) + 1 / 6 * gamma2**2 * gamma3 * (e3_24 - 6 * e24 + 6 * e4) + gamma2 * (1 / 6 * gamma3 * (-4 * e2 + 4 * e24 - 6 * e4 + 6) + 1 / 6 * gamma4 * (-4 * e2 + e3_23 - 2 * e23 + 6))
         a1 = 0
         a2 = 1 / 6 * gamma3 * gamma2**2 * (6 * e4 * tau2 - e3_24 + 9 * e24 - 8 * e4) + gamma2 * (1 / 6 * gamma4 * (6 * tau2 + 6 * e2 - e3_23 + 3 * e23 - 2 * e3 - 6) + 1 / 6 * gamma3 * (-6 * e4 * tau2 + 6 * tau2 + 6 * e2 - 6 * e24 + 6 * e4 - 6))
@@ -321,14 +339,14 @@ class ModelH1(Model):
         a3 = 0
         a4 = 0
         a[4, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
+        # fmt: on
 
         return a
 
 
 class ModelH2(Model):
-
     def __init__(self, name, mnemo):
-        mnemonic_name = 'H2:' + mnemo
+        mnemonic_name = "H2:" + mnemo
         super(ModelH2, self).__init__(name, mnemonic_name)
 
     @staticmethod
@@ -355,6 +373,7 @@ class ModelH2(Model):
         e3_23 = np.exp(3 * -tau2 - tau3)
         a = dict()
 
+        # fmt: off
         a0 = gamma2 * (1 / 6 * gamma3 * (2 * e14 - e124) + 1 / 6 * gamma4 * (-4 * e2 + e3_23 - 2 * e23 + 6)) + gamma1 * (1 / 6 * gamma3 * e14 + 1 / 6 * gamma4 * (2 * e1 - e123))
         a1 = 0
         a2 = 1 / 6 * gamma2 * gamma4 * (6 * tau2 + 6 * e2 - e3_23 + 3 * e23 - 2 * e3 - 6)
@@ -424,56 +443,57 @@ class ModelH2(Model):
         a3 = 0
         a4 = 0
         a[4, 4] = summarize_a((a0, a1, a2, a3, a4), r, n0)
+        # fmt: on
 
         return a
 
 
 # Note: first model in list must be the most complex, last model must be the simplest
 models_H1 = (
-    ModelH1('2H1', 'TTgg'),
-    ModelH1('1H1', 'TTg0'),
-    ModelH1('1H2', 'TT1g'),
-    ModelH1('1H3', 'TT0g'),
-    ModelH1('1H4', 'TTg1'),
-    ModelH1('1HP', 'T0gg'),
-    ModelH1('1T1', 'TT10'),
-    ModelH1('1T2', 'TT00'),
-    ModelH1('1T2A', 'TT01'),
-    ModelH1('1T2B', 'TT11'),
-    ModelH1('1PH1', '0TNg'),
-    ModelH1('1PH1A', 'T01g'),
-    ModelH1('1PH2', 'T0g0'),
-    ModelH1('1PH3', 'T0g1'),
-    ModelH1('1P1', '0TN0'),
-    ModelH1('1P2', 'T00N'),
-    ModelH1('1P2A', '0TN1'),
-    ModelH1('1P2B', 'T011'),
-    ModelH1('1P3', 'T010'),
-    ModelH1('PL1', '00NN'),
+    ModelH1("2H1", "TTgg"),
+    ModelH1("1H1", "TTg0"),
+    ModelH1("1H2", "TT1g"),
+    ModelH1("1H3", "TT0g"),
+    ModelH1("1H4", "TTg1"),
+    ModelH1("1HP", "T0gg"),
+    ModelH1("1T1", "TT10"),
+    ModelH1("1T2", "TT00"),
+    ModelH1("1T2A", "TT01"),
+    ModelH1("1T2B", "TT11"),
+    ModelH1("1PH1", "0TNg"),
+    ModelH1("1PH1A", "T01g"),
+    ModelH1("1PH2", "T0g0"),
+    ModelH1("1PH3", "T0g1"),
+    ModelH1("1P1", "0TN0"),
+    ModelH1("1P2", "T00N"),
+    ModelH1("1P2A", "0TN1"),
+    ModelH1("1P2B", "T011"),
+    ModelH1("1P3", "T010"),
+    ModelH1("PL1", "00NN"),
 )
 models_H2 = (
-    ModelH2('2H2', 'TTgg'),
-    ModelH2('2HA1', 'TTg0'),
-    ModelH2('2HA2', 'TTg1'),
-    ModelH2('2HB1', 'TT0g'),
-    ModelH2('2HB2', 'TT1g'),
-    ModelH2('2HP', 'T0gg'),
-    ModelH2('2T1', 'TT10'),
-    ModelH2('2T2', 'TT00'),
-    ModelH2('2T2A', 'TT01'),
-    ModelH2('2T2B', 'TT11'),
-    ModelH2('2PH1', '0TNg'),
-    ModelH2('2PH2', 'T0g0'),
-    ModelH2('2PH2A', 'T00g'),
-    ModelH2('2PH2B', 'T01g'),
-    ModelH2('2PH2C', 'T0g1'),
-    ModelH2('2P1', '0TN0'),
-    ModelH2('2P1A', '0TN1'),
-    ModelH2('2P2', 'T000'),
-    ModelH2('2P2A', 'T011'),
-    ModelH2('2P3', 'T010'),
-    ModelH2('2P3A', 'T001'),
-    ModelH2('PL2', '00NN'),
+    ModelH2("2H2", "TTgg"),
+    ModelH2("2HA1", "TTg0"),
+    ModelH2("2HA2", "TTg1"),
+    ModelH2("2HB1", "TT0g"),
+    ModelH2("2HB2", "TT1g"),
+    ModelH2("2HP", "T0gg"),
+    ModelH2("2T1", "TT10"),
+    ModelH2("2T2", "TT00"),
+    ModelH2("2T2A", "TT01"),
+    ModelH2("2T2B", "TT11"),
+    ModelH2("2PH1", "0TNg"),
+    ModelH2("2PH2", "T0g0"),
+    ModelH2("2PH2A", "T00g"),
+    ModelH2("2PH2B", "T01g"),
+    ModelH2("2PH2C", "T0g1"),
+    ModelH2("2P1", "0TN0"),
+    ModelH2("2P1A", "0TN1"),
+    ModelH2("2P2", "T000"),
+    ModelH2("2P2A", "T011"),
+    ModelH2("2P3", "T010"),
+    ModelH2("2P3A", "T001"),
+    ModelH2("PL2", "00NN"),
 )
 all_models = models_H1 + models_H2
 
@@ -481,81 +501,90 @@ models_mapping = Model.mapping
 models_mapping_mnemonic = Model.mapping_mnemonic
 
 models_hierarchy = {
-    'H1': {
-        'free': OrderedDict([
-            ('2H1', '1H1 1H2 1H3 1H4 1HP'.split()),
-            ('1H1', '1T1 1T2 1PH1 1PH2 1PH3'.split()),
-            ('1H2', '1T1 1T2 1PH1 1PH2 1PH3'.split()),
-            ('1H3', '1T1 1T2 1PH1 1PH2 1PH3'.split()),
-            ('1H4', '1T1 1T2 1PH1 1PH2 1PH3'.split()),
-            ('1HP', '1T1 1T2 1PH1 1PH2 1PH3'.split()),
-            ('1T1', '1P1 1P2 1P3'.split()),
-            ('1T2', '1P1 1P2 1P3'.split()),
-            ('1PH1', '1P1 1P2 1P3'.split()),
-            ('1PH2', '1P1 1P2 1P3'.split()),
-            ('1PH3', '1P1 1P2 1P3'.split()),
-            ('1P1', 'PL1'.split()),
-            ('1P2', 'PL1'.split()),
-            ('1P3', 'PL1'.split()),
-        ]),
-        'non-free': OrderedDict([
-            ('2H1', '1H1 1H2 1H3 1H4 1HP 1PH1'.split()),
-            ('1H1', '1T1 1T2 1P1 1PH2'.split()),
-            ('1H2', '1PH1 1T2B 1T1 1PH1A'.split()),
-            ('1H3', '1T2A 1T2 1PH1 1P2'.split()),
-            ('1H4', '1T2B 1T2A 1PH3 1P2A'.split()),
-            ('1HP', 'PL1 1P2 1PH2 1PH3 1PH1A'.split()),
-            ('1T1', '1P1 1P3'.split()),
-            ('1T2', '1P1 1P2'.split()),
-            ('1T2A', '1P2 1P2A'.split()),
-            ('1T2B', '1P2A 1P2B'.split()),
-            ('1PH1', '1P2A PL1'.split()),
-            ('1PH1A', '1P2B 1P3 PL1'.split()),
-            ('1PH2', '1P2 1P3 PL1'.split()),
-            ('1PH3', '1P2 1P2B PL1'.split()),
-            ('1P1', 'PL1'.split()),
-            ('1P2', 'PL1'.split()),
-            ('1P2A', 'PL1'.split()),
-            ('1P2B', 'PL1'.split()),
-            ('1P3', 'PL1'.split()),
-        ]),
+    "H1": {
+        "free": [
+            ("2H1", "1H1 1H2 1H3 1H4 1HP"),
+            ("1H1", "1T1 1T2 1PH1 1PH2 1PH3"),
+            ("1H2", "1T1 1T2 1PH1 1PH2 1PH3"),
+            ("1H3", "1T1 1T2 1PH1 1PH2 1PH3"),
+            ("1H4", "1T1 1T2 1PH1 1PH2 1PH3"),
+            ("1HP", "1T1 1T2 1PH1 1PH2 1PH3"),
+            ("1T1", "1P1 1P2 1P3"),
+            ("1T2", "1P1 1P2 1P3"),
+            ("1PH1", "1P1 1P2 1P3"),
+            ("1PH2", "1P1 1P2 1P3"),
+            ("1PH3", "1P1 1P2 1P3"),
+            ("1P1", "PL1"),
+            ("1P2", "PL1"),
+            ("1P3", "PL1"),
+        ],
+        "non-free": [
+            ("2H1", "1H1 1H2 1H3 1H4 1HP 1PH1"),
+            ("1H1", "1T1 1T2 1P1 1PH2"),
+            ("1H2", "1PH1 1T2B 1T1 1PH1A"),
+            ("1H3", "1T2A 1T2 1PH1 1P2"),
+            ("1H4", "1T2B 1T2A 1PH3 1P2A"),
+            ("1HP", "PL1 1P2 1PH2 1PH3 1PH1A"),
+            ("1T1", "1P1 1P3"),
+            ("1T2", "1P1 1P2"),
+            ("1T2A", "1P2 1P2A"),
+            ("1T2B", "1P2A 1P2B"),
+            ("1PH1", "1P2A PL1"),
+            ("1PH1A", "1P2B 1P3 PL1"),
+            ("1PH2", "1P2 1P3 PL1"),
+            ("1PH3", "1P2 1P2B PL1"),
+            ("1P1", "PL1"),
+            ("1P2", "PL1"),
+            ("1P2A", "PL1"),
+            ("1P2B", "PL1"),
+            ("1P3", "PL1"),
+        ],
     },
-    'H2': {
-        'free': OrderedDict([
-            ('2H2', '2HA1 2HB1 2HP'.split()),
-            ('2HA1', '2T1 2T2 2PH1 2PH2'.split()),
-            ('2HB1', '2T1 2T2 2PH1 2PH2'.split()),
-            ('2HP', '2T1 2T2 2PH1 2PH2'.split()),
-            ('2T1', '2P1 2P2 2P3'.split()),
-            ('2T2', '2P1 2P2 2P3'.split()),
-            ('2PH1', '2P1 2P2 2P3'.split()),
-            ('2PH2', '2P1 2P2 2P3'.split()),
-            ('2P1', 'PL2'.split()),
-            ('2P2', 'PL2'.split()),
-            ('2P3', 'PL2'.split()),
-        ]),
-        'non-free': OrderedDict([
-            ('2H2', '2HA1 2HA2 2HB1 2HB2 2HP'.split()),
-            ('2HA1', '2PH2 2T2 2T1'.split()),
-            ('2HA2', '2P1A 2T2B 2T2A 2PH2C'.split()),
-            ('2HB1', '2T2A 2PH1 2PH2B 2PH2A'.split()),
-            ('2HB2', '2T1 2T2B 2PH1 2PH2B'.split()),
-            ('2HP', '2PH2 2PH2A 2PH2B 2PH2C PL2'.split()),
-            ('2T1', '2P3 2P1'.split()),
-            ('2T2', '2P1 2P2'.split()),
-            ('2T2A', '2P1A 2P3A'.split()),
-            ('2T2B', '2P1A 2P2A'.split()),
-            ('2PH1', '2P1 2P1A PL2'.split()),
-            ('2PH2', '2P2 2P3 PL2'.split()),
-            ('2PH2A', '2P2 2P3A PL2'.split()),
-            ('2PH2B', '2P1 2P3'.split()),
-            ('2PH2C', '2P2A 2P3A'.split()),
-            ('2P1', 'PL2'.split()),
-            ('2P1A', 'PL2'.split()),
-            ('2P2', 'PL2'.split()),
-            ('2P2A', 'PL2'.split()),
-            ('2P3', 'PL2'.split()),
-            ('2P3A', 'PL2'.split()),
-        ])
+    "H2": {
+        "free": [
+            ("2H2", "2HA1 2HB1 2HP"),
+            ("2HA1", "2T1 2T2 2PH1 2PH2"),
+            ("2HB1", "2T1 2T2 2PH1 2PH2"),
+            ("2HP", "2T1 2T2 2PH1 2PH2"),
+            ("2T1", "2P1 2P2 2P3"),
+            ("2T2", "2P1 2P2 2P3"),
+            ("2PH1", "2P1 2P2 2P3"),
+            ("2PH2", "2P1 2P2 2P3"),
+            ("2P1", "PL2"),
+            ("2P2", "PL2"),
+            ("2P3", "PL2"),
+        ],
+        "non-free": [
+            ("2H2", "2HA1 2HA2 2HB1 2HB2 2HP"),
+            ("2HA1", "2PH2 2T2 2T1"),
+            ("2HA2", "2P1A 2T2B 2T2A 2PH2C"),
+            ("2HB1", "2T2A 2PH1 2PH2B 2PH2A"),
+            ("2HB2", "2T1 2T2B 2PH1 2PH2B"),
+            ("2HP", "2PH2 2PH2A 2PH2B 2PH2C PL2"),
+            ("2T1", "2P3 2P1"),
+            ("2T2", "2P1 2P2"),
+            ("2T2A", "2P1A 2P3A"),
+            ("2T2B", "2P1A 2P2A"),
+            ("2PH1", "2P1 2P1A PL2"),
+            ("2PH2", "2P2 2P3 PL2"),
+            ("2PH2A", "2P2 2P3A PL2"),
+            ("2PH2B", "2P1 2P3"),
+            ("2PH2C", "2P2A 2P3A"),
+            ("2P1", "PL2"),
+            ("2P1A", "PL2"),
+            ("2P2", "PL2"),
+            ("2P2A", "PL2"),
+            ("2P3", "PL2"),
+            ("2P3A", "PL2"),
+        ],
+    },
+}
+models_hierarchy = {
+    group: {
+        freeness: OrderedDict(
+            [(parent, children.split()) for parent, children in hierarchy]
+        )
+        for freeness, hierarchy in group_hierarchy.items()
     }
+    for group, group_hierarchy in models_hierarchy.items()
 }
