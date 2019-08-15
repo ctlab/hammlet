@@ -38,7 +38,7 @@ def main():
         tests_require=['pytest'],
         entry_points={
             'console_scripts': [
-                'hammlet = hammlet.main:cli',
+                'hammlet = hammlet.cli:cli',
             ]
         }
     )
