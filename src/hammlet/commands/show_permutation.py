@@ -21,12 +21,12 @@ from ..utils import autotimeit, morph10
 def show_permutation(preset, y, permutation, debug):
     """Show permutation."""
 
-    _, ys = parse_input(preset, None, None, y, verbose=True)
-    del preset, y
+    _, y = parse_input(preset, None, None, y, verbose=True)
+    del preset
 
-    log_info('ys: {}'.format(' '.join(map(str, ys))))
+    log_info('y: {}'.format(' '.join(map(str, y))))
     log_info('Permutation: ({})'.format(','.join(map(str, permutation))))
 
     perm = tuple(p - 1 for p in permutation)
-    ys_ = morph10(ys, perm)
-    log_success('Permuted ys: {}'.format(' '.join(map(str, ys_))))
+    y_ = morph10(y, perm)
+    log_success('Permuted y: {}'.format(' '.join(map(str, y_))))
