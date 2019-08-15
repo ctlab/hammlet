@@ -1,0 +1,16 @@
+repos:
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+    -   id: check-yaml
+    -   id: check-toml
+    -   id: check-symlinks
+    -   id: check-added-large-files
+    -   id: check-case-conflict
+    -   id: check-merge-conflict
+-   repo: git://github.com/psf/black
+    rev: stable
+    hooks:
+    -   id: black
