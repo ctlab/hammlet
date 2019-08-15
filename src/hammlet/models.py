@@ -129,8 +129,8 @@ def summarize_a(a, r, n0):
 
 class Model(object):
 
-    mapping = OrderedDict()  # {name: model} :: {str: Model}
-    mapping_mnemonic = OrderedDict()  # {mnemonic_name: mode} :: {str: Model}
+    mapping = CaseInsensitiveOrderedDict()  # {name: model} :: {str: Model}
+    mapping_mnemonic = CaseInsensitiveOrderedDict()  # {mnemonic_name: mode} :: {str: Model}
 
     __slots__ = ('name', 'mnemonic_name', 'n0_bounds', 'T1_bounds', 'T3_bounds', 'gamma1_bounds', 'gamma3_bounds')
 
