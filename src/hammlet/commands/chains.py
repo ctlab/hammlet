@@ -5,11 +5,10 @@ import click
 from tabulate import tabulate
 
 from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_best, parse_input, parse_models, parse_permutation
-from ..printers import (log_br, log_debug, log_info, log_success, log_warn, print_a, print_input,
-                        print_model_results, print_permutation, print_model_result_boot)
+from ..parsers import presets_db, parse_input, parse_permutation
+from ..printers import log_debug, log_info, log_success
 from ..models import models_H1, models_H2, models_hierarchy
-from ..utils import autotimeit, pformatf, get_pvalues, get_paths, get_simple_models
+from ..utils import autotimeit, pformatf, get_paths, get_chains
 
 
 @click.command()
@@ -73,9 +72,9 @@ def chains(group, preset, y, r, is_only_first, only_permutation, is_free_permuta
         perms = list(itertools.permutations((1, 2, 3, 4)))
 
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
-
-    log_info('Searching for simplest models...')
     results_chain = OrderedDict()
+
+    log_info('Optimizing...')
     if is_free_permutation:
         for model in models:
             results = optimizer.many_perms(model, perms, sort=False)
@@ -88,8 +87,6 @@ def chains(group, preset, y, r, is_only_first, only_permutation, is_free_permuta
         results_complex = optimizer.many_perms(model_complex, perms, sort=False)
         best_complex_result = results_complex[0]
         results_chain[model_complex.name] = best_complex_result
-        # log_info('Best permutation for the most complex model: {}'
-        #          .format(','.join(map(str, best_complex_result.permutation))))
 
         results = optimizer.many_models(models[1:], best_complex_result.permutation, sort=False)
         for result in results:
@@ -98,35 +95,29 @@ def chains(group, preset, y, r, is_only_first, only_permutation, is_free_permuta
         del model_complex, results_complex, best_complex_result, result, results
 
     data = []
-    for m, result in results_chain.items():
+    for result in results_chain.values():
         model = result.model
-        assert m == model.name
         perm = result.permutation
         LL = result.LL
-        n0, T1, T3, g1, g3 = result.theta
-        data.append((model.name, model.mnemonic_name, ','.join(map(str, perm)), LL, n0, T1, T3, g1, g3))
+        n0, T1, T3, gamma1, gamma3 = result.theta
+        data.append((model.name, model.mnemonic_name, ','.join(map(str, perm)), LL, n0, T1, T3, gamma1, gamma3))
     table = tabulate(data,
                      headers=[click.style(s, bold=True) for s in ['Model', 'Mnemo', 'Perm', 'LL', 'n0', 'T1', 'T3', 'g1', 'g3']],
                      numalign='center', stralign='center',
                      floatfmt='.3f', tablefmt='simple')
     log_success('MLE results:')
     click.echo(table)
-
-    pvalues = get_pvalues(results_chain, hierarchy)
-    data = []
-    for (model_complex, model_simple), (stat, p) in pvalues.items():
-        data.append((model_complex, model_simple, stat, p,
-                     click.style('Yes', fg='green') if p >= critical_pvalue else click.style('No', fg='red')))
-    del model_complex, model_simple, stat, p
-    table = tabulate(data,
-                     headers=['Complex', 'Simple', 'stat', 'p', '>crit'],
-                     floatfmt=[None, None, '.3f', '.3f', None],
-                     numalign='decimal', stralign='center',
-                     missingval='-', tablefmt='simple')
-    log_success('P-values:')
-    click.echo(table)
     del data, table
 
-    paths = get_paths(models[0].name, hierarchy)
-    simple_models = get_simple_models(paths, pvalues, critical_pvalue)
+    log_info('Calculating chains...')
+    paths = get_paths(hierarchy, models[0])
+    chains = get_chains(paths, results_chain, critical_pvalue)
+    chains = [chain for chain in chains if len(chain) > 1]  # drop 1-length chains
+    chains = list(set(map(tuple, chains)))  # drop duplicates
+
+    log_success('Chains:')
+    for chain in chains:
+        click.echo('    ' + ' -> '.join('{}[{:.2f}]'.format(model, results_chain[model].LL) for model in chain))
+
+    simple_models = set(chain[-1] for chain in chains)
     log_success('Insignificantly worse simple models: {}'.format(' '.join(simple_models)))

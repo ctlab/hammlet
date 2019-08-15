@@ -4,10 +4,10 @@ from functools import wraps
 
 import numpy as np
 from scipy.stats import chi2
-from scipy.special import chdtri  # faster
 
 __all__ = ['autotimeit', 'pformatf', 'morph4', 'morph10',
-           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood', 'get_pvalues', 'get_paths']
+           'ij2pattern', 'pattern2ij', 'get_a', 'likelihood',
+           'get_paths', 'get_chain', 'get_chains']
 
 
 def autotimeit(func, msg='All done in {:.1f} s.'):
@@ -166,20 +166,13 @@ def get_pvalue(result_complex, result_simple):
     return (stat, p)
 
 
-def get_pvalues(results, hierarchy):
-    # results :: {model: result}
-    pvalues = OrderedDict()  # {(model-complex-name, model-simple-name): (stat, pvalue)}
-    for model_complex in hierarchy:
-        for model_simple in hierarchy[model_complex]:
-            result_complex = results[model_complex]
-            result_simple = results[model_simple]
-            pvalues[model_complex, model_simple] = get_pvalue(result_complex, result_simple)
-    return pvalues
+def get_paths(hierarchy, initial_model):
+    from .models import Model
+    if isinstance(initial_model, Model):
+        initial_model = initial_model.name
 
-
-def get_paths(initial_model_name, hierarchy):
-    paths = []
-    q = deque([[initial_model_name]])
+    paths = []  # [model_name]
+    q = deque([[initial_model]])
 
     while q:
         path = q.popleft()
@@ -193,15 +186,20 @@ def get_paths(initial_model_name, hierarchy):
     return paths
 
 
-def get_simple_models(paths, pvalues, critical_pvalue):
-    simple_models = set()
-    for path in paths:
-        assert len(path) > 1
-        for model_complex, model_simple in zip(path, path[1:]):
-            stat, p = pvalues[model_complex, model_simple]
-            if p < critical_pvalue:
-                simple_models.add(model_complex)
-                break
+def get_chain(path, results, critical_pvalue):
+    # results :: {model_name: result}
+    chain = [path[0]]
+    for model_complex, model_simple in zip(path, path[1:]):
+        result_complex = results[model_complex]
+        result_simple = results[model_simple]
+        stat, p = get_pvalue(result_complex, result_simple)
+        if p >= critical_pvalue:
+            chain.append(model_simple)
         else:
-            simple_models.add(model_simple)
-    return simple_models
+            break
+    return chain
+
+
+def get_chains(paths, results, critical_pvalue):
+    # results :: {model_name: result}
+    return [get_chain(path, results, critical_pvalue) for path in paths]
