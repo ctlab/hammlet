@@ -12,7 +12,8 @@ from ..utils import autotimeit, pformatf, get_paths, get_chains
 
 
 @click.command()
-@click.argument('group', type=click.Choice(['H1', 'H2']), required=True)
+@click.option('-g', '--group', type=click.Choice(['H1', 'H2']), required=True,
+              help='Model group')
 @click.option('--preset', type=click.Choice(presets_db), metavar='<preset>',
               help='Data preset ({})'.format('/'.join(presets_db.keys())))
 @click.option('-y', nargs=10, type=int, metavar='<int...>',
