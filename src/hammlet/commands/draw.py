@@ -33,7 +33,7 @@ from ..drawing import get_drawing_string
 @click.option('--threshold-g', 'threshold_g', type=float, metavar='<float>',
               default=0.01, show_default=True,
               help='Threshold for almost-zero gamma')
-@click.option('-cb', '--color-background', metavar='<color>',
+@click.option('-cb', '--color-back', metavar='<color>',
               default='transparent', show_default=True,
               help='Background color')
 @click.option('-ct', '--color-tree', metavar='<color>',
