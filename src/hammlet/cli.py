@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import click
 
-from .commands import mle, calculate_aij, show_permutation, draw, chains, levels
+from . import commands
 from .version import version as __version__
 
 
@@ -34,12 +34,12 @@ def cli():
 
 
 # Note: respect the desired order
-cli.add_command(mle)
-cli.add_command(calculate_aij)
-cli.add_command(show_permutation)
-cli.add_command(draw)
-cli.add_command(chains)
-cli.add_command(levels)
+cli.add_command(commands.mle)
+cli.add_command(commands.calculate_aij)
+cli.add_command(commands.show_permutation)
+cli.add_command(commands.draw)
+cli.add_command(commands.chains)
+cli.add_command(commands.levels)
 
 if __name__ == '__main__':
     cli()
