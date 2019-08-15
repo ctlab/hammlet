@@ -104,8 +104,7 @@ def chains(group, preset, y, r, is_only_first, only_permutation, is_free_permuta
         data.append((model.name, model.mnemonic_name, ','.join(map(str, perm)), LL, n0, T1, T3, gamma1, gamma3))
     table = tabulate(data,
                      headers=[click.style(s, bold=True) for s in ['Model', 'Mnemo', 'Perm', 'LL', 'n0', 'T1', 'T3', 'g1', 'g3']],
-                     numalign='center', stralign='center',
-                     floatfmt='.3f', tablefmt='simple')
+                     numalign='center', stralign='center', floatfmt='.3f', tablefmt='simple')
     log_success('MLE results:')
     click.echo(table)
     del data, table
