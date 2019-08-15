@@ -4,6 +4,12 @@ from setuptools import find_packages, setup
 
 
 def main():
+    setup_requires = [
+        'setuptools_scm',
+    ]
+    if {'pytest', 'test'}.intersection(sys.argv):
+        setup_requires.append('pytest-runner')
+
     install_requires = [
         'numpy',
         'scipy',
@@ -14,9 +20,15 @@ def main():
     if sys.platform == 'win32':
         install_requires.append('colorama')
 
-    setup_requires = ['setuptools_scm']
-    if {'pytest', 'test', 'ptr'}.intersection(sys.argv):
-        setup_requires.append('pytest-runner')
+    extras_require = {}
+    # extras_require['draw'] = [
+    #     'svgwrite',
+    # ]
+    extras_require['tests'] = [
+        'pytest',
+        'pytest-sugar',
+        'pytest-cov',
+    ]
 
     setup(
         name='Hammlet',
@@ -36,7 +48,8 @@ def main():
         },
         install_requires=install_requires,
         setup_requires=setup_requires,
-        tests_require=['pytest'],
+        extras_require=extras_require,
+        tests_require=extras_require['tests'],
         entry_points={
             'console_scripts': [
                 'hammlet = hammlet.cli:cli',
