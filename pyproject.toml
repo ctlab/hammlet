@@ -20,6 +20,10 @@ svgwrite = "*"
 [tool.poetry.dev-dependencies]
 pytest = "*"
 pytest-cov = "*"
+pre-commit = "*"
+black = { version = "*", allows-prereleases = true, python = "^3.6" }
+flake8 = "*"
+tox = "*"
 
 [tool.poetry.scripts]
 hammlet = "hammlet.cli:cli"
