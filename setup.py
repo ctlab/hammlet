@@ -14,7 +14,7 @@ def main():
 
     extras_require = {}
     # extras_require['draw'] = ['svgwrite']
-    extras_require["tests"] = ["pytest", "pytest-sugar"]
+    extras_require["tests"] = ["pytest", "pytest-sugar", "pytest-cov"]
 
     setup(
         name="Hammlet",

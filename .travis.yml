@@ -9,4 +9,6 @@ python:
 install:
   - pip install .
 
-script: python setup.py test
+script:
+  - pip install .[tests]
+  - pytest
