@@ -20,10 +20,10 @@ poetry_publish:
 
 ensure_version:
 	@echo "Writing version '$(VERSION)' to '$(VERSION_FILE)'..."
-	@echo -e "# THIS FILE IS GENERATED\nversion = '$(VERSION)'" > $(VERSION_FILE)
+	@echo -e "# THIS FILE IS GENERATED\nversion = '$(VERSION)'" > "$(VERSION_FILE)"
 
 bump_version:
-	@poetry version $(VERSION)
+	@poetry version "$(VERSION)"
 
 zero_version:
 	@poetry version '0.0.0'
