@@ -16,7 +16,7 @@ poetry_build:
 
 poetry_publish:
 	@echo "Publishing..."
-	poetry publish -r local
+	poetry publish -r local || true
 
 ensure_version:
 	@echo "Writing version '$(VERSION)' to '$(VERSION_FILE)'..."
