@@ -8,11 +8,13 @@ default:
 
 build: | ensure_version bump_version poetry_build zero_version
 
+release: | ensure_version bump_version poetry_build poetry_publish zero_version
+
 poetry_build:
 	@echo "Building..."
 	@poetry build
 
-release: build
+poetry_publish:
 	@echo "Publishing..."
 	poetry publish -r local
 
