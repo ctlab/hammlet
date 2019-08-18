@@ -1,4 +1,4 @@
-VERSION = $(shell dunamai from git --no-metadata)
+VERSION := $(shell git describe --tags --long --first-parent --match '*.*' | python -c 's = input(); t,n,_ = s.split("-", 2); n=int(n); v = t; v += f".post{n}" if n > 0 else ""; print(v)')
 VERSION_FILE = src/hammlet/version.py
 
 .PHONY: default build ensure_version
