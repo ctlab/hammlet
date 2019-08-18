@@ -2,7 +2,7 @@
 name = "Hammlet"
 version = "0.0.0"
 description = "Hybridization Models Maximum Likelihood Estimator"
-license="GNU GPLv3"
+license = "GPL-3.0+"
 authors = ["Konstantin Chukharev <lipen00@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/ctlab/hammlet"
