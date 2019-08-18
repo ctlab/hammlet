@@ -27,3 +27,6 @@ bump_version:
 
 zero_version:
 	@poetry version '0.0.0'
+
+show_version:
+	@echo "Version: '$(VERSION)'"
