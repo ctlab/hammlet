@@ -19,3 +19,6 @@ exclude = '''
   | data
 )/
 '''
+
+[build-system]
+requires = ["setuptools", "wheel"]
