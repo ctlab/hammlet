@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Hammlet"
-version = "1.5.1.post43.dev0"
+version = "0.0.0"
 description = "Hybridization Models Maximum Likelihood Estimator"
 license="GNU GPLv3"
 authors = ["Konstantin Chukharev <lipen00@gmail.com>"]
