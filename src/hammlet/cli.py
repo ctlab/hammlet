@@ -3,7 +3,7 @@ from collections import OrderedDict
 import click
 
 from . import commands
-from .version import version as __version__
+from . import version as __version__
 
 
 CONTEXT_SETTINGS = dict(max_content_width=999, help_option_names=["-h", "--help"])
