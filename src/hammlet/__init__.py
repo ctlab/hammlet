@@ -1,3 +1,7 @@
 from . import models
 from . import optimizer
-from .version import version
+
+try:
+    from .version import version
+except ImportError:
+    version = "unknown"
