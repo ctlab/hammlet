@@ -24,7 +24,7 @@ before_install:
   - pip install --upgrade pip
   - pip install poetry
 install:
-  - make install
+  - poetry install -v
 script:
   - poetry run pytest -v --cov=hammlet
 
