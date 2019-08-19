@@ -8,7 +8,8 @@ python:
 stages:
   - lint
   - test
-  - deploy
+  - name: deploy
+    if: tag IS present
 
 cache:
   pip: true
@@ -47,4 +48,3 @@ jobs:
         skip_cleanup: true
         on:
           tags: true
-      if: tag IS present
