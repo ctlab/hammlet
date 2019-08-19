@@ -4,11 +4,11 @@ VERSION_FILE = src/hammlet/version.py
 default:
 	@echo "Specify a target!"
 
-install: | ensure_version bump_version poentry_install zero_version
+install: | bump_version poentry_install zero_version
 
-build: | ensure_version bump_version poetry_build zero_version
+build: | bump_version poetry_build zero_version
 
-release: | ensure_version bump_version poetry_build poetry_publish zero_version
+release: | bump_version poetry_build poetry_publish zero_version
 
 poentry_install:
 	@echo "Installing..."
@@ -20,17 +20,17 @@ poetry_build:
 
 poetry_publish:
 	@echo "Publishing..."
-	poetry publish -r local || true
-
-ensure_version:
-	@echo "Writing version '$(VERSION)' to '$(VERSION_FILE)'..."
-	@echo -e "# THIS FILE IS GENERATED\nversion = '$(VERSION)'" > "$(VERSION_FILE)"
+	@poetry publish -r local || true
 
 bump_version:
+	@echo "Writing version '$(VERSION)' to '$(VERSION_FILE)'..."
+	@echo -e "# THIS FILE IS GENERATED\nversion = '$(VERSION)'" > "$(VERSION_FILE)"
 	@poetry version "$(VERSION)"
 
 zero_version:
+	@echo "Zeroing version..."
 	@poetry version '0.0.0'
+	rm -f "$(VERSION_FILE)"
 
 show_version:
 	@echo "Version: '$(VERSION)'"
