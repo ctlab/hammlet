@@ -16,6 +16,10 @@ cache:
   directories:
     - "$HOME/.cache/pre-commit"
 
+git:
+  # Allows `git describe` access all tags
+  depth: false
+
 before_install:
   - pip install --upgrade pip
   - pip install poetry
