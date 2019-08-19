@@ -40,11 +40,10 @@ jobs:
       script: skip
       before_deploy:
         # - poetry config http-basic.pypi $PYPI_USERNAME $PYPI_PASSWORD
-        - poetry build -f sdist
       deploy:
         provider: script
-        # script: poetry publish
-        script: echo "Publishing to PyPI..."
+        script:
+          - make release
         skip_cleanup: true
         on:
           tags: true
