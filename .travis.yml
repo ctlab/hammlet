@@ -1,12 +1,50 @@
-dist: xenial
-
 language: python
+dist: xenial
 python:
-  - "2.7"
-  - "3.4"
   - "3.7"
+  - "3.4"
+  - "2.7"
 
+stages:
+  - lint
+  - test
+  - deploy
+
+cache:
+  pip: true
+  directories:
+    - "$HOME/.cache/pre-commit"
+
+before_install:
+  - pip install --upgrade pip
+  - pip install poetry
 install:
-  - pip install .
+  - poetry install -v
+script:
+  - poetry run pytest -v --cov=hammlet
 
-script: python setup.py test
+jobs:
+  include:
+    - stage: lint
+      python: "3.7"
+      before_install:
+        - pip install pre-commit
+      install:
+        - pre-commit install
+      script:
+        - pre-commit run --all-files
+
+    - stage: deploy
+      python: "3.7"
+      script: skip
+      before_deploy:
+        # - poetry config http-basic.pypi $PYPI_USERNAME $PYPI_PASSWORD
+        - poetry build -f sdist
+      deploy:
+        provider: script
+        # script: poetry publish
+        script: echo "Publishing to PyPI..."
+        skip_cleanup: true
+        on:
+          tags: true
+      if: tag IS present
