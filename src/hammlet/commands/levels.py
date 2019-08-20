@@ -45,6 +45,20 @@ from ..utils import autotimeit, pformatf, get_chain
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
 )
 @click.option(
+    "--output-mle",
+    "output_filename_mle",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with MLE results table",
+)
+@click.option(
+    "--output-chain",
+    "output_filename_chain",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with a resulting chain",
+)
+@click.option(
     "-p",
     "--pvalue",
     "critical_pvalue",
@@ -72,7 +86,18 @@ from ..utils import autotimeit, pformatf, get_chain
 )
 @click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
-def levels(levels_filename, preset, y, r, critical_pvalue, method, theta0, debug):
+def levels(
+    levels_filename,
+    preset,
+    y,
+    r,
+    output_filename_mle,
+    output_filename_chain,
+    critical_pvalue,
+    method,
+    theta0,
+    debug,
+):
     """Compute levels."""
 
     y = parse_input(preset, y, verbose=True)
@@ -163,6 +188,13 @@ def levels(levels_filename, preset, y, r, critical_pvalue, method, theta0, debug
             del result, model, perm, LL, n0, T1, T3, gamma1, gamma3
         del level
     headers = ["Lvl", "Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
+    if output_filename_mle:
+        log_info("Writing MLE results to <{}>...".format(output_filename_mle))
+        with click.open_file(output_filename_mle, "w", atomic=True) as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            for row in data:
+                writer.writerow(map(click.unstyle, map(str, row)))
     table = tabulate(
         data,
         headers=[click.style(s, bold=True) for s in headers],
@@ -218,6 +250,16 @@ def levels(levels_filename, preset, y, r, critical_pvalue, method, theta0, debug
     path = [best_results_level[level].model.name for level in reversed(range(5))]
     results = {result.model.name: result for result in best_results_level.values()}
     chain = get_chain(path, results, critical_pvalue)
+    if output_filename_chain:
+        log_info("Writing chain to <{}>...".format(output_filename_chain))
+        with click.open_file(output_filename_chain, "w", atomic=True) as f:
+            f.write(
+                "{}\n".format(
+                    " -> ".join(
+                        "{}[{:.3f}]".format(model, results[model].LL) for model in chain
+                    )
+                )
+            )
     log_success("Chain over levels:")
     click.echo(
         "    "

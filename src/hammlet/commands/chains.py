@@ -1,3 +1,4 @@
+import csv
 import itertools
 from collections import OrderedDict
 
@@ -38,6 +39,20 @@ from ..utils import autotimeit, pformatf, get_paths, get_chains
     default=(1, 1, 1, 1),
     show_default=True,
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
+)
+@click.option(
+    "--output-mle",
+    "output_filename_mle",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with MLE results table",
+)
+@click.option(
+    "--output-chains",
+    "output_filename_chains",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with resulting chains",
 )
 @click.option(
     "--only-first",
@@ -90,6 +105,8 @@ def chains(
     preset,
     y,
     r,
+    output_filename_mle,
+    output_filename_chains,
     is_only_first,
     only_permutation,
     is_free_permutation,
@@ -172,6 +189,13 @@ def chains(
             )
         )
     headers = ["Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
+    if output_filename_mle:
+        log_info("Writing MLE results to <{}>...".format(output_filename_mle))
+        with click.open_file(output_filename_mle, "w", atomic=True) as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            for row in data:
+                writer.writerow(map(str, row))
     table = tabulate(
         data,
         headers=[click.style(s, bold=True) for s in headers],
@@ -189,6 +213,19 @@ def chains(
     chains = get_chains(paths, results_chain, critical_pvalue)
     chains = [chain for chain in chains if len(chain) > 1]  # drop 1-length chains
     chains = list(set(map(tuple, chains)))  # drop duplicates
+
+    if output_filename_chains:
+        log_info("Writing chains to <{}>...".format(output_filename_chains))
+        with click.open_file(output_filename_chains, "w", atomic=True) as f:
+            for chain in chains:
+                f.write(
+                    "{}\n".format(
+                        " -> ".join(
+                            "{}[{:.3f}]".format(model, results_chain[model].LL)
+                            for model in chain
+                        )
+                    )
+                )
 
     log_success("Chains:")
     for chain in chains:

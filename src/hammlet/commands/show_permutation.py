@@ -27,9 +27,16 @@ from ..utils import autotimeit, morph10
     callback=parse_permutation,
     help="Comma-separated permutation of (1,2,3,4) to use for calculations",
 )
+@click.option(
+    "--output-y",
+    "output_filename_y",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with resulting y values",
+)
 @click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
-def show_permutation(preset, y, permutation, debug):
+def show_permutation(preset, y, permutation, output_filename_y, debug):
     """Show permutation."""
 
     _, y = parse_input(preset, None, None, y, verbose=True)
@@ -41,3 +48,8 @@ def show_permutation(preset, y, permutation, debug):
     perm = tuple(p - 1 for p in permutation)
     y_ = morph10(y, perm)
     log_success("Permuted y: {}".format(" ".join(map(str, y_))))
+
+    if output_filename_y:
+        log_info("Writing y values to <{}>...".format(output_filename_y))
+        with click.open_file(output_filename_y, "w", atomic=True) as f:
+            f.write("{}\n".format(" ".join(map(str, y_))))

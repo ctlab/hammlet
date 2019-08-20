@@ -1,3 +1,4 @@
+import csv
 import itertools
 
 import click
@@ -51,6 +52,13 @@ from ..utils import autotimeit, pformatf
     help="Comma-separated list of models",
 )
 @click.option(
+    "--output-mle",
+    "output_filename_mle",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with MLE results table",
+)
+@click.option(
     "--best",
     "number_of_best",
     metavar="<int|all>",
@@ -99,6 +107,13 @@ from ..utils import autotimeit, pformatf
     show_default=False,
     help="Bootstrap best result n times by applying Poisson to input y values",
 )
+@click.option(
+    "--output-bootstrap",
+    "output_filename_bootstrap",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with bootstrap results table",
+)
 @click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
 def mle(
@@ -106,6 +121,7 @@ def mle(
     y,
     r,
     models,
+    output_filename_mle,
     number_of_best,
     is_only_first,
     only_permutation,
@@ -113,6 +129,7 @@ def mle(
     method,
     theta0,
     bootstrap_times,
+    output_filename_bootstrap,
     debug,
 ):
     """Perform maximum likelihood estimation."""
@@ -122,6 +139,7 @@ def mle(
     log_info("y: {}".format(" ".join(map(str, y))))
     log_info("r: ({})".format(", ".join(map(pformatf, r))))
     log_info("Models: {}".format(" ".join(model.name for model in models)))
+    log_info("Output file: {}".format(output_filename_mle))
 
     if not theta0:
         theta0 = (round(0.6 * sum(y), 5), 0.5, 0.5, 0.5, 0.5)
@@ -160,9 +178,16 @@ def mle(
                 g3,
             )
         )
+    headers = ["Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
+    if output_filename_mle:
+        log_info("Writing MLE results to <{}>...".format(output_filename_mle))
+        with click.open_file(output_filename_mle, "w", atomic=True) as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            for row in data:
+                writer.writerow(map(str, row))
     if number_of_best != "all":
         data = data[:number_of_best]
-    headers = ["Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
     table = tabulate(
         data,
         headers=[click.style(s, bold=True) for s in headers],
@@ -206,6 +231,17 @@ def mle(
                 )
             )
         headers = ["y", "LL", "n0", "T1", "T3", "g1", "g3"]
+        if output_filename_bootstrap:
+            log_info(
+                "Writing bootstrap results to <{}>...".format(output_filename_bootstrap)
+            )
+            with click.open_file(output_filename_bootstrap, "w", atomic=True) as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+                for row in data:
+                    row = list(row)
+                    row[0] = " ".join(row[0].split())
+                    writer.writerow(map(str, row))
         table = tabulate(
             data,
             headers=[click.style(s, bold=True) for s in headers],

@@ -35,9 +35,16 @@ from ..utils import autotimeit, pformatf, get_a
     show_default=True,
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
 )
+@click.option(
+    "--output-aij",
+    "output_filename_aij",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with resulting a_ij values",
+)
 @click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
-def calculate_aij(models, theta, r, debug):
+def calculate_aij(models, theta, r, output_filename_aij, debug):
     """Calculate a_ij."""
 
     log_info("theta = ({})".format(", ".join(pformatf(x, 3) for x in theta)))
@@ -54,3 +61,9 @@ def calculate_aij(models, theta, r, debug):
                 ", ".join(pformatf(a_ij, 3) for a_ij in a),
             )
         )
+
+    if output_filename_aij:
+        log_info("Writing a_ij values to <{}>...".format(output_filename_aij))
+        with click.open_file(output_filename_aij, "w", atomic=True) as f:
+            for model in models:
+                f.write("{}: {}\n".format(model.name, ",".join(map(str, a))))
