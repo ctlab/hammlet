@@ -48,10 +48,6 @@ class Optimizer:
             results.sort(key=attrgetter("LL"), reverse=True)
         return results
 
-    def many_many(self, models, perms, sort=True):
-        """DEPRECATED"""
-        return self.many_many(models, perms, sort=sort)
-
     def many_perms(self, model, perms, sort=True):
         return self.many([model], perms, sort=sort)
 
