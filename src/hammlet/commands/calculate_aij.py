@@ -35,8 +35,9 @@ from ..utils import autotimeit, pformatf, get_a
     show_default=True,
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
 )
+@click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
-def calculate_aij(models, theta, r):
+def calculate_aij(models, theta, r, debug):
     """Calculate a_ij."""
 
     log_info("theta = ({})".format(", ".join(pformatf(x, 3) for x in theta)))
