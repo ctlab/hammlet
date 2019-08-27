@@ -150,14 +150,14 @@ def chains(
     log_info("Optimizing...")
     if is_free_permutation:
         for model in models:
-            results = optimizer.many_perms(model, perms, sort=False)
+            results = optimizer.many_perms(model, perms, sort=True)
             best_result = results[0]
             results_chain[model.name] = best_result
 
         del model, results, best_result
     else:
         model_complex = models[0]
-        results_complex = optimizer.many_perms(model_complex, perms, sort=False)
+        results_complex = optimizer.many_perms(model_complex, perms, sort=True)
         best_complex_result = results_complex[0]
         results_chain[model_complex.name] = best_complex_result
 
