@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import click
 
 from ..parsers import parse_models
@@ -51,9 +53,11 @@ def calculate_aij(models, theta, r, output_filename_aij, debug):
     log_info("r = ({})".format(", ".join(pformatf(x, 3) for x in r)))
 
     # log_info('Calculating a_ij values...')
+    results = OrderedDict()  # {model: a}
     for model in models:
         theta_ = model.apply_bounds(theta)
         a = get_a(model, theta_, r)
+        results[model] = a
         log_success(
             "a_ij for model {} ({}): {}".format(
                 model.name,
@@ -61,9 +65,10 @@ def calculate_aij(models, theta, r, output_filename_aij, debug):
                 ", ".join(pformatf(a_ij, 3) for a_ij in a),
             )
         )
+    del model, theta_, a
 
     if output_filename_aij:
         log_info("Writing a_ij values to <{}>...".format(output_filename_aij))
         with click.open_file(output_filename_aij, "w", atomic=True) as f:
-            for model in models:
+            for model, a in results.items():
                 f.write("{}: {}\n".format(model.name, ",".join(map(str, a))))
