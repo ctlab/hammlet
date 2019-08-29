@@ -98,22 +98,6 @@ from ..utils import autotimeit, pformatf
     + click.style("five", bold=True)
     + " initial theta components (n0 T1 T3 gamma1 gamma3)",
 )
-@click.option(
-    "--bootstrap",
-    "bootstrap_times",
-    type=int,
-    metavar="<int>",
-    default=0,
-    show_default=False,
-    help="Bootstrap best result n times by applying Poisson to input y values",
-)
-@click.option(
-    "--output-bootstrap",
-    "output_filename_bootstrap",
-    type=click.Path(writable=True),
-    metavar="<path>",
-    help="Output file with bootstrap results table",
-)
 @click.option("--debug", is_flag=True, hidden=True, help="Debug")
 @autotimeit
 def mle(
@@ -128,8 +112,6 @@ def mle(
     is_no_polytomy,
     method,
     theta0,
-    bootstrap_times,
-    output_filename_bootstrap,
     debug,
 ):
     """Perform maximum likelihood estimation."""
@@ -199,57 +181,3 @@ def mle(
     log_success("MLE results:")
     click.echo(table)
     del data, headers, table
-
-    if bootstrap_times > 0:
-        from numpy.random import poisson
-
-        best_result = results[0]
-        best_model = best_result.model
-        best_perm = best_result.permutation
-
-        log_info(
-            "Bootstraping best result (model: {}, perm: ({})) {} times...".format(
-                best_model.name, ",".join(map(str, best_perm)), bootstrap_times
-            )
-        )
-        data = []
-        for _ in range(bootstrap_times):
-            y_poissoned = tuple(poisson(y))
-            optimizer_boot = Optimizer(y_poissoned, r, theta0, method, debug=debug)
-            result_boot = optimizer_boot.one(best_model, best_perm)
-            LL = result_boot.LL
-            n0, T1, T3, g1, g3 = result_boot.theta
-            data.append(
-                (
-                    " ".join(format(x, " >2") for x in y_poissoned),
-                    LL,
-                    n0,
-                    T1,
-                    T3,
-                    g1,
-                    g3,
-                )
-            )
-        headers = ["y", "LL", "n0", "T1", "T3", "g1", "g3"]
-        if output_filename_bootstrap:
-            log_info(
-                "Writing bootstrap results to <{}>...".format(output_filename_bootstrap)
-            )
-            with click.open_file(output_filename_bootstrap, "w", atomic=True) as f:
-                writer = csv.writer(f)
-                writer.writerow(headers)
-                for row in data:
-                    row = list(row)
-                    row[0] = " ".join(row[0].split())
-                    writer.writerow(map(str, row))
-        table = tabulate(
-            data,
-            headers=[click.style(s, bold=True) for s in headers],
-            numalign="center",
-            stralign="center",
-            floatfmt=".3f",
-            tablefmt="simple",
-        )
-        log_success("Bootstrap results:")
-        click.echo(table)
-        del data, headers, table

@@ -1,4 +1,5 @@
 from .mle import mle
+from .bootstrap import bootstrap
 from .calculate_aij import calculate_aij
 from .show_permutation import show_permutation
 from .draw import draw
