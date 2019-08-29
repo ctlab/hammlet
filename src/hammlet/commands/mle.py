@@ -164,7 +164,7 @@ def mle(
     if output_filename_mle:
         log_info("Writing MLE results to <{}>...".format(output_filename_mle))
         with click.open_file(output_filename_mle, "w", atomic=True) as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, lineterminator="\n")
             writer.writerow(headers)
             for row in data:
                 writer.writerow(map(str, row))

@@ -135,7 +135,7 @@ def bootstrap(
             "Writing bootstrap results to <{}>...".format(output_filename_bootstrap)
         )
         with click.open_file(output_filename_bootstrap, "w", atomic=True) as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, lineterminator="\n")
             writer.writerow(headers)
             for row in data:
                 row = list(row)
