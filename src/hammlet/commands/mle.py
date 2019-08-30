@@ -138,8 +138,7 @@ def mle(
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
     log_info("Optimizing...")
-    results = optimizer.many(models, perms)
-    results.sort(key=lambda t: t.LL, reverse=True)
+    results = optimizer.many(models, perms, sort=True)
 
     data = []
     for result in results:
