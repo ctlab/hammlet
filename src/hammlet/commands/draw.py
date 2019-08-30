@@ -74,7 +74,7 @@ from ..drawing import get_drawing_string
 )
 @click.option(
     "-cb",
-    "--color-back",
+    "--color-background",
     metavar="<color>",
     default="transparent",
     show_default=True,
