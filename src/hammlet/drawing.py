@@ -65,6 +65,11 @@ def _label(self, s, pos, fill="black", text_anchor="start", **kwargs):
     self.add(self.text(s, insert=(pos.x, pos.y), fill=fill, **extra))
 
 
+# Monkey-patch:
+svgwrite.Drawing.segment = _segment
+svgwrite.Drawing.label = _label
+
+
 def get_drawing_string(
     model,
     T12,
@@ -195,9 +200,6 @@ def get_drawing_string(
     pD = Point(xCD, yD)
 
     dwg = svgwrite.Drawing(profile="tiny")
-    # Monkey-patch:
-    dwg.segment = _segment
-    dwg.label = _label
 
     if color_background is not None:
         dwg.add(
