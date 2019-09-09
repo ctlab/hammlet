@@ -14,6 +14,7 @@ __all__ = [
     "pattern2ij",
     "get_a",
     "likelihood",
+    "get_pvalue",
     "get_paths",
     "get_chain",
     "get_chains",

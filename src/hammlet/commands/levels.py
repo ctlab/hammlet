@@ -8,7 +8,7 @@ from ..optimizer import Optimizer
 from ..parsers import presets_db, parse_input
 from ..printers import log_debug, log_info, log_success, log_warn
 from ..models import models_mapping_mnemonic
-from ..utils import autotimeit, pformatf, get_chain
+from ..utils import autotimeit, pformatf, get_chain, get_pvalue
 
 
 @click.command()
@@ -59,6 +59,13 @@ from ..utils import autotimeit, pformatf, get_chain
     help="Output file with a resulting chain",
 )
 @click.option(
+    "--output-result",
+    "output_filename_result",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with a result",
+)
+@click.option(
     "-p",
     "--pvalue",
     "critical_pvalue",
@@ -93,6 +100,7 @@ def levels(
     r,
     output_filename_mle,
     output_filename_chain,
+    output_filename_result,
     critical_pvalue,
     method,
     theta0,
@@ -263,11 +271,51 @@ def levels(
     log_success("Chain over levels:")
     click.echo(
         "    "
-        + " -> ".join(
-            "{}[{:.2f}]".format(results[model].model.name, results[model].LL)
-            for model in chain
-        )
+        + " -> ".join("{}[{:.2f}]".format(model, results[model].LL) for model in chain)
     )
 
     simple_model = chain[-1]
+    if output_filename_result:
+        log_info("Writing result to <{}>...".format(output_filename_result))
+        with click.open_file(output_filename_result, "w", atomic=True) as f:
+            writer = csv.writer(f, lineterminator="\n")
+            headers = "Model Mnemo Permutation n0 T1 T3 g1 g3 Prev.Model Prev.pvalue Next.Model Next.pvalue".split()
+            simple_level = 5 - len(chain)
+            simple_result = results[simple_model]
+            assert simple_result.model.name == simple_model
+            n0, T1, T3, g1, g3 = simple_result.theta
+            if simple_level == 4:
+                prev_model = None
+                prev_pvalue = None
+            else:
+                prev_result = best_results_level[simple_level + 1]
+                prev_model = prev_result.model.name
+                _, prev_pvalue = get_pvalue(prev_result, simple_result)
+                del prev_result
+            if simple_level == 0:
+                next_model = None
+            else:
+                next_result = best_results_level[simple_level - 1]
+                next_model = next_result.model.name
+                _, next_pvalue = get_pvalue(simple_result, next_result)
+                del next_result
+            writer.writerow(headers)
+            writer.writerow(
+                [
+                    simple_model,
+                    simple_result.model.mnemonic_name,
+                    "{{{}}}".format(",".join(map(str, simple_result.permutation))),
+                    n0,
+                    T1,
+                    T3,
+                    g1,
+                    g3,
+                    prev_model,
+                    prev_pvalue,
+                    next_model,
+                    next_pvalue,
+                ]
+            )
+        del f, writer, headers, simple_level, simple_result, n0, T1, T3, g1, g3
+        del prev_model, prev_pvalue, next_model, next_pvalue
     log_success("Insignificantly worse simple model: {}".format(simple_model))
