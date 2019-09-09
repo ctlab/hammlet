@@ -226,6 +226,10 @@ def levels(
         perm = result.permutation
         LL = result.LL
         n0, T1, T3, gamma1, gamma3 = result.theta
+        if level == 4:
+            p = None
+        else:
+            _, p = get_pvalue(best_results_level[level + 1], result)
         data.append(
             [
                 level,
@@ -238,17 +242,44 @@ def levels(
                 T3,
                 gamma1,
                 gamma3,
+                p,
             ]
         )
-        del result, model, perm, LL, n0, T1, T3, gamma1, gamma3
-    headers = ["Lvl", "Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
+        del result, model, perm, LL, n0, T1, T3, gamma1, gamma3, p
+    headers = [
+        "Lvl",
+        "Model",
+        "Mnemo",
+        "Perm",
+        "LL",
+        "n0",
+        "T1",
+        "T3",
+        "g1",
+        "g3",
+        "pvalue",
+    ]
     table = tabulate(
         data,
         headers=[click.style(s, bold=True) for s in headers],
         numalign="center",
         stralign="center",
-        floatfmt=".3f",
+        # floatfmt=".3f",
+        floatfmt=[
+            None,
+            None,
+            None,
+            None,
+            ".2f",
+            ".3f",
+            ".3f",
+            ".3f",
+            ".3f",
+            ".3f",
+            ".5f",
+        ],
         tablefmt="simple",
+        missingval="-",
     )
     log_success("Best result on each level:")
     click.echo(table)
