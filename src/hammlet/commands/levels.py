@@ -194,16 +194,16 @@ def levels(
         levels_data = _levels_data_default
 
     # ================
-    from ..models import all_models
+    # from ..models import all_models
 
-    models_in_data = set()
-    for level_data in levels_data.values():
-        for model in level_data:
-            models_in_data.add(model)
-    missed_models = set(all_models) - models_in_data
-    if missed_models:
-        log_warn("Missed models: {}".format(" ".join(map(str, missed_models))))
-    del all_models, missed_models, models_in_data, level_data, model
+    # models_in_data = set()
+    # for level_data in levels_data.values():
+    #     for model in level_data:
+    #         models_in_data.add(model)
+    # missed_models = set(all_models) - models_in_data
+    # if missed_models:
+    #     log_warn("Missing models: {}".format(" ".join(map(str, missed_models))))
+    # del all_models, missed_models, models_in_data, level_data, model
     # ================
 
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
