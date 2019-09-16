@@ -83,7 +83,7 @@ from ..utils import autotimeit, pformatf
     metavar="<n0 T1 T3 g1 g3>",
     help="Space-separated list of "
     + click.style("five", bold=True)
-    + " initial theta components (n0 T1 T3 gamma1 gamma3)",
+    + " initial theta components",
 )
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
