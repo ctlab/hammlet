@@ -225,7 +225,7 @@ def levels(
             results = optimizer.many_perms(model, perms, sort=False)
             results_level[level].extend(results)
         results_level[level].sort(key=lambda t: t.LL, reverse=True)
-    del level, level_data, model, perms, results
+    del level, level_data, model, perms
 
     data = []
     for level in reversed(range(5)):
