@@ -1,5 +1,6 @@
 import csv
 import sys
+from collections import defaultdict
 
 import click
 from tabulate import tabulate
@@ -9,6 +10,43 @@ from ..parsers import presets_db, parse_input
 from ..printers import log_debug, log_info, log_success, log_warn
 from ..models import models_mapping_mnemonic
 from ..utils import autotimeit, pformatf, get_chain, get_pvalue
+
+_levels_data_default = {
+    # fmt: off
+    4: {
+        "H1:TTgg": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (1, 3, 4, 2), (1, 4, 2, 3), (1, 4, 3, 2), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 1, 4), (2, 3, 4, 1), (2, 4, 1, 3), (2, 4, 3, 1), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 1, 4), (3, 2, 4, 1), (3, 4, 1, 2), (3, 4, 2, 1), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 1, 3), (4, 2, 3, 1), (4, 3, 1, 2), (4, 3, 2, 1)],
+        "H2:TTgg": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (1, 3, 4, 2), (1, 4, 2, 3), (1, 4, 3, 2), (2, 3, 1, 4), (2, 3, 4, 1), (2, 4, 1, 3), (2, 4, 3, 1), (3, 4, 1, 2), (3, 4, 2, 1)],
+    },
+    3: {
+        "H1:TTg0": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 1, 4), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 1, 4), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 1, 3)],
+        "H1:TT1g": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (1, 3, 4, 2), (1, 4, 2, 3), (1, 4, 3, 2), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 1, 4), (2, 3, 4, 1), (2, 4, 1, 3), (2, 4, 3, 1), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 1, 4), (3, 2, 4, 1), (3, 4, 1, 2), (3, 4, 2, 1), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 1, 3), (4, 2, 3, 1), (4, 3, 1, 2), (4, 3, 2, 1)],
+        "H1:TT0g": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 4, 2), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 4, 1), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 4, 1), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 3, 1)],
+        "H1:TTg1": [(1, 2, 3, 4), (1, 3, 2, 4), (1, 4, 2, 3), (2, 3, 1, 4), (2, 4, 1, 3), (3, 4, 1, 2)],
+        "H2:T0gg": [(1, 2, 3, 4), (1, 3, 2, 4), (1, 4, 2, 3), (2, 3, 1, 4), (2, 4, 1, 3), (3, 4, 1, 2)],
+    },
+    2: {
+        "H1:0Tng": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 4, 2), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 4, 1), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 4, 1), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 3, 1)],
+        "H1:T0g0": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (2, 1, 3, 4), (2, 1, 4, 3), (2, 3, 1, 4), (3, 1, 2, 4), (3, 1, 4, 2), (3, 2, 1, 4), (4, 1, 2, 3), (4, 1, 3, 2), (4, 2, 1, 3)],
+        "H1:T0g1": [(1, 2, 3, 4), (1, 3, 2, 4), (1, 4, 2, 3), (2, 3, 1, 4), (2, 4, 1, 3), (3, 4, 1, 2)],
+        "H1:TT10": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4), (2, 1, 3, 4), (2, 1, 4, 3), (3, 1, 4, 2)],
+        "H1:TT01": [(1, 2, 3, 4), (1, 3, 2, 4), (1, 4, 2, 3), (2, 1, 3, 4), (2, 3, 1, 4), (2, 4, 1, 3), (3, 1, 2, 4), (3, 2, 1, 4), (3, 4, 1, 2), (4, 1, 2, 3), (4, 2, 1, 3), (4, 3, 1, 2)],
+    },
+    1: {
+        "H1:0Tn1": [(1, 2, 3, 4), (1, 3, 2, 4), (1, 4, 2, 3), (2, 3, 1, 4), (2, 4, 1, 3), (3, 4, 1, 2)],
+        "H1:T010": [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4)],
+        "H1:T00n": [(1, 2, 3, 4), (2, 1, 3, 4), (3, 1, 2, 4), (4, 1, 2, 3)],
+    },
+    0: {
+        "H1:00nn": [(1, 2, 3, 4)]
+    },
+    # fmt: on
+}
+_levels_data_default = {
+    level: {
+        models_mapping_mnemonic[mnemo]: perms for mnemo, perms in level_data.items()
+    }
+    for level, level_data in _levels_data_default.items()
+}
 
 
 @click.command()
@@ -125,37 +163,47 @@ def levels(
             perm = perm[:-1]
         return tuple(map(int, perm.split(",")))
 
-    log_info("Processing levels...".format())
-    levels_data = {level: [] for level in range(5)}  # {level: [(model, perm)]}
-    if sys.version > "3":
-        levels_file = open(levels_filename, newline="")
-    else:
-        levels_file = open(levels_filename, "rb")
-    with levels_file as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            level = int(row["Level"])
-            assert 0 <= level <= 4
-            model = models_mapping_mnemonic["{}:{}".format(row["Branch"], row["Case"])]
-            if model.name != row["Type"]:
-                log_warn(
-                    "Model name mismatch: model.name={}, Type={}".format(
-                        model.name, row["Type"]
+    if levels_filename:
+        log_info("Reading levels data from <{}>...".format(levels_filename))
+        levels_data = {
+            level: defaultdict(list) for level in range(5)
+        }  # {level: {model: [perm]}
+        if sys.version > "3":
+            levels_file = open(levels_filename, newline="")
+        else:
+            levels_file = open(levels_filename, "rb")
+        with levels_file as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                level = int(row["Level"])
+                assert 0 <= level <= 4
+                model = models_mapping_mnemonic[
+                    "{}:{}".format(row["Branch"], row["Case"])
+                ]
+                if model.name != row["Type"]:
+                    log_warn(
+                        "Model name mismatch: model.name={}, Type={}".format(
+                            model.name, row["Type"]
+                        )
                     )
-                )
-            perm = parse_perm(row["Permut"])
-            levels_data[level].append((model, perm))
-    del reader, row, level, model, perm, levels_file
+                perm = parse_perm(row["Permut"])
+                levels_data[level][model].append(perm)
+        del reader, row, level, model, perm, levels_file
+    else:
+        log_info("Using default levels data")
+        levels_data = _levels_data_default
 
     # ================
     from ..models import all_models
 
-    missed_models = set(all_models) - set(
-        model for (model, perm) in sum(levels_data.values(), [])
-    )
+    models_in_data = set()
+    for level_data in levels_data.values():
+        for model in level_data:
+            models_in_data.add(model)
+    missed_models = set(all_models) - models_in_data
     if missed_models:
         log_warn("Missed models: {}".format(" ".join(map(str, missed_models))))
-    del all_models, missed_models
+    del all_models, missed_models, models_in_data, level_data, model
     # ================
 
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
@@ -163,10 +211,11 @@ def levels(
 
     log_info("Optimizing...")
     for level, level_data in levels_data.items():
-        for model, perm in level_data:
-            result = optimizer.one(model, perm)
-            results_level[level].append(result)
+        for model, perms in level_data.items():
+            results = optimizer.many_perms(model, perms, sort=False)
+            results_level[level].extend(results)
         results_level[level].sort(key=lambda t: t.LL, reverse=True)
+    del level, level_data, model, perms, results
 
     data = []
     for level in reversed(range(5)):
