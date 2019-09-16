@@ -5,11 +5,11 @@ from collections import OrderedDict
 import click
 from tabulate import tabulate
 
-from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_input, parse_permutation
-from ..printers import log_debug, log_info, log_success
 from ..models import models_H1, models_H2, models_hierarchy
-from ..utils import autotimeit, pformatf, get_paths, get_chains
+from ..optimizer import Optimizer
+from ..parsers import parse_input, parse_permutation, presets_db
+from ..printers import log_debug, log_info, log_success
+from ..utils import autotimeit, get_chains, get_paths, pformatf
 
 
 @click.command()

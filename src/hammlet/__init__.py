@@ -1,3 +1,3 @@
-from . import models
-from . import optimizer
-from .version import version
+__all__ = ["models", "optimizer"]
+
+from . import models, optimizer

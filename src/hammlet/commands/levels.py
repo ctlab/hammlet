@@ -5,11 +5,11 @@ from collections import defaultdict
 import click
 from tabulate import tabulate
 
-from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_input
-from ..printers import log_debug, log_info, log_success, log_warn
 from ..models import models_mapping_mnemonic
-from ..utils import autotimeit, pformatf, get_chain, get_pvalue
+from ..optimizer import Optimizer
+from ..parsers import parse_input, presets_db
+from ..printers import log_debug, log_info, log_success, log_warn
+from ..utils import autotimeit, get_chain, get_pvalue, pformatf
 
 _levels_data_default = {
     # fmt: off

@@ -4,7 +4,7 @@ import click
 
 from ..parsers import parse_models
 from ..printers import log_info, log_success
-from ..utils import autotimeit, pformatf, get_a
+from ..utils import autotimeit, get_a, pformatf
 
 
 @click.command()

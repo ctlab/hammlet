@@ -1,12 +1,11 @@
 import csv
 
 import click
+from numpy.random import poisson
 from tabulate import tabulate
 
-from numpy.random import poisson
-
 from ..optimizer import Optimizer
-from ..parsers import presets_db, parse_input, parse_models, parse_permutation
+from ..parsers import parse_input, parse_models, parse_permutation, presets_db
 from ..printers import log_debug, log_info, log_success
 from ..utils import autotimeit, pformatf
 

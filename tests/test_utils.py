@@ -1,5 +1,5 @@
-from hammlet.utils import get_paths
 from hammlet.models import models_hierarchy
+from hammlet.utils import get_paths
 
 
 def test_get_paths_H1_free():

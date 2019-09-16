@@ -5,7 +5,6 @@ import click
 from . import commands
 from . import version as __version__
 
-
 CONTEXT_SETTINGS = dict(max_content_width=999, help_option_names=["-h", "--help"])
 
 
@@ -27,7 +26,6 @@ def cli():
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
     """
-    pass
 
 
 # Note: respect the desired order

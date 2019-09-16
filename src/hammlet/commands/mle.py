@@ -6,11 +6,11 @@ from tabulate import tabulate
 
 from ..optimizer import Optimizer
 from ..parsers import (
-    presets_db,
     parse_best,
     parse_input,
     parse_models,
     parse_permutation,
+    presets_db,
 )
 from ..printers import log_debug, log_info, log_success
 from ..utils import autotimeit, pformatf
