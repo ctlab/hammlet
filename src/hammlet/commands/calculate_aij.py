@@ -44,7 +44,7 @@ from ..utils import autotimeit, pformatf, get_a
     metavar="<path>",
     help="Output file with resulting a_ij values",
 )
-@click.option("--debug", is_flag=True, hidden=True, help="Debug")
+@click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def calculate_aij(models, theta, r, output_filename_aij, debug):
     """Calculate a_ij."""

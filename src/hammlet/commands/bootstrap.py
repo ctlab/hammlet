@@ -85,7 +85,7 @@ from ..utils import autotimeit, pformatf
     + click.style("five", bold=True)
     + " initial theta components (n0 T1 T3 gamma1 gamma3)",
 )
-@click.option("--debug", is_flag=True, hidden=True, help="Debug")
+@click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def bootstrap(
     preset,

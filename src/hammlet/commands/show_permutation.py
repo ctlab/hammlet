@@ -34,7 +34,7 @@ from ..utils import autotimeit, morph10
     metavar="<path>",
     help="Output file with resulting y values",
 )
-@click.option("--debug", is_flag=True, hidden=True, help="Debug")
+@click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def show_permutation(preset, y, permutation, output_filename_y, debug):
     """Show permutation."""
