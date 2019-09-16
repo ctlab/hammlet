@@ -104,6 +104,15 @@ _levels_data_default = {
     help="Output file with a result",
 )
 @click.option(
+    "-f",
+    "--format",
+    "output_result_format",
+    type=click.Choice(["csv", "tsv"]),
+    default="csv",
+    show_default=True,
+    help="Format for --output-result file",
+)
+@click.option(
     "-p",
     "--pvalue",
     "critical_pvalue",
@@ -139,6 +148,7 @@ def levels(
     output_filename_mle,
     output_filename_chain,
     output_filename_result,
+    output_result_format,
     critical_pvalue,
     method,
     theta0,
@@ -358,7 +368,12 @@ def levels(
     if output_filename_result:
         log_info("Writing result to <{}>...".format(output_filename_result))
         with click.open_file(output_filename_result, "w", atomic=True) as f:
-            writer = csv.writer(f, lineterminator="\n")
+            if output_result_format == "csv":
+                writer = csv.writer(f, lineterminator="\n")
+            elif output_result_format == "tsv":
+                writer = csv.writer(f, lineterminator="\n", delimiter="\t")
+            else:
+                raise ValueError("Unsupported format '{}'".format(output_result_format))
             headers = "Model Mnemo Permutation n0 T1 T3 g1 g3 Prev.Model Prev.pvalue Next.Model Next.pvalue".split()
             simple_level = 5 - len(chain)
             simple_result = results[simple_model]
