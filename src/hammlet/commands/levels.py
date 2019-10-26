@@ -190,10 +190,10 @@ def levels(
                 model = models_mapping_mnemonic[
                     "{}:{}".format(row["Branch"], row["Case"])
                 ]
-                if model.name != row["Type"]:
+                if model.name != row["Alias"]:
                     log_warn(
-                        "Model name mismatch: model.name={}, Type={}".format(
-                            model.name, row["Type"]
+                        "Model name mismatch: model.name={}, Alias={}".format(
+                            model.name, row["Alias"]
                         )
                     )
                 perm = parse_perm(row["Permut"])
