@@ -58,8 +58,8 @@ def convert_permutation(permutation):
     (4, 1, 3, 2)
     >>> convert_permutation((2, 3, 1, 4))
     (2, 3, 1, 4)
-    >>> convert_permutation(None)
-    None
+    >>> convert_permutation(None) is None
+    True
     """
     if isinstance(permutation, int):
         assert 1234 <= permutation <= 4321
