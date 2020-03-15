@@ -11,6 +11,11 @@ __all__ = [
     "all_models",
     "models_H1",
     "models_H2",
+    "models_N0",
+    "models_N1",
+    "models_N2",
+    "models_N3",
+    "models_N4",
     "models_hierarchy",
     "models_mapping",
     "models_mapping_mnemonic",
@@ -142,6 +147,7 @@ class Model(object):
     __slots__ = (
         "name",
         "mnemonic_name",
+        "perms",
         "n0_bounds",
         "T1_bounds",
         "T3_bounds",
@@ -149,8 +155,10 @@ class Model(object):
         "gamma3_bounds",
     )
 
-    def __init__(self, name, mnemonic_name):
-        assert re.fullmatch(r"H[12]:[T01N]{2}[g01N]{2}", mnemonic_name)
+    def __init__(self, name, mnemonic_name, perms="all"):
+        assert re.fullmatch(
+            r"H[12]:[T01]{2}[g01Nn]{2}", mnemonic_name
+        ), "Bad mnemonic_name '{}'".format(mnemonic_name)
         assert name not in self.mapping, "Duplicate name '{}'".format(name)
         assert (
             mnemonic_name not in self.mapping_mnemonic
@@ -165,14 +173,16 @@ class Model(object):
                 return (0, 0)
             elif c == "1":
                 return (1, 1)
-            elif c == "N":
+            elif c == "N" or c == "n":
                 return None
             else:
                 raise ValueError("Bad symbol in mnemonic name: '{}'".format(c))
 
         group, mnemo = mnemonic_name.split(":")
+
         self.name = name
         self.mnemonic_name = mnemonic_name
+        self.perms = perms
         self.n0_bounds = (0, None)
         self.T1_bounds = to_bound(mnemo[0])
         self.T3_bounds = to_bound(mnemo[1])
@@ -240,9 +250,9 @@ class Model(object):
 
 
 class ModelH1(Model):
-    def __init__(self, name, mnemo):
+    def __init__(self, name, mnemo, perms="all"):
         mnemonic_name = "H1:" + mnemo
-        super(ModelH1, self).__init__(name, mnemonic_name)
+        super(ModelH1, self).__init__(name, mnemonic_name, perms)
 
     @staticmethod
     def __call__(theta, r):
@@ -345,9 +355,9 @@ class ModelH1(Model):
 
 
 class ModelH2(Model):
-    def __init__(self, name, mnemo):
+    def __init__(self, name, mnemo, perms="all"):
         mnemonic_name = "H2:" + mnemo
-        super(ModelH2, self).__init__(name, mnemonic_name)
+        super(ModelH2, self).__init__(name, mnemonic_name, perms)
 
     @staticmethod
     def __call__(theta, r):
@@ -449,95 +459,109 @@ class ModelH2(Model):
 
 
 # Note: first model in list must be the most complex, last model must be the simplest
-models_H1 = (
+# fmt: off
+models_H1 = [
     ModelH1("2H1", "TTgg"),
-    ModelH1("1H1", "TTg0"),
+    ModelH1("1H1", "TTg0", [1234, 1243, 1324, 2134, 2143, 2314,
+                            3124, 3142, 3214, 4123, 4132, 4213]),
     ModelH1("1H2", "TT1g"),
-    ModelH1("1H3", "TT0g"),
-    ModelH1("1H4", "TTg1"),
+    ModelH1("1H3", "TT0g", [1234, 1243, 1342, 2134, 2143, 2341,
+                            3124, 3142, 3241, 4123, 4132, 4231]),
+    ModelH1("1H4", "TTg1", [1234, 1324, 1423, 2314, 2413, 3412]),
     ModelH1("1HP", "T0gg"),
-    ModelH1("1T1", "TT10"),
-    ModelH1("1T2", "TT00"),
+    ModelH1("T1", "TT10", [1234, 1243, 1324, 2134, 2143, 3142]),
+    ModelH1("T2", "TT00", [1234, 1324, 1423, 2134, 2314, 2413,
+                           3124, 3214, 3412, 4123, 4213, 4312]),
     ModelH1("1T2A", "TT01"),
     ModelH1("1T2B", "TT11"),
-    ModelH1("1PH1", "0TNg"),
+    ModelH1("1HP1", "0Tng", [1234, 1243, 1342, 2134, 2143, 2341,
+                             3124, 3142, 3241, 4123, 4132, 4231]),
     ModelH1("1PH1A", "T01g"),
-    ModelH1("1PH2", "T0g0"),
-    ModelH1("1PH3", "T0g1"),
-    ModelH1("1P1", "0TN0"),
-    ModelH1("1P2", "T00N"),
-    ModelH1("1P2A", "0TN1"),
+    ModelH1("1HP2", "T0g0", [1234, 1243, 1324, 2134, 2143, 2314,
+                             3124, 3142, 3214, 4123, 4132, 4213]),
+    ModelH1("1HP3", "T0g1", [1234, 1324, 1423, 2314, 2413, 3412]),
+    ModelH1("PT", "0Tn0", [1234, 1324, 1423, 2314, 2413, 3412]),
+    ModelH1("TP", "T00n", [1234, 2134, 3124, 4123]),
+    ModelH1("1P2A", "0Tn1"),
     ModelH1("1P2B", "T011"),
-    ModelH1("1P3", "T010"),
-    ModelH1("PL1", "00NN"),
-)
-models_H2 = (
+    ModelH1("T0", "T010", [1234, 1243, 1324]),
+    ModelH1("P", "00nn", [1234]),
+]
+# fmt: on
+models_H2 = [
     ModelH2("2H2", "TTgg"),
     ModelH2("2HA1", "TTg0"),
     ModelH2("2HA2", "TTg1"),
     ModelH2("2HB1", "TT0g"),
     ModelH2("2HB2", "TT1g"),
-    ModelH2("2HP", "T0gg"),
+    ModelH2("2HP", "T0gg", [1234, 1324, 1423, 2314, 2413, 3412]),
     ModelH2("2T1", "TT10"),
     ModelH2("2T2", "TT00"),
     ModelH2("2T2A", "TT01"),
     ModelH2("2T2B", "TT11"),
-    ModelH2("2PH1", "0TNg"),
+    ModelH2("2PH1", "0Tng"),
     ModelH2("2PH2", "T0g0"),
     ModelH2("2PH2A", "T00g"),
     ModelH2("2PH2B", "T01g"),
     ModelH2("2PH2C", "T0g1"),
-    ModelH2("2P1", "0TN0"),
-    ModelH2("2P1A", "0TN1"),
+    ModelH2("2P1", "0Tn0"),
+    ModelH2("2P1A", "0Tn1"),
     ModelH2("2P2", "T000"),
     ModelH2("2P2A", "T011"),
     ModelH2("2P3", "T010"),
     ModelH2("2P3A", "T001"),
-    ModelH2("PL2", "00NN"),
-)
+    ModelH2("PL2", "00nn", [1234]),
+]
 all_models = models_H1 + models_H2
 
 models_mapping = Model.mapping
 models_mapping_mnemonic = Model.mapping_mnemonic
 
+models_N0 = [models_mapping[name] for name in ["P"]]
+models_N1 = [models_mapping[name] for name in ["PT", "TP", "T0"]]
+models_N2 = [models_mapping[name] for name in ["1HP1", "1HP2", "1HP3", "T1", "T2"]]
+models_N3 = [models_mapping[name] for name in ["1H1", "1H2", "1H3", "1H4", "2HP"]]
+models_N4 = [models_mapping[name] for name in ["2H1", "2H2"]]
+models_NR = models_N0 + models_N1 + models_N2 + models_N3 + models_N4
+
 models_hierarchy = {
     "H1": {
         "free": [
             ("2H1", "1H1 1H2 1H3 1H4 1HP"),
-            ("1H1", "1T1 1T2 1PH1 1PH2 1PH3"),
-            ("1H2", "1T1 1T2 1PH1 1PH2 1PH3"),
-            ("1H3", "1T1 1T2 1PH1 1PH2 1PH3"),
-            ("1H4", "1T1 1T2 1PH1 1PH2 1PH3"),
-            ("1HP", "1T1 1T2 1PH1 1PH2 1PH3"),
-            ("1T1", "1P1 1P2 1P3"),
-            ("1T2", "1P1 1P2 1P3"),
-            ("1PH1", "1P1 1P2 1P3"),
-            ("1PH2", "1P1 1P2 1P3"),
-            ("1PH3", "1P1 1P2 1P3"),
-            ("1P1", "PL1"),
-            ("1P2", "PL1"),
-            ("1P3", "PL1"),
+            ("1H1", "T1 T2 1HP1 1HP2 1HP3"),
+            ("1H2", "T1 T2 1HP1 1HP2 1HP3"),
+            ("1H3", "T1 T2 1HP1 1HP2 1HP3"),
+            ("1H4", "T1 T2 1HP1 1HP2 1HP3"),
+            ("1HP", "T1 T2 1HP1 1HP2 1HP3"),
+            ("T1", "PT PT T0"),
+            ("T2", "PT PT T0"),
+            ("1HP1", "PT PT T0"),
+            ("1HP2", "PT PT T0"),
+            ("1HP3", "PT PT T0"),
+            ("PT", "P"),
+            ("PT", "P"),
+            ("T0", "P"),
         ],
         "non-free": [
-            ("2H1", "1H1 1H2 1H3 1H4 1HP 1PH1"),
-            ("1H1", "1T1 1T2 1P1 1PH2"),
-            ("1H2", "1PH1 1T2B 1T1 1PH1A"),
-            ("1H3", "1T2A 1T2 1PH1 1P2"),
-            ("1H4", "1T2B 1T2A 1PH3 1P2A"),
-            ("1HP", "PL1 1P2 1PH2 1PH3 1PH1A"),
-            ("1T1", "1P1 1P3"),
-            ("1T2", "1P1 1P2"),
-            ("1T2A", "1P2 1P2A"),
+            ("2H1", "1H1 1H2 1H3 1H4 1HP 1HP1"),
+            ("1H1", "T1 T2 PT 1HP2"),
+            ("1H2", "1HP1 1T2B T1 1PH1A"),
+            ("1H3", "1T2A T2 1HP1 PT"),
+            ("1H4", "1T2B 1T2A 1HP3 1P2A"),
+            ("1HP", "P PT 1HP2 1HP3 1PH1A"),
+            ("T1", "PT T0"),
+            ("T2", "PT PT"),
+            ("1T2A", "PT 1P2A"),
             ("1T2B", "1P2A 1P2B"),
-            ("1PH1", "1P2A PL1"),
-            ("1PH1A", "1P2B 1P3 PL1"),
-            ("1PH2", "1P2 1P3 PL1"),
-            ("1PH3", "1P2 1P2B PL1"),
-            ("1P1", "PL1"),
-            ("1P2", "PL1"),
-            ("1P2A", "PL1"),
-            ("1P2B", "PL1"),
-            ("1P3", "PL1"),
+            ("1HP1", "1P2A P"),
+            ("1PH1A", "1P2B T0 P"),
+            ("1HP2", "PT T0 P"),
+            ("1HP3", "PT 1P2B P"),
+            ("PT", "P"),
+            ("PT", "P"),
+            ("1P2A", "P"),
+            ("1P2B", "P"),
+            ("T0", "P"),
         ],
     },
     "H2": {

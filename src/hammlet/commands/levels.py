@@ -288,7 +288,7 @@ def levels(
         if level == 4:
             p = None
         else:
-            _, p = get_pvalue(best_results_level[level + 1], result)
+            _, p = get_pvalue(best_results_level[level + 1], result, df=1)
         data.append(
             [
                 level,
@@ -392,7 +392,7 @@ def levels(
             else:
                 next_result = best_results_level[simple_level - 1]
                 next_model = next_result.model.name
-                _, next_pvalue = get_pvalue(simple_result, next_result)
+                _, next_pvalue = get_pvalue(simple_result, next_result, df=1)
                 del next_result
             writer.writerow(headers)
             writer.writerow(

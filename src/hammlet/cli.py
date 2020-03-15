@@ -35,6 +35,9 @@ cli.add_command(commands.show_permutation)
 cli.add_command(commands.draw)
 cli.add_command(commands.chains)
 cli.add_command(commands.levels)
+# cli.add_command(commands.stat_chains)
+cli.add_command(commands.stat_levels)
+cli.add_command(commands.stat_reverse)
 
 if __name__ == "__main__":
     cli()

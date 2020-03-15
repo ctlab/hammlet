@@ -8,6 +8,11 @@ from .models import (
     models_H2,
     models_mapping,
     models_mapping_mnemonic,
+    models_N0,
+    models_N1,
+    models_N2,
+    models_N3,
+    models_N4,
 )
 from .printers import log_info, log_warn
 
@@ -102,8 +107,18 @@ def parse_models(ctx, param, value):
         model_names += tuple(m.name for m in models_H1)
     elif "H2" in model_names:
         model_names += tuple(m.name for m in models_H2)
+    elif "N0" in model_names:
+        model_names += tuple(m.name for m in models_N0)
+    elif "N1" in model_names:
+        model_names += tuple(m.name for m in models_N1)
+    elif "N2" in model_names:
+        model_names += tuple(m.name for m in models_N2)
+    elif "N3" in model_names:
+        model_names += tuple(m.name for m in models_N3)
+    elif "N4" in model_names:
+        model_names += tuple(m.name for m in models_N4)
     # seen = set()
-    seen = {"H1", "H2"}
+    seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
     seen_add = seen.add
     unique_names = tuple(m for m in model_names if not (m in seen or seen_add(m)))
     for m in unique_names:
@@ -128,7 +143,7 @@ def parse_best(ctx, param, value):
 
 def parse_permutation(ctx, param, value):
     if value:
-        perm = tuple(map(int, value.split(",")))
+        perm = tuple(map(int, value))
         if len(perm) != 4 or sorted(perm) != [1, 2, 3, 4]:
             raise click.BadParameter("must be a permutation of (1,2,3,4)")
         return perm

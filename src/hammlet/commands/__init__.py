@@ -6,6 +6,9 @@ __all__ = [
     "levels",
     "mle",
     "show_permutation",
+    "stat_chains",
+    "stat_levels",
+    "stat_reverse",
 ]
 
 from .bootstrap import bootstrap
@@ -15,3 +18,6 @@ from .draw import draw
 from .levels import levels
 from .mle import mle
 from .show_permutation import show_permutation
+from .stat_chains import stat_chains
+from .stat_levels import stat_levels
+from .stat_reverse import stat_reverse

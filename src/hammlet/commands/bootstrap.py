@@ -50,7 +50,7 @@ from ..utils import autotimeit, pformatf
     metavar="<int...>",
     required=True,
     callback=parse_permutation,
-    help="Permutation of (1,2,3,4) for calculations",
+    help="Permutations to use for calculations",
 )
 @click.option(
     "-n",

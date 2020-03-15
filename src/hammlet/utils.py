@@ -8,6 +8,7 @@ from scipy.stats import chi2
 __all__ = [
     "autotimeit",
     "pformatf",
+    "convert_permutation",
     "morph4",
     "morph10",
     "ij2pattern",
@@ -48,6 +49,27 @@ def pformatf(x, digits=3):
     return "{:.{}f}".format(x, digits).rstrip("0").rstrip(".")
 
 
+def convert_permutation(permutation):
+    """Convert permutation to tuple.
+
+    >>> convert_permutation(1243)
+    (1, 2, 4, 3)
+    >>> convert_permutation("4132")
+    (4, 1, 3, 2)
+    >>> convert_permutation((2, 3, 1, 4))
+    (2, 3, 1, 4)
+    >>> convert_permutation(None)
+    None
+    """
+    if isinstance(permutation, int):
+        assert 1234 <= permutation <= 4321
+        return tuple(map(int, str(permutation)))
+    elif isinstance(permutation, str):
+        return tuple(map(int, permutation))
+    else:
+        return permutation
+
+
 def morph4(iterable, permutation):
     """Apply permutation on 4-iterable.
 
@@ -62,6 +84,7 @@ def morph4(iterable, permutation):
     """
     if permutation is None:
         return iterable
+
     if isinstance(iterable, str):
         return "".join(iterable[i] for i in permutation)
     elif isinstance(iterable, list):
@@ -175,9 +198,9 @@ def likelihood(model, y_, theta, r):
     return poisson(a, y_).sum()
 
 
-def get_pvalue(result_complex, result_simple):
+def get_pvalue(result_complex, result_simple, df):
     stat = 2 * (result_complex.LL - result_simple.LL)
-    p = 1 - chi2.cdf(stat, 1)
+    p = 1 - chi2.cdf(stat, df)
     return (stat, p)
 
 
@@ -208,7 +231,7 @@ def get_chain(path, results, critical_pvalue):
     for model_complex, model_simple in zip(path, path[1:]):
         result_complex = results[model_complex]
         result_simple = results[model_simple]
-        stat, p = get_pvalue(result_complex, result_simple)
+        stat, p = get_pvalue(result_complex, result_simple, df=1)
         if p >= critical_pvalue:
             chain.append(model_simple)
         else:

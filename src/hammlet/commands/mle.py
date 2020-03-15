@@ -1,5 +1,4 @@
 import csv
-import itertools
 
 import click
 from tabulate import tabulate
@@ -68,16 +67,16 @@ from ..utils import autotimeit, pformatf
     help="Number of best models to show",
 )
 @click.option(
-    "--only-first",
-    "is_only_first",
+    "--only-first-permutation",
+    "is_only_first_permutation",
     is_flag=True,
-    help="Use only first permutation (1,2,3,4) for calculations",
+    help="Use only first permutation (1234) for calculations",
 )
 @click.option(
     "--only-permutation",
-    metavar="<int...>",
+    metavar="<[1-4]{4}>",
     callback=parse_permutation,
-    help="Use only specified permutation of (1,2,3,4) for calculations",
+    help="Use only specified permutation of (1234) for calculations",
 )
 @click.option(
     "--no-polytomy", "is_no_polytomy", is_flag=True, help="Do not show polytomy results"
@@ -107,7 +106,7 @@ def mle(
     models,
     output_filename_mle,
     number_of_best,
-    is_only_first,
+    is_only_first_permutation,
     only_permutation,
     is_no_polytomy,
     method,
@@ -128,12 +127,12 @@ def mle(
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
 
-    if is_only_first:
-        perms = [(1, 2, 3, 4)]
+    if is_only_first_permutation:
+        perms = [1234]
     elif only_permutation:
         perms = [only_permutation]
     else:
-        perms = list(itertools.permutations((1, 2, 3, 4)))
+        perms = "all"
 
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
@@ -150,7 +149,7 @@ def mle(
             (
                 model.name,
                 model.mnemonic_name,
-                ",".join(map(str, perm)),
+                "".join(map(str, perm)),
                 LL,
                 n0,
                 T1,

@@ -23,9 +23,9 @@ from ..utils import autotimeit, morph10
 @click.option(
     "-p",
     "--permutation",
-    metavar="<int...>",
+    metavar="<[1-4]{4}>",
     callback=parse_permutation,
-    help="Comma-separated permutation of (1,2,3,4) to use for calculations",
+    help="Permutation to use for calculations",
 )
 @click.option(
     "--output-y",

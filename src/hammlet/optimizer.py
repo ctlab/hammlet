@@ -1,10 +1,11 @@
+import itertools
 from collections import namedtuple
 from operator import attrgetter
 
 from scipy.optimize import minimize
 
 from .printers import log_debug
-from .utils import likelihood, morph10
+from .utils import convert_permutation, likelihood, morph10
 
 __all__ = ["Optimizer"]
 
@@ -26,8 +27,8 @@ class Optimizer:
     def one(self, model, perm):
         if self.debug:
             log_debug(
-                "Optimizing model {} for permutation ({})...".format(
-                    model, ",".join(map(str, perm))
+                "Optimizing model {} for permutation {}...".format(
+                    model, "".join(map(str, perm))
                 )
             )
         # maximize `likelihood`  ==  minimize `-likelihood`
@@ -42,8 +43,19 @@ class Optimizer:
         theta = tuple(result.x)
         return OptimizationResult(model, perm, LL, theta)
 
-    def many(self, models, perms, sort=True):
-        results = [self.one(model, perm) for model in models for perm in perms]
+    def many(self, models, perms="all", sort=True):
+        results = []
+        for model in models:
+            if perms == "all":
+                ps = model.perms
+            else:
+                ps = perms
+            if ps == "all":
+                ps = list(itertools.permutations((1, 2, 3, 4)))
+            else:
+                ps = list(map(convert_permutation, ps))
+            for perm in ps:
+                results.append(self.one(model, perm))
         if sort:
             results.sort(key=attrgetter("LL"), reverse=True)
         return results
