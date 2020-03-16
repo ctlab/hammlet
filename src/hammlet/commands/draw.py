@@ -37,7 +37,7 @@ from ..drawing import get_drawing_string
     help="4 comma-separated names of species",
 )
 @click.option(
-    "-w",
+    "-a",
     "--width",
     type=float,
     metavar="<float>",
@@ -46,7 +46,7 @@ from ..drawing import get_drawing_string
     help="Width",
 )
 @click.option(
-    "-h",
+    "-b",
     "--height",
     type=float,
     metavar="<float>",
