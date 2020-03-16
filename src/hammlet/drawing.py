@@ -84,6 +84,7 @@ def get_drawing_string(
     color_tree,
     color_hybrid,
     color_ruler,
+    is_draw_ruler=True,
 ):
     assert model in ("H1", "H2"), "Model must me either H1 or H2"
     assert T12 >= 0, "T12 must be positive"
@@ -221,8 +222,9 @@ def get_drawing_string(
     dwg.label(names[1], p2 + Point(2, 0))
     dwg.label(names[2], p3 + Point(2, 0))
     dwg.label(names[3], p4 + Point(2, 0))
-    dwg.segment(pRulerStart, pRulerEnd, stroke=color_ruler)
-    dwg.label(str(rulerMya), pRulerLabel, text_anchor="middle")
+    if is_draw_ruler:
+        dwg.segment(pRulerStart, pRulerEnd, stroke=color_ruler)
+        dwg.label(str(rulerMya), pRulerLabel, text_anchor="middle")
 
     s = StringIO()
     dwg.write(s, pretty=True)

@@ -104,6 +104,13 @@ from ..drawing import get_drawing_string
     show_default=True,
     help="Ruler color",
 )
+@click.option(
+    "--ruler/--no-ruler",
+    "is_draw_ruler",
+    default=True,
+    show_default=True,
+    help="Draw a ruler",
+)
 def draw(
     model,
     output,
@@ -120,6 +127,7 @@ def draw(
     color_tree,
     color_hybrid,
     color_ruler,
+    is_draw_ruler,
 ):
     """Draw hybridization network."""
 
@@ -142,6 +150,7 @@ def draw(
         color_tree=color_tree,
         color_hybrid=color_hybrid,
         color_ruler=color_ruler,
+        is_draw_ruler=is_draw_ruler,
     )
 
     with click.open_file(output, "w") as f:
