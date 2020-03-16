@@ -138,10 +138,11 @@ def stat_reverse(
 
     for level_simple in levels[1:]:
         result_simple = best_result_by_level[level_simple]
-        stat, p = get_pvalue(result_complex, result_simple, df=1)
+        df = int(level_complex[1:]) - int(level_simple[1:])
+        stat, p = get_pvalue(result_complex, result_simple, df=df)
         log_info(
-            "{}-{}: stat = {:.3f}, p-value = {:.5f}".format(
-                level_complex, level_simple, stat, p
+            "{}-{}: df = {}, stat = {:.3f}, p-value = {:.5f}".format(
+                level_complex, level_simple, df, stat, p
             )
         )
         if p >= critical_pvalue:
