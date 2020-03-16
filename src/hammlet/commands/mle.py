@@ -12,7 +12,7 @@ from ..parsers import (
     presets_db,
 )
 from ..printers import log_debug, log_info, log_success
-from ..utils import autotimeit, pformatf
+from ..utils import autotimeit, pformatf, results_to_data
 
 
 @click.command()
@@ -139,26 +139,7 @@ def mle(
     log_info("Optimizing...")
     results = optimizer.many(models, perms, sort=True)
 
-    data = []
-    for result in results:
-        model = result.model
-        perm = result.permutation
-        LL = result.LL
-        n0, T1, T3, g1, g3 = result.theta
-        data.append(
-            (
-                model.name,
-                model.mnemonic_name,
-                "".join(map(str, perm)),
-                LL,
-                n0,
-                T1,
-                T3,
-                g1,
-                g3,
-            )
-        )
-    headers = ["Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3"]
+    headers, data = results_to_data(results)
     if output_filename_mle:
         log_info("Writing MLE results to <{}>...".format(output_filename_mle))
         with click.open_file(output_filename_mle, "w", atomic=True) as f:
@@ -176,6 +157,6 @@ def mle(
         floatfmt=".3f",
         tablefmt="simple",
     )
+    del headers, data
     log_success("MLE results:")
     click.echo(table)
-    del data, headers, table

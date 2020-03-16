@@ -1,10 +1,19 @@
-import click
+import csv
 
-from ..models import models_N0, models_N1, models_N2, models_N3, models_N4
+import click
+from tabulate import tabulate
+
+from ..models import models_nrds
 from ..optimizer import Optimizer
 from ..parsers import parse_input, presets_db
-from ..printers import log_debug, log_info, log_success, print_result
-from ..utils import autotimeit, get_pvalue, pformatf
+from ..printers import log_debug, log_info, log_success
+from ..utils import (
+    autotimeit,
+    get_pvalue,
+    grouped_results_to_data,
+    pformatf,
+    results_to_data,
+)
 
 
 @click.command()
@@ -31,6 +40,13 @@ from ..utils import autotimeit, get_pvalue, pformatf
     default=(1, 1, 1, 1),
     show_default=True,
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
+)
+@click.option(
+    "--output-mle",
+    "output_filename_mle",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with MLE results table",
 )
 @click.option(
     "-p",
@@ -60,7 +76,9 @@ from ..utils import autotimeit, get_pvalue, pformatf
 )
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
-def stat_levels(preset, y, r, critical_pvalue, method, theta0, debug):
+def stat_levels(
+    preset, y, r, output_filename_mle, critical_pvalue, method, theta0, debug
+):
     """Perform 'levels' statistics calculation."""
 
     y = parse_input(preset, y, verbose=True)
@@ -73,89 +91,56 @@ def stat_levels(preset, y, r, critical_pvalue, method, theta0, debug):
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
 
+    levels = ["N4", "N3", "N2", "N1", "N0"]
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
-    click.echo()
-    log_info("Optimizing N4...")
-    results_N4 = optimizer.many(models_N4, sort=True)
-    best_result_N4 = max(results_N4, key=lambda r: r.LL)
-    log_success("Best result for N4:")
-    print_result(best_result_N4)
+    log_info("Optimizing...")
+    results_by_level = {level: optimizer.many(models_nrds[level]) for level in levels}
+    best_result_by_level = {
+        level: max(results, key=lambda r: r.LL)
+        for level, results in results_by_level.items()
+    }
 
-    #
+    if output_filename_mle:
+        headers, data = grouped_results_to_data(results_by_level, group_header="Level")
+        log_info("Writing MLE results to <{}>...".format(output_filename_mle))
+        with click.open_file(output_filename_mle, "w", atomic=True) as f:
+            writer = csv.writer(f, lineterminator="\n")
+            writer.writerow(headers)
+            for row in data:
+                writer.writerow(map(str, row))
+            del writer
+        del headers, data
 
-    click.echo()
-    log_info("Optimizing N3...")
-    results_N3 = optimizer.many(models_N3, sort=True)
-    best_result_N3 = max(results_N3, key=lambda r: r.LL)
-    log_success("Best result for N3:")
-    print_result(best_result_N3)
+    headers, data = grouped_results_to_data(
+        {level: [best_result] for level, best_result in best_result_by_level.items()},
+        group_header="Level",
+    )
+    table = tabulate(
+        data,
+        headers=[click.style(s, bold=True) for s in headers],
+        numalign="center",
+        stralign="center",
+        floatfmt=".3f",
+        tablefmt="simple",
+    )
+    del headers, data
+    log_success("MLE results (best per level):")
+    click.echo(table)
 
-    _, p = get_pvalue(best_result_N4, best_result_N3, df=1)
-    log_info("p-value for N4-N3: {:.3f}".format(p))
-    if p < critical_pvalue:
-        log_info("p < critical_pvalue, N4 is the best")
-        log_success("Final result: N4, model {}".format(best_result_N4.model.name))
-        return
-    else:
-        log_info("p >= critical_pvalue, N3 is better than N4")
-    del p
+    for level_current, level_next in zip(levels, levels[1:]):
+        result_current = best_result_by_level[level_current]
+        result_next = best_result_by_level[level_next]
+        stat, p = get_pvalue(result_current, result_next, df=1)
+        log_info(
+            "{}-{}: stat = {:.3f}, p-value = {:.5f}".format(
+                level_current, level_next, stat, p
+            )
+        )
+        if p < critical_pvalue:
+            log_success("Last p-value < critical_pvalue, stopping")
+            break
 
-    #
-
-    click.echo()
-    log_info("Optimizing N2...")
-    results_N2 = optimizer.many(models_N2, sort=True)
-    best_result_N2 = max(results_N2, key=lambda r: r.LL)
-    log_success("Best result for N2:")
-    print_result(best_result_N2)
-
-    _, p = get_pvalue(best_result_N3, best_result_N2, df=1)
-    log_info("p-value for N3-N2: {:.3f}".format(p))
-    if p < critical_pvalue:
-        log_info("p < critical_pvalue, N3 is the best")
-        log_success("Final result: N3, model {}".format(best_result_N3.model.name))
-        return
-    else:
-        log_info("p >= critical_pvalue, N2 is better than N3")
-    del p
-
-    #
-
-    click.echo()
-    log_info("Optimizing N1...")
-    results_N1 = optimizer.many(models_N1, sort=True)
-    best_result_N1 = max(results_N1, key=lambda r: r.LL)
-    log_success("Best result for N1:")
-    print_result(best_result_N1)
-
-    _, p = get_pvalue(best_result_N2, best_result_N1, df=1)
-    log_info("p-value for N2-N1: {:.3f}".format(p))
-    if p < critical_pvalue:
-        log_info("p < critical_pvalue, N2 is the best")
-        log_success("Final result: N2, model {}".format(best_result_N2.model.name))
-        return
-    else:
-        log_info("p >= critical_pvalue, N1 is better than N2")
-    del p
-
-    #
-
-    click.echo()
-    log_info("Optimizing N0...")
-    results_N0 = optimizer.many(models_N0, sort=True)
-    best_result_N0 = max(results_N0, key=lambda r: r.LL)
-    log_success("Best result for N0:")
-    print_result(best_result_N0)
-
-    _, p = get_pvalue(best_result_N1, best_result_N0, df=1)
-    log_info("p-value for N1-N0: {:.3f}".format(p))
-    if p < critical_pvalue:
-        log_info("p < critical_pvalue, N1 is the best")
-        log_success("Final result: N1, model {}".format(best_result_N1.model.name))
-        return
-    else:
-        log_info("p >= critical_pvalue, N0 is better than N1")
-    del p
-
-    log_success("Final result: N0, model {}".format(best_result_N0.model.name))
+    log_success(
+        "Final result: level {}, model {}".format(level_current, result_current.model)
+    )

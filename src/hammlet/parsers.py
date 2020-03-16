@@ -8,11 +8,7 @@ from .models import (
     models_H2,
     models_mapping,
     models_mapping_mnemonic,
-    models_N0,
-    models_N1,
-    models_N2,
-    models_N3,
-    models_N4,
+    models_nrds,
 )
 from .printers import log_info, log_warn
 
@@ -108,15 +104,15 @@ def parse_models(ctx, param, value):
     elif "H2" in model_names:
         model_names += tuple(m.name for m in models_H2)
     elif "N0" in model_names:
-        model_names += tuple(m.name for m in models_N0)
+        model_names += tuple(m.name for m in models_nrds["N0"])
     elif "N1" in model_names:
-        model_names += tuple(m.name for m in models_N1)
+        model_names += tuple(m.name for m in models_nrds["N1"])
     elif "N2" in model_names:
-        model_names += tuple(m.name for m in models_N2)
+        model_names += tuple(m.name for m in models_nrds["N2"])
     elif "N3" in model_names:
-        model_names += tuple(m.name for m in models_N3)
+        model_names += tuple(m.name for m in models_nrds["N3"])
     elif "N4" in model_names:
-        model_names += tuple(m.name for m in models_N4)
+        model_names += tuple(m.name for m in models_nrds["N4"])
     # seen = set()
     seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
     seen_add = seen.add

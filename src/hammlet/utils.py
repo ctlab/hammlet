@@ -19,6 +19,8 @@ __all__ = [
     "get_paths",
     "get_chain",
     "get_chains",
+    "results_to_data",
+    "grouped_results_to_data",
 ]
 
 
@@ -242,3 +244,37 @@ def get_chain(path, results, critical_pvalue):
 def get_chains(paths, results, critical_pvalue):
     # results :: {model_name: result}
     return [get_chain(path, results, critical_pvalue) for path in paths]
+
+
+def results_to_data(results):
+    data = []
+    for result in results:
+        model = result.model
+        perm = result.permutation
+        LL = result.LL
+        n0, T1, T3, g1, g3 = result.theta
+        data.append(
+            (
+                model.name,
+                model.mnemonic_name,
+                "".join(map(str, perm)),
+                LL,
+                n0,
+                T1,
+                T3,
+                g1,
+                g3,
+            )
+        )
+    headers = ("Model", "Mnemo", "Perm", "LL", "n0", "T1", "T3", "g1", "g3")
+    return headers, data
+
+
+def grouped_results_to_data(grouped_results, group_header="Group"):
+    data_all = []
+    for group, results in grouped_results.items():
+        headers, data = results_to_data(results)
+        for i in range(len(data)):
+            data[i] = (group,) + data[i]
+        data_all.extend(data)
+    return (group_header,) + headers, data_all

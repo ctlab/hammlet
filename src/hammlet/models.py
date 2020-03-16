@@ -517,12 +517,20 @@ all_models = models_H1 + models_H2
 models_mapping = Model.mapping
 models_mapping_mnemonic = Model.mapping_mnemonic
 
-models_N0 = [models_mapping[name] for name in ["P"]]
-models_N1 = [models_mapping[name] for name in ["PT", "TP", "T0"]]
-models_N2 = [models_mapping[name] for name in ["1HP1", "1HP2", "1HP3", "T1", "T2"]]
-models_N3 = [models_mapping[name] for name in ["1H1", "1H2", "1H3", "1H4", "2HP"]]
-models_N4 = [models_mapping[name] for name in ["2H1", "2H2"]]
-models_NR = models_N0 + models_N1 + models_N2 + models_N3 + models_N4
+models_nrds = {
+    "N0": ["P"],
+    "N1": ["PT", "TP", "T0"],
+    "N2": ["1HP1", "1HP2", "1HP3", "T1", "T2"],
+    "N3": ["1H1", "1H2", "1H3", "1H4", "2HP"],
+    "N4": ["2H1", "2H2"],
+}
+models_nrds["NR"] = [
+    name for i in range(0, 4 + 1) for name in models_nrds["N{}".format(i)]
+]
+models_nrds = {
+    level: [models_mapping[name] for name in names]
+    for level, names in models_nrds.items()
+}
 
 models_hierarchy = {
     "H1": {
