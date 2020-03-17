@@ -550,7 +550,7 @@ models_hierarchy = {
             ("PT", "P"),
             ("T0", "P"),
         ],
-        "non-free": [
+        "fixed": [
             ("2H1", "1H1 1H2 1H3 1H4 1HP 1HP1"),
             ("1H1", "T1 T2 PT 1HP2"),
             ("1H2", "1HP1 1T2B T1 1PH1A"),
@@ -586,7 +586,7 @@ models_hierarchy = {
             ("2P2", "PL2"),
             ("2P3", "PL2"),
         ],
-        "non-free": [
+        "fixed": [
             ("2H2", "2HA1 2HA2 2HB1 2HB2 2HP"),
             ("2HA1", "2PH2 2T2 2T1"),
             ("2HA2", "2P1A 2T2B 2T2A 2PH2C"),

@@ -120,7 +120,7 @@ def chains(
     y = parse_input(preset, y, verbose=True)
     del preset
     log_info("Model group: {}".format(group))
-    log_info("Hierarchy: {}".format("free" if is_free_permutation else "non-free"))
+    log_info("Hierarchy: {}".format("free" if is_free_permutation else "fixed"))
     log_info("y: {}".format(" ".join(map(str, y))))
     log_info("r: ({})".format(", ".join(map(pformatf, r))))
 
@@ -135,7 +135,7 @@ def chains(
         models = models_H2
     else:
         raise ValueError("Unsupperted group '{}'".format(group))
-    hierarchy = models_hierarchy[group]["free" if is_free_permutation else "non-free"]
+    hierarchy = models_hierarchy[group]["free" if is_free_permutation else "fixed"]
 
     if is_only_first:
         perms = [(1, 2, 3, 4)]
