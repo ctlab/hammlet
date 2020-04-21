@@ -180,17 +180,17 @@ def stat_reverse(
             mnemo = final_result.model.mnemonic_name
             LL = final_result.LL
             (n0, T1, T3, g1, g3) = final_result.theta
-            if level == levels[0]:
+            if level == levels[0] or level == levels[1]:
                 pbad = 0
             else:
+                level_prev = levels[levels.index(level) - 1]
                 _, pbad = get_pvalue(
-                    final_result,
-                    best_result_by_level[levels[levels.index(level) - 1]],
-                    df=1,
+                    result_complex,
+                    best_result_by_level[level_prev],
+                    df=int(level_complex[1:]) - int(level_prev[1:]),
                 )
             pgood = p
-            _, ppoly = get_pvalue(final_result, best_result_by_level["N0"], df=1)
-            # Ex: [reverse],N3,1H3,H1:TT0g,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
+            _, ppoly = get_pvalue(result_complex, best_result_by_level["N0"], df=4)
             f.write(
                 "[reverse],{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
                     level, name, mnemo, LL, n0, T1, T3, g1, g3, pbad, pgood, ppoly
