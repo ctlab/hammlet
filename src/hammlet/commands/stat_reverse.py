@@ -49,6 +49,13 @@ from ..utils import (
     help="Output file with MLE results table",
 )
 @click.option(
+    "--output-result",
+    "output_filename_result",
+    type=click.Path(writable=True),
+    metavar="<path>",
+    help="Output file with result",
+)
+@click.option(
     "-p",
     "--pvalue",
     "critical_pvalue",
@@ -77,7 +84,15 @@ from ..utils import (
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_reverse(
-    preset, y, r, output_filename_mle, critical_pvalue, method, theta0, debug
+    preset,
+    y,
+    r,
+    output_filename_mle,
+    output_filename_result,
+    critical_pvalue,
+    method,
+    theta0,
+    debug,
 ):
     """Perform 'reverse' statistics calculation."""
 
@@ -154,3 +169,28 @@ def stat_reverse(
     log_success(
         "Final result: level {}, model {}".format(final_level, final_result.model)
     )
+
+    if output_filename_result:
+        log_info("Writing result to <{}>...".format(output_filename_result))
+        with click.open_file(output_filename_result, "w", atomic=True) as f:
+            level = final_level
+            name = final_result.model.name
+            mnemo = final_result.model.mnemonic_name
+            LL = final_result.LL
+            (n0, T1, T3, g1, g3) = final_result.theta
+            if level == levels[0]:
+                pbad = 0
+            else:
+                _, pbad = get_pvalue(
+                    final_result,
+                    best_result_by_level[levels[levels.index(level) - 1]],
+                    df=1,
+                )
+            pgood = p
+            _, ppoly = get_pvalue(final_result, best_result_by_level["N0"], df=1)
+            # Ex: [reverse],N3,1H3,H1:TT0g,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
+            f.write(
+                "[reverse],{},{},{}, {}, {},{},{},{},{}, {},{},{}\n".format(
+                    level, name, mnemo, LL, n0, T1, T3, g1, g3, pbad, pgood, ppoly
+                )
+            )
