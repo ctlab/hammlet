@@ -110,7 +110,9 @@ def stat_reverse(
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
     log_info("Optimizing...")
-    results_by_level = {level: optimizer.many(models_nrds[level]) for level in levels}
+    results_by_level = {
+        level: optimizer.many(models_nrds[level], perms="model") for level in levels
+    }
     best_result_by_level = {
         level: max(results, key=lambda r: r.LL)
         for level, results in results_by_level.items()

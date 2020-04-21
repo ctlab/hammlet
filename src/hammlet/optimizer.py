@@ -46,7 +46,11 @@ class Optimizer:
     def many(self, models, perms="all", sort=True):
         results = []
         for model in models:
-            if perms == "all":
+            if perms == "model":
+                ps = model.perms
+            else:
+                ps = perms
+            if ps == "all":
                 ps = list(itertools.permutations((1, 2, 3, 4)))
             else:
                 ps = list(map(convert_permutation, ps))
