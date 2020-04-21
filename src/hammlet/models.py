@@ -520,7 +520,7 @@ models_mapping_mnemonic = Model.mapping_mnemonic
 
 models_nrds = {
     "N0": ["P"],
-    "N1": ["PT", "TP", "T0"],
+    "N1": ["PT", "TP"],
     "N2": ["1HP1", "1HP2", "1HP3", "T1", "T2"],
     "N3": ["1H1", "1H2", "1H3", "1H4", "2HP"],
     "N4": ["2H1", "2H2"],
