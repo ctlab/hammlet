@@ -487,9 +487,9 @@ models_H1 = [
     ModelH1("T0", "T010", [1234, 1243, 1324]),
     ModelH1("P", "00nn", [1234]),
 ]
-# fmt: on
 models_H2 = [
-    ModelH2("2H2", "TTgg"),
+    ModelH2("2H2", "TTgg", [1234, 1243, 1324, 1342, 1423, 1432,
+                            2314, 2341, 2413, 2431, 3412, 3421]),
     ModelH2("2HA1", "TTg0"),
     ModelH2("2HA2", "TTg1"),
     ModelH2("2HB1", "TT0g"),
@@ -512,6 +512,7 @@ models_H2 = [
     ModelH2("2P3A", "T001"),
     ModelH2("PL2", "00nn", [1234]),
 ]
+# fmt: on
 all_models = models_H1 + models_H2
 
 models_mapping = Model.mapping
