@@ -178,6 +178,7 @@ def stat_reverse(
             level = final_level
             name = final_result.model.name
             mnemo = final_result.model.mnemonic_name
+            permutation = result_current.permutation
             LL = final_result.LL
             (n0, T1, T3, g1, g3) = final_result.theta
             if level == levels[0] or level == levels[1]:
@@ -192,7 +193,19 @@ def stat_reverse(
             pgood = p
             _, ppoly = get_pvalue(result_complex, best_result_by_level["N0"], df=4)
             f.write(
-                "[reverse],{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-                    level, name, mnemo, LL, n0, T1, T3, g1, g3, pbad, pgood, ppoly
+                "[reverse],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                    level,
+                    name,
+                    mnemo,
+                    "".join(map(str, permutation)),
+                    LL,
+                    n0,
+                    T1,
+                    T3,
+                    g1,
+                    g3,
+                    pbad,
+                    pgood,
+                    ppoly,
                 )
             )

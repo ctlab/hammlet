@@ -166,6 +166,7 @@ def stat_levels(
             level = level_current
             name = result_current.model.name
             mnemo = result_current.model.mnemonic_name
+            permutation = result_current.permutation
             LL = result_current.LL
             (n0, T1, T3, g1, g3) = result_current.theta
             if level == levels[0]:
@@ -189,7 +190,19 @@ def stat_levels(
             )
             # Ex: [levels],N3,1H3,H1:TT0g,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
             f.write(
-                "[levels],{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-                    level, name, mnemo, LL, n0, T1, T3, g1, g3, pbad, pgood, ppoly
+                "[levels],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                    level,
+                    name,
+                    mnemo,
+                    "".join(map(str, permutation)),
+                    LL,
+                    n0,
+                    T1,
+                    T3,
+                    g1,
+                    g3,
+                    pbad,
+                    pgood,
+                    ppoly,
                 )
             )
