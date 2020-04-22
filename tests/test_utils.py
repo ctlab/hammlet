@@ -4,7 +4,7 @@ from hammlet.utils import get_paths
 
 def test_get_paths_H1_free():
     assert all(
-        path[-1] == "P" for path in get_paths(models_hierarchy["H1"]["free"], "2H1")
+        path[-1] == "P" for path in get_paths(models_hierarchy["H1"]["fixed"], "2H1")
     )
 
 
@@ -16,7 +16,7 @@ def test_get_paths_H1_nonfree():
 
 def test_get_paths_H2_free():
     assert all(
-        path[-1] == "PL2" for path in get_paths(models_hierarchy["H2"]["free"], "2H2")
+        path[-1] == "PL2" for path in get_paths(models_hierarchy["H2"]["fixed"], "2H2")
     )
 
 
