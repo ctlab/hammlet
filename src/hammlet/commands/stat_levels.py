@@ -188,7 +188,7 @@ def stat_levels(
             _, ppoly = get_pvalue(
                 result_current, best_result_by_level["N0"], df=int(level[1:])
             )
-            # Ex: [levels],N3,1H3,H1:TT0g,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
+            # Ex: [levels],N3,1H3,H1:TT0g,1234,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
             f.write(
                 "[levels],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
                     level,
