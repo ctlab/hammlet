@@ -178,7 +178,7 @@ def stat_reverse(
             level = final_level
             name = final_result.model.name
             mnemo = final_result.model.mnemonic_name
-            permutation = result_current.permutation
+            permutation = final_result.permutation
             LL = final_result.LL
             (n0, T1, T3, g1, g3) = final_result.theta
             if level == levels[0] or level == levels[1]:
