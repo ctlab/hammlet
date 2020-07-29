@@ -152,9 +152,14 @@ def stat_levels(
                 level_current, level_next, stat, p
             )
         )
+        del stat
         if p < critical_pvalue:
             log_success("Last p-value < critical_pvalue, stopping")
             break
+    else:  # Note: for...else
+        log_success("All p-value > critical_pvalue, accepting polytomy")
+        level_current = level_next
+        result_current = result_next
 
     log_success(
         "Final result: level {}, model {}".format(level_current, result_current.model)
