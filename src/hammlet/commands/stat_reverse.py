@@ -217,7 +217,7 @@ def stat_reverse(
                 )
             pgood = p
             if final_level == "N0":
-                ppoly = 0
+                ppoly = 1
             else:
                 _, ppoly = get_pvalue(
                     final_result, best_result_by_level["N0"], df=int(final_level[1:])
