@@ -224,42 +224,47 @@ def stat_levels(
         level_current = level_next
         result_current = result_next
 
+    final_level = level_current
+    final_result = result_current
+
     log_success(
-        "Final result: level {}, model {}".format(level_current, result_current.model)
+        "Final result: level {}, model {}".format(final_level, final_result.model)
     )
 
     if output_filename_result:
         log_info("Writing result to <{}>...".format(output_filename_result))
         with click.open_file(output_filename_result, "w", atomic=True) as f:
-            level = level_current
-            name = result_current.model.name
-            mnemo = result_current.model.mnemonic_name
-            permutation = result_current.permutation
-            LL = result_current.LL
-            (n0, T1, T3, g1, g3) = result_current.theta
-            if level == levels[0]:
+            name = final_result.model.name
+            mnemo = final_result.model.mnemonic_name
+            permutation = final_result.permutation
+            LL = final_result.LL
+            (n0, T1, T3, g1, g3) = final_result.theta
+            if final_level == levels[0]:
                 pbad = 0
             else:
                 _, pbad = get_pvalue(
-                    best_result_by_level[levels[levels.index(level) - 1]],
-                    result_current,
+                    best_result_by_level[levels[levels.index(final_level) - 1]],
+                    final_result,
                     df=1,
                 )
-            if level == levels[-1]:
+            if final_level == levels[-1]:
                 pgood = 0
             else:
                 _, pgood = get_pvalue(
-                    result_current,
-                    best_result_by_level[levels[levels.index(level) + 1]],
+                    final_result,
+                    best_result_by_level[levels[levels.index(final_level) + 1]],
                     df=1,
                 )
-            _, ppoly = get_pvalue(
-                result_current, best_result_by_level["N0"], df=int(level[1:])
-            )
+            if final_level == "N0":
+                ppoly = 0
+            else:
+                _, ppoly = get_pvalue(
+                    final_result, best_result_by_level["N0"], df=int(final_level[1:])
+                )
             # Ex: [levels],N3,1H3,H1:TT0g,1234,444.45,98.99,1.0,2.0,0,0.5,0.01,0.6,0.0001
             f.write(
                 "[levels],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-                    level,
+                    final_level,
                     name,
                     mnemo,
                     "".join(map(str, permutation)),

@@ -201,26 +201,30 @@ def stat_reverse(
     if output_filename_result:
         log_info("Writing result to <{}>...".format(output_filename_result))
         with click.open_file(output_filename_result, "w", atomic=True) as f:
-            level = final_level
             name = final_result.model.name
             mnemo = final_result.model.mnemonic_name
             permutation = final_result.permutation
             LL = final_result.LL
             (n0, T1, T3, g1, g3) = final_result.theta
-            if level == levels[0] or level == levels[1]:
+            if final_level == levels[0] or final_level == levels[1]:
                 pbad = 0
             else:
-                level_prev = levels[levels.index(level) - 1]
+                level_prev = levels[levels.index(final_level) - 1]
                 _, pbad = get_pvalue(
                     result_complex,
                     best_result_by_level[level_prev],
                     df=int(level_complex[1:]) - int(level_prev[1:]),
                 )
             pgood = p
-            _, ppoly = get_pvalue(result_complex, best_result_by_level["N0"], df=4)
+            if final_level == "N0":
+                ppoly = 0
+            else:
+                _, ppoly = get_pvalue(
+                    final_result, best_result_by_level["N0"], df=int(final_level[1:])
+                )
             f.write(
                 "[reverse],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-                    level,
+                    final_level,
                     name,
                     mnemo,
                     "".join(map(str, permutation)),
