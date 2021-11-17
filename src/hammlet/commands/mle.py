@@ -51,6 +51,16 @@ from ..utils import autotimeit, pformatf, results_to_data
     help="Comma-separated list of models",
 )
 @click.option(
+    "-x",
+    "--exclude",
+    "excluded_models",
+    multiple=True,
+    metavar="<name...|all>",
+    required=False,
+    callback=parse_models,
+    help="Comma-separated list of models to exclude",
+)
+@click.option(
     "--output-mle",
     "output_filename_mle",
     type=click.Path(writable=True),
@@ -104,6 +114,7 @@ def mle(
     y,
     r,
     models,
+    excluded_models,
     output_filename_mle,
     number_of_best,
     is_only_first_permutation,
@@ -114,6 +125,17 @@ def mle(
     debug,
 ):
     """Perform maximum likelihood estimation."""
+
+    if excluded_models:
+        log_debug(
+            "Excluding models: {}".format(
+                " ".join(model.name for model in excluded_models)
+            )
+        )
+        models = list(set(models) - set(excluded_models))
+    if not models:
+        log_info("No models left, nothing to do")
+        return
 
     y = parse_input(preset, y, verbose=True)
     del preset

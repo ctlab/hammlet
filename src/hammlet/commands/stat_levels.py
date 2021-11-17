@@ -5,15 +5,9 @@ from tabulate import tabulate
 
 from ..models import models_nrds
 from ..optimizer import Optimizer
-from ..parsers import parse_input, presets_db
+from ..parsers import parse_input, parse_models, presets_db
 from ..printers import log_debug, log_info, log_success
-from ..utils import (
-    autotimeit,
-    get_pvalue,
-    grouped_results_to_data,
-    pformatf,
-    results_to_data,
-)
+from ..utils import autotimeit, get_pvalue, grouped_results_to_data, pformatf
 
 
 @click.command()
@@ -40,6 +34,16 @@ from ..utils import (
     default=(1, 1, 1, 1),
     show_default=True,
     help="Space-separated list of " + click.style("four", bold=True) + " r values",
+)
+@click.option(
+    "-x",
+    "--exclude",
+    "excluded_models",
+    multiple=True,
+    metavar="<name...|all>",
+    required=False,
+    callback=parse_models,
+    help="Comma-separated list of models to exclude",
 )
 @click.option(
     "--output-mle",
@@ -87,6 +91,7 @@ def stat_levels(
     preset,
     y,
     r,
+    excluded_models,
     output_filename_mle,
     output_filename_result,
     critical_pvalue,
@@ -109,8 +114,22 @@ def stat_levels(
     levels = ["N4", "N3", "N2", "N1", "N0"]
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
+    if excluded_models:
+        log_debug(
+            "Excluding models: {}".format(
+                " ".join(model.name for model in excluded_models)
+            )
+        )
+    models_by_level = {
+        level: list(set(models_nrds[level]) - set(excluded_models)) for level in levels
+    }
+    # Drop empty levels
+    levels = [level for level in levels if models_by_level[level]]
+
     log_info("Optimizing...")
-    results_by_level = {level: optimizer.many(models_nrds[level]) for level in levels}
+    results_by_level = {
+        level: optimizer.many(models_by_level[level]) for level in levels
+    }
     best_result_by_level = {
         level: max(results, key=lambda r: r.LL)
         for level, results in results_by_level.items()
