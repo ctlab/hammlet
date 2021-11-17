@@ -99,19 +99,19 @@ def parse_models(ctx, param, value):
     model_names = tuple(m for s in value for m in _get_model_names(s))
     if "all" in map(lambda s: s.lower(), model_names):
         return all_models
-    elif "H1" in model_names:
+    if "H1" in model_names:
         model_names += tuple(m.name for m in models_H1)
-    elif "H2" in model_names:
+    if "H2" in model_names:
         model_names += tuple(m.name for m in models_H2)
-    elif "N0" in model_names:
+    if "N0" in model_names:
         model_names += tuple(m.name for m in models_nrds["N0"])
-    elif "N1" in model_names:
+    if "N1" in model_names:
         model_names += tuple(m.name for m in models_nrds["N1"])
-    elif "N2" in model_names:
+    if "N2" in model_names:
         model_names += tuple(m.name for m in models_nrds["N2"])
-    elif "N3" in model_names:
+    if "N3" in model_names:
         model_names += tuple(m.name for m in models_nrds["N3"])
-    elif "N4" in model_names:
+    if "N4" in model_names:
         model_names += tuple(m.name for m in models_nrds["N4"])
     # seen = set()
     seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
