@@ -30,6 +30,7 @@ def cli():
 # Note: respect the desired order
 cli.add_command(commands.mle)
 cli.add_command(commands.bootstrap)
+cli.add_command(commands.bootstrap_LL)
 cli.add_command(commands.calculate_aij)
 cli.add_command(commands.show_permutation)
 cli.add_command(commands.draw)

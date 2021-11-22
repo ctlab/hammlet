@@ -1,5 +1,6 @@
 __all__ = [
     "bootstrap",
+    "bootstrap_LL",
     "calculate_aij",
     "chains",
     "draw",
@@ -12,6 +13,7 @@ __all__ = [
 ]
 
 from .bootstrap import bootstrap
+from .bootstrap_LL import bootstrap_LL
 from .calculate_aij import calculate_aij
 from .chains import chains
 from .draw import draw
