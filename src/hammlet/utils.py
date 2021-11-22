@@ -16,6 +16,7 @@ __all__ = [
     "get_a",
     "likelihood",
     "get_pvalue",
+    "get_LL2",
     "get_paths",
     "get_chain",
     "get_chains",
@@ -25,7 +26,7 @@ __all__ = [
 
 
 def autotimeit(func, msg="All done in {:.1f} s."):
-    from .printers import log_br, log
+    from .printers import log, log_br
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -204,6 +205,30 @@ def get_pvalue(result_complex, result_simple, df):
     stat = 2 * (result_complex.LL - result_simple.LL)
     p = 1 - chi2.cdf(stat, df)
     return (stat, p)
+
+
+def get_LL2(
+    model_high,
+    model_low,
+    permutation_high,
+    permutation_low,
+    y,
+    r,
+    theta0,
+    method,
+    debug=False,
+):
+    from numpy.random import poisson
+
+    from .optimizer import Optimizer
+
+    y_poissoned = tuple(poisson(y))
+    optimizer = Optimizer(y_poissoned, r, theta0, method, debug=debug)
+    result_high = optimizer.one(model_high, permutation_high)
+    result_low = optimizer.one(model_low, permutation_low)
+    LLx = result_high.LL
+    LLy = result_low.LL
+    return LLx - LLy
 
 
 def get_paths(hierarchy, initial_model):

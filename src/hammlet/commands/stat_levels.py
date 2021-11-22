@@ -6,8 +6,15 @@ from tabulate import tabulate
 from ..models import models_nrds
 from ..optimizer import Optimizer
 from ..parsers import parse_input, parse_models, presets_db
-from ..printers import log_debug, log_info, log_success
-from ..utils import autotimeit, get_pvalue, grouped_results_to_data, pformatf
+from ..printers import log_debug, log_info, log_success, log_warn
+from ..utils import (
+    autotimeit,
+    get_a,
+    get_LL2,
+    get_pvalue,
+    grouped_results_to_data,
+    pformatf,
+)
 
 
 @click.command()
@@ -167,13 +174,49 @@ def stat_levels(
         result_current = best_result_by_level[level_current]
         result_next = best_result_by_level[level_next]
         stat, p = get_pvalue(result_current, result_next, df=1)
+        a = get_a(model=result_next.model, theta=result_next.theta, r=r)
+        if 0.1 <= critical_pvalue:
+            rep = 100
+        elif 0.01 <= critical_pvalue < 0.1:
+            rep = 1000
+        else:
+            log_warn("Are you crazy? p={} is too small!".format(critical_pvalue))
+            rep = 2000
+        # elif 0.001 <= critical_pvalue < 0.01:
+        #     rep = 10000
+        # elif 0.0001 <= critical_pvalue < 0.001:
+        #     rep = 100000
+        # else:
+        #     rep = 1000000
+        log_info("Bootstraping {} times for p={}".format(rep, critical_pvalue))
+        boot = [
+            get_LL2(
+                model_high=result_current.model,
+                model_low=result_next.model,
+                permutation_high=result_current.permutation,
+                permutation_low=result_next.permutation,
+                y=a,
+                r=r,
+                theta0=theta0,
+                method=method,
+                debug=debug,
+            )
+            for _ in range(rep)
+        ]
+        boot.sort()
+        i = int(rep - critical_pvalue * rep)
+        if i == rep:
+            i = rep - 1
+        z = boot[i]
+        # print(f"levels = {level_current}/{level_next}, LLs = {boot}")
+        print(f"levels = {level_current}/{level_next}, z = {z}")
         log_info(
             "{}-{}: stat = {:.3f}, p-value = {:.5f}".format(
                 level_current, level_next, stat, p
             )
         )
         del stat
-        if p < critical_pvalue:
+        if p <= critical_pvalue:
             log_success("Last p-value < critical_pvalue, stopping")
             break
     else:  # Note: for...else
