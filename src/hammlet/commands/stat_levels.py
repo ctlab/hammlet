@@ -92,6 +92,19 @@ from ..utils import (
     + click.style("five", bold=True)
     + " initial theta components",
 )
+@click.option(
+    "--ecdf",
+    is_flag=True,
+    help="Use ecdf criterion",
+)
+@click.option(
+    "-n",
+    "--times",
+    "bootstrap_times",
+    type=int,
+    metavar="<int>",
+    help="[ecdf] Number of bootstrap samples",
+)
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_levels(
@@ -104,6 +117,8 @@ def stat_levels(
     critical_pvalue,
     method,
     theta0,
+    ecdf,
+    bootstrap_times,
     debug,
 ):
     """Perform 'levels' statistics calculation."""
@@ -117,6 +132,29 @@ def stat_levels(
         theta0 = (round(0.6 * sum(y), 5), 0.5, 0.5, 0.5, 0.5)
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
+
+    if bootstrap_times and not ecdf:
+        raise click.BadParameter(
+            "bootstrap is only performed with --ecdf flag", param_hint="-n/--times"
+        )
+
+    if bootstrap_times:
+        rep = bootstrap_times
+    else:
+        if 0.1 <= critical_pvalue:
+            rep = 100
+        elif 0.01 <= critical_pvalue < 0.1:
+            rep = 1000
+        else:
+            log_warn("Are you crazy? p={} is too small!".format(critical_pvalue))
+            rep = 2000
+        # elif 0.001 <= critical_pvalue < 0.01:
+        #     rep = 10000
+        # elif 0.0001 <= critical_pvalue < 0.001:
+        #     rep = 100000
+        # else:
+        #     rep = 1000000
+    log_info("Going to use {} bootstrap samples for p={}".format(rep, critical_pvalue))
 
     levels = ["N4", "N3", "N2", "N1", "N0"]
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
@@ -173,54 +211,56 @@ def stat_levels(
     for level_current, level_next in zip(levels, levels[1:]):
         result_current = best_result_by_level[level_current]
         result_next = best_result_by_level[level_next]
-        stat, p = get_pvalue(result_current, result_next, df=1)
-        a = get_a(model=result_next.model, theta=result_next.theta, r=r)
-        if 0.1 <= critical_pvalue:
-            rep = 100
-        elif 0.01 <= critical_pvalue < 0.1:
-            rep = 1000
+        if ecdf and level_next != "N0":
+            a = get_a(model=result_next.model, theta=result_next.theta, r=r)
+            # log_info("Bootstrapping...")
+            boot = [
+                get_LL2(
+                    model_high=result_current.model,
+                    model_low=result_next.model,
+                    permutation_high=result_current.permutation,
+                    permutation_low=result_next.permutation,
+                    y=a,
+                    r=r,
+                    theta0=theta0,
+                    method=method,
+                    debug=debug,
+                )
+                for _ in range(rep)
+            ]
+            boot.sort()
+            i = int(rep - critical_pvalue * rep)
+            z = boot[min([i, rep - 1])]
+            LLx = result_current.LL
+            LLy = result_next.LL
+            d = LLx - LLy
+            log_info(
+                "{}-{}: delta LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
+                    level_current, level_next, d, z, i, rep, boot[0], boot[-1]
+                )
+            )
+            del a, boot, i, LLx, LLy
+            if d > z:
+                log_success("Last delta LL > critical LL, stopping")
+                del d, z
+                break
         else:
-            log_warn("Are you crazy? p={} is too small!".format(critical_pvalue))
-            rep = 2000
-        # elif 0.001 <= critical_pvalue < 0.01:
-        #     rep = 10000
-        # elif 0.0001 <= critical_pvalue < 0.001:
-        #     rep = 100000
-        # else:
-        #     rep = 1000000
-        log_info("Bootstraping {} times for p={}".format(rep, critical_pvalue))
-        boot = [
-            get_LL2(
-                model_high=result_current.model,
-                model_low=result_next.model,
-                permutation_high=result_current.permutation,
-                permutation_low=result_next.permutation,
-                y=a,
-                r=r,
-                theta0=theta0,
-                method=method,
-                debug=debug,
+            stat, p = get_pvalue(result_current, result_next, df=1)
+            log_info(
+                "{}-{}: stat = {:.3f}, p-value = {:.5f}".format(
+                    level_current, level_next, stat, p
+                )
             )
-            for _ in range(rep)
-        ]
-        boot.sort()
-        i = int(rep - critical_pvalue * rep)
-        if i == rep:
-            i = rep - 1
-        z = boot[i]
-        # print(f"levels = {level_current}/{level_next}, LLs = {boot}")
-        print(f"levels = {level_current}/{level_next}, z = {z}")
-        log_info(
-            "{}-{}: stat = {:.3f}, p-value = {:.5f}".format(
-                level_current, level_next, stat, p
-            )
-        )
-        del stat
-        if p <= critical_pvalue:
-            log_success("Last p-value < critical_pvalue, stopping")
-            break
+            del stat
+            if p <= critical_pvalue:
+                log_success("Last p-value <= critical_pvalue, stopping")
+                del p
+                break
     else:  # Note: for...else
-        log_success("All p-value > critical_pvalue, accepting polytomy")
+        if ecdf:
+            log_success("All delta LLs <= critical LLs, accepting polytomy")
+        else:
+            log_success("All p-value > critical_pvalue, accepting polytomy")
         level_current = level_next
         result_current = result_next
 
