@@ -104,8 +104,6 @@ def bootstrap_LL(
     if len(models) != 2:
         raise click.BadParameter("specify exactly two models", param_hint="-m/--models")
 
-    print(f"models = {models}")
-
     y = parse_input(preset, y, verbose=True)
     del preset
 
