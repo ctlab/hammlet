@@ -86,12 +86,13 @@ def parse_models(ctx, param, value):
             group, mnemos = s.split(":")
             model_names = []
             for mnemo in re.split(r"[,;]", mnemos):
-                if mnemo not in models_mapping_mnemonic[group]:
+                m = group + ":" + mnemo
+                if m not in models_mapping_mnemonic:
                     raise click.BadParameter(
                         'unknown model mnemonic name "{}"'.format(mnemo),
                         param_hint="models",
                     )
-                model_names.append(models_mapping_mnemonic[group][mnemo].name)
+                model_names.append(models_mapping_mnemonic[m].name)
             return model_names
         else:
             return re.split(r"[,;]", s)
