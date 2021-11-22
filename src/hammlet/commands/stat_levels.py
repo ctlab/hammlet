@@ -123,6 +123,7 @@ def stat_levels(
     models_by_level = {
         level: list(set(models_nrds[level]) - set(excluded_models)) for level in levels
     }
+    del excluded_models
     # Drop empty levels
     levels = [level for level in levels if models_by_level[level]]
 
