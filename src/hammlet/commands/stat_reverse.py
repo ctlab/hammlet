@@ -9,6 +9,8 @@ from ..parsers import parse_input, parse_models, presets_db
 from ..printers import log_debug, log_info, log_success
 from ..utils import (
     autotimeit,
+    get_a,
+    get_LL2,
     get_pvalue,
     grouped_results_to_data,
     pformatf,
@@ -91,6 +93,19 @@ from ..utils import (
     + click.style("five", bold=True)
     + " initial theta components",
 )
+@click.option(
+    "--ecdf",
+    is_flag=True,
+    help="Use ecdf criterion",
+)
+@click.option(
+    "-n",
+    "--times",
+    "bootstrap_times",
+    type=int,
+    metavar="<int>",
+    help="[ecdf] Number of bootstrap samples",
+)
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_reverse(
@@ -103,6 +118,8 @@ def stat_reverse(
     critical_pvalue,
     method,
     theta0,
+    ecdf,
+    bootstrap_times,
     debug,
 ):
     """Perform 'reverse' statistics calculation."""
@@ -116,6 +133,29 @@ def stat_reverse(
         theta0 = (round(0.6 * sum(y), 5), 0.5, 0.5, 0.5, 0.5)
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
+
+    if bootstrap_times and not ecdf:
+        raise click.BadParameter(
+            "bootstrap is only performed with --ecdf flag", param_hint="-n/--times"
+        )
+
+    if bootstrap_times:
+        rep = bootstrap_times
+    else:
+        if 0.1 <= critical_pvalue:
+            rep = 100
+        elif 0.01 <= critical_pvalue < 0.1:
+            rep = 1000
+        else:
+            log_warn("Are you crazy? p={} is too small!".format(critical_pvalue))
+            rep = 2000
+        # elif 0.001 <= critical_pvalue < 0.01:
+        #     rep = 10000
+        # elif 0.0001 <= critical_pvalue < 0.001:
+        #     rep = 100000
+        # else:
+        #     rep = 1000000
+    log_info("Going to use {} bootstrap samples for p={}".format(rep, critical_pvalue))
 
     levels = ["N4", "N0", "N1", "N2", "N3"]
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
@@ -181,18 +221,51 @@ def stat_reverse(
 
     for level_simple in levels[1:]:
         result_simple = best_result_by_level[level_simple]
-        df = int(level_complex[1:]) - int(level_simple[1:])
-        stat, p = get_pvalue(result_complex, result_simple, df=df)
-        log_info(
-            "{}-{}: df = {}, stat = {:.3f}, p-value = {:.5f}".format(
-                level_complex, level_simple, df, stat, p
+        if ecdf:
+            a = get_a(model=result_simple.model, theta=result_simple.theta, r=r)
+            boot = [
+                get_LL2(
+                    model_high=result_complex.model,
+                    model_low=result_simple.model,
+                    permutation_high=result_complex.permutation,
+                    permutation_low=result_simple.permutation,
+                    y=a,
+                    r=r,
+                    theta0=theta0,
+                    method=method,
+                    debug=debug,
+                )
+                for _ in range(rep)
+            ]
+            boot.sort()
+            i = int(rep - critical_pvalue * rep)
+            z = boot[min([i, rep - 1])]
+            LLx = result_complex.LL
+            LLy = result_simple.LL
+            d = 2 * (LLx - LLy)
+            log_info(
+                "{}-{}: delta 2*LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
+                    level_complex, level_simple, d, z, i, rep, boot[0], boot[-1]
+                )
             )
-        )
-        if p >= critical_pvalue:
-            log_success("Last p-value >= critical_pvalue, stopping")
-            final_level = level_simple
-            final_result = result_simple
-            break
+            del a, boot, i, LLx, LLy
+            if d < z:
+                log_success("Last delta 2*LL < critical LL, stopping")
+                del d, z
+                break
+        else:
+            df = int(level_complex[1:]) - int(level_simple[1:])
+            stat, p = get_pvalue(result_complex, result_simple, df=df)
+            log_info(
+                "{}-{}: df = {}, stat = {:.3f}, p-value = {:.5f}".format(
+                    level_complex, level_simple, df, stat, p
+                )
+            )
+            if p >= critical_pvalue:
+                log_success("Last p-value >= critical_pvalue, stopping")
+                final_level = level_simple
+                final_result = result_simple
+                break
 
     log_success(
         "Final result: level {}, model {}".format(final_level, final_result.model)
