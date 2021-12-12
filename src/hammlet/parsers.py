@@ -149,3 +149,12 @@ def parse_permutation(ctx, param, value):
     #     if sorted(value) != [1, 2, 3, 4]:
     #         raise click.BadParameter('must be a permutation of (1,2,3,4)')
     # return value
+
+
+def parse_ecdfs(ctx, param, value):
+    if value:
+        ecdfs = re.split(r"[,;]", value)
+        ecdfs = [float(x.strip()) for x in ecdfs]
+        if len(ecdfs) != 4:
+            raise click.BadParameter("must be exactly 4 values")
+        return ecdfs

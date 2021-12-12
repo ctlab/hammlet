@@ -5,7 +5,7 @@ from tabulate import tabulate
 
 from ..models import models_nrds
 from ..optimizer import Optimizer
-from ..parsers import parse_input, parse_models, presets_db
+from ..parsers import parse_ecdfs, parse_input, parse_models, presets_db
 from ..printers import log_debug, log_info, log_success, log_warn
 from ..utils import (
     autotimeit,
@@ -98,6 +98,14 @@ from ..utils import (
     help="Use ecdf criterion",
 )
 @click.option(
+    "--ecdfs",
+    metavar="<N4-N3, N3-N2, N2-N1, N1-N0>",
+    callback=parse_ecdfs,
+    help="[ecdf] Comma-separated list of "
+    + click.style("four", bold=True)
+    + " precomputed critical values for N4-N3,...,N1-N0",
+)
+@click.option(
     "-n",
     "--times",
     "bootstrap_times",
@@ -118,6 +126,7 @@ def stat_levels(
     method,
     theta0,
     ecdf,
+    ecdfs,
     bootstrap_times,
     debug,
 ):
@@ -211,37 +220,55 @@ def stat_levels(
     for level_current, level_next in zip(levels, levels[1:]):
         result_current = best_result_by_level[level_current]
         result_next = best_result_by_level[level_next]
-        if ecdf and level_next != "N0":
-            a = get_a(model=result_next.model, theta=result_next.theta, r=r)
-            # log_info("Bootstrapping...")
-            boot = [
-                get_LL2(
-                    model_high=result_current.model,
-                    model_low=result_next.model,
-                    permutation_high=result_current.permutation,
-                    permutation_low=result_next.permutation,
-                    y=a,
-                    r=r,
-                    theta0=theta0,
-                    method=method,
-                    debug=debug,
-                )
-                for _ in range(rep)
-            ]
-            boot.sort()
-            i = int(rep - critical_pvalue * rep)
-            z = boot[min([i, rep - 1])]
+        if ecdf:  # and level_next != "N0":
+            if ecdfs is not None:
+                z = ecdfs[levels.index(level_current)]
+            else:
+                # log_info(
+                #     "Bootstrapping {}({}) / {}({})...".format(
+                #         level_current,
+                #         result_current.model,
+                #         level_next,
+                #         result_next.model,
+                #     )
+                # )
+                a = get_a(model=result_next.model, theta=result_next.theta, r=r)
+                boot = [
+                    get_LL2(
+                        model_high=result_current.model,
+                        model_low=result_next.model,
+                        permutation_high=result_current.permutation,
+                        permutation_low=result_next.permutation,
+                        y=a,
+                        r=r,
+                        theta0=theta0,
+                        method=method,
+                        debug=debug,
+                    )
+                    for _ in range(rep)
+                ]
+                boot.sort()
+                i = int(rep - critical_pvalue * rep)
+                z = boot[min([i, rep - 1])]
             LLx = result_current.LL
             LLy = result_next.LL
-            d = LLx - LLy
-            log_info(
-                "{}-{}: delta LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
-                    level_current, level_next, d, z, i, rep, boot[0], boot[-1]
+            d = 2 * (LLx - LLy)
+            if ecdfs:
+                log_info(
+                    "{}-{}: 2*delta LL = {:.3f}, critical LL = {:.3f}".format(
+                        level_current, level_next, d, z
+                    )
                 )
-            )
-            del a, boot, i, LLx, LLy
+                del LLx, LLy
+            else:
+                log_info(
+                    "{}-{}: 2*delta LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
+                        level_current, level_next, d, z, i, rep, boot[0], boot[-1]
+                    )
+                )
+                del a, boot, i, LLx, LLy
             if d > z:
-                log_success("Last delta LL > critical LL, stopping")
+                log_success("Last 2*delta LL > critical LL, stopping")
                 del d, z
                 break
         else:
@@ -258,7 +285,7 @@ def stat_levels(
                 break
     else:  # Note: for...else
         if ecdf:
-            log_success("All delta LLs <= critical LLs, accepting polytomy")
+            log_success("All 2*delta LLs <= critical LLs, accepting polytomy")
         else:
             log_success("All p-value > critical_pvalue, accepting polytomy")
         level_current = level_next

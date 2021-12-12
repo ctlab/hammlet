@@ -5,8 +5,8 @@ from tabulate import tabulate
 
 from ..models import models_nrds
 from ..optimizer import Optimizer
-from ..parsers import parse_input, parse_models, presets_db
-from ..printers import log_debug, log_info, log_success
+from ..parsers import parse_ecdfs, parse_input, parse_models, presets_db
+from ..printers import log_debug, log_info, log_success, log_warn
 from ..utils import (
     autotimeit,
     get_a,
@@ -99,6 +99,14 @@ from ..utils import (
     help="Use ecdf criterion",
 )
 @click.option(
+    "--ecdfs",
+    metavar="<N4-N0, N4-N1, N4-N2, N4-N3>",
+    callback=parse_ecdfs,
+    help="[ecdf] Comma-separated list of "
+    + click.style("four", bold=True)
+    + " precomputed critical values for N4-N0,...,N4-N3",
+)
+@click.option(
     "-n",
     "--times",
     "bootstrap_times",
@@ -119,6 +127,7 @@ def stat_reverse(
     method,
     theta0,
     ecdf,
+    ecdfs,
     bootstrap_times,
     debug,
 ):
@@ -222,35 +231,46 @@ def stat_reverse(
     for level_simple in levels[1:]:
         result_simple = best_result_by_level[level_simple]
         if ecdf:
-            a = get_a(model=result_simple.model, theta=result_simple.theta, r=r)
-            boot = [
-                get_LL2(
-                    model_high=result_complex.model,
-                    model_low=result_simple.model,
-                    permutation_high=result_complex.permutation,
-                    permutation_low=result_simple.permutation,
-                    y=a,
-                    r=r,
-                    theta0=theta0,
-                    method=method,
-                    debug=debug,
-                )
-                for _ in range(rep)
-            ]
-            boot.sort()
-            i = int(rep - critical_pvalue * rep)
-            z = boot[min([i, rep - 1])]
+            if ecdfs is not None:
+                z = ecdfs[int(level_simple[1:])]
+            else:
+                a = get_a(model=result_simple.model, theta=result_simple.theta, r=r)
+                boot = [
+                    get_LL2(
+                        model_high=result_complex.model,
+                        model_low=result_simple.model,
+                        permutation_high=result_complex.permutation,
+                        permutation_low=result_simple.permutation,
+                        y=a,
+                        r=r,
+                        theta0=theta0,
+                        method=method,
+                        debug=debug,
+                    )
+                    for _ in range(rep)
+                ]
+                boot.sort()
+                i = int(rep - critical_pvalue * rep)
+                z = boot[min([i, rep - 1])]
             LLx = result_complex.LL
             LLy = result_simple.LL
             d = 2 * (LLx - LLy)
-            log_info(
-                "{}-{}: delta 2*LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
-                    level_complex, level_simple, d, z, i, rep, boot[0], boot[-1]
+            if ecdfs is not None:
+                log_info(
+                    "{}-{}: 2*delta LL = {:.3f}, critical LL = {:.3f}".format(
+                        level_complex, level_simple, d, z
+                    )
                 )
-            )
-            del a, boot, i, LLx, LLy
+                del LLx, LLy
+            else:
+                log_info(
+                    "{}-{}: 2*delta LL = {:.3f}, critical LL = {:.3f} ({}th of {}, range={:.3f}..{:.3f})".format(
+                        level_complex, level_simple, d, z, i, rep, boot[0], boot[-1]
+                    )
+                )
+                del a, boot, i, LLx, LLy
             if d < z:
-                log_success("Last delta 2*LL < critical LL, stopping")
+                log_success("Last 2*delta LL < critical LL, stopping")
                 del d, z
                 break
         else:
