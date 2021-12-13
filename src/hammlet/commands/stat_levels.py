@@ -113,6 +113,11 @@ from ..utils import (
     metavar="<int>",
     help="[ecdf] Number of bootstrap samples",
 )
+@click.option(
+    "--use-best-senior-model",
+    is_flag=True,
+    help="[ecdf] Optimize only the best senior model during bootstrap in ecdf",
+)
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_levels(
@@ -128,6 +133,7 @@ def stat_levels(
     ecdf,
     ecdfs,
     bootstrap_times,
+    use_best_senior_model,
     debug,
 ):
     """Perform 'levels' statistics calculation."""
@@ -145,6 +151,12 @@ def stat_levels(
     if bootstrap_times and not ecdf:
         raise click.BadParameter(
             "bootstrap is only performed with --ecdf flag", param_hint="-n/--times"
+        )
+
+    if use_best_senior_model and not ecdf:
+        raise click.BadParameter(
+            "option --use-best-senior-model only makes sense with --ecdf flag",
+            param_hint="--use-best-senior-model",
         )
 
     if bootstrap_times:
@@ -225,16 +237,27 @@ def stat_levels(
                 z = ecdfs[levels.index(level_current)]
             else:
                 a = get_a(model=result_next.model, theta=result_next.theta, r=r)
-                log_info(
-                    "Bootstrapping {}/{} {} times...".format(
-                        level_current,
-                        result_next.model,
-                        rep,
+                if use_best_senior_model:
+                    models_high = [result_current.model]
+                    log_info(
+                        "Bootstrapping {}/{} {} times...".format(
+                            result_current.model,
+                            result_next.model,
+                            rep,
+                        )
                     )
-                )
+                else:
+                    models_high = models_by_level[level_current]
+                    log_info(
+                        "Bootstrapping {}/{} {} times...".format(
+                            level_current,
+                            result_next.model,
+                            rep,
+                        )
+                    )
                 boot = [
                     get_LL2(
-                        models_high=models_by_level[level_current],
+                        models_high=models_high,
                         model_low=result_next.model,
                         y=a,
                         r=r,
