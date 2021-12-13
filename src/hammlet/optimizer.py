@@ -4,6 +4,7 @@ from operator import attrgetter
 
 from scipy.optimize import minimize
 
+from .models import constraint_value
 from .printers import log_debug
 from .utils import convert_permutation, likelihood, morph10
 
@@ -31,11 +32,15 @@ class Optimizer:
                     model, "".join(map(str, perm))
                 )
             )
+        bounds = model.get_safe_bounds()
+        theta0 = tuple(
+            constraint_value(param, bound) for param, bound in zip(self.theta0, bounds)
+        )
         # maximize `likelihood`  ==  minimize `-likelihood`
         result = minimize(
             lambda theta: -likelihood(model, morph10(self.y, perm), theta, self.r),
-            self.theta0,
-            bounds=model.get_safe_bounds(),
+            theta0,
+            bounds=bounds,
             method=self.method,
             options=self.options,
         )
