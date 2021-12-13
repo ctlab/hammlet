@@ -236,7 +236,8 @@ def stat_reverse(
             else:
                 a = get_a(model=result_simple.model, theta=result_simple.theta, r=r)
                 log_info(
-                    "Bootstrapping N4/{} {} times...".format(
+                    "Bootstrapping {}/{} {} times...".format(
+                        level_complex,
                         result_simple.model,
                         rep,
                     )
