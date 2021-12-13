@@ -170,9 +170,9 @@ class Model(object):
             elif c == "g":
                 return (0, 1)
             elif c == "0":
-                return (0, 0)
+                return (0, 1e-9)
             elif c == "1":
-                return (1, 1)
+                return (1 - 1e-9, 1)
             elif c == "N" or c == "n":
                 return None
             else:
