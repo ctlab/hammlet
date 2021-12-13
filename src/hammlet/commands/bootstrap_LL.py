@@ -163,8 +163,8 @@ def bootstrap_LL(
         y_poissoned = tuple(poisson(y))
         optimizer_boot = Optimizer(y_poissoned, r, theta0, method, debug=debug)
 
-        results_boot_senior = optimizer_boot.many(models_senior)
-        results_boot_junior = optimizer_boot.many_perms(model_junior, "all")
+        results_boot_senior = optimizer_boot.many(models_senior, "model")
+        results_boot_junior = optimizer_boot.many_perms(model_junior, "model")
 
         best_result_senior = max(results_boot_senior, key=lambda it: it.LL)
         best_result_junior = max(results_boot_junior, key=lambda it: it.LL)

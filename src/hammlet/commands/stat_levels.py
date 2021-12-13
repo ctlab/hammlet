@@ -183,7 +183,7 @@ def stat_levels(
 
     log_info("Optimizing...")
     results_by_level = {
-        level: optimizer.many(models_by_level[level]) for level in levels
+        level: optimizer.many(models_by_level[level], "model") for level in levels
     }
     best_result_by_level = {
         level: max(results, key=lambda r: r.LL)

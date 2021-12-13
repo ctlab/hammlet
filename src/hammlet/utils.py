@@ -216,14 +216,12 @@ def get_LL2(
     method,
     debug=False,
 ):
-    from numpy.random import poisson
-
     from .optimizer import Optimizer
 
-    y_poissoned = tuple(poisson(y))
+    y_poissoned = tuple(np.random.poisson(y))
     optimizer = Optimizer(y_poissoned, r, theta0, method, debug=debug)
-    results_high = optimizer.many_perms(model_high, "all")
-    results_low = optimizer.many_perms(model_low, "all")
+    results_high = optimizer.many_perms(model_high, perms="model")
+    results_low = optimizer.many_perms(model_low, perms="model")
     best_result_high = max(results_high, key=lambda it: it.LL)
     best_result_low = max(results_low, key=lambda it: it.LL)
     LLx = best_result_high.LL
