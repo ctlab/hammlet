@@ -301,6 +301,8 @@ def stat_levels(
             del stat
             if p <= critical_pvalue:
                 log_success("Last p-value <= critical_pvalue, stopping")
+                level_current = level_next
+                result_current = result_next
                 del p
                 break
     else:  # Note: for...else

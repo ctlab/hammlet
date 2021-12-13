@@ -299,6 +299,8 @@ def stat_reverse(
                 del a, boot, i, LLx, LLy
             if d < z:
                 log_success("Last 2*delta LL < critical LL, stopping")
+                final_level = level_simple
+                final_result = result_simple
                 del d, z
                 break
         else:
