@@ -1,7 +1,7 @@
 import csv
 
 import click
-from numpy.random import poisson
+import numpy as np
 from tabulate import tabulate
 
 from ..models import models_nrds
@@ -160,7 +160,7 @@ def bootstrap_LL(
     )
     data = []
     for _ in range(bootstrap_times):
-        y_poissoned = tuple(poisson(y))
+        y_poissoned = tuple(np.random.poisson(y))
         optimizer_boot = Optimizer(y_poissoned, r, theta0, method, debug=debug)
 
         results_boot_senior = optimizer_boot.many(models_senior, "model")
