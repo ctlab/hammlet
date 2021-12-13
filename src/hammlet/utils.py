@@ -208,7 +208,7 @@ def get_pvalue(result_complex, result_simple, df):
 
 
 def get_LL2(
-    model_high,
+    models_high,
     model_low,
     y,
     r,
@@ -220,7 +220,7 @@ def get_LL2(
 
     y_poissoned = tuple(np.random.poisson(y))
     optimizer = Optimizer(y_poissoned, r, theta0, method, debug=debug)
-    results_high = optimizer.many_perms(model_high, perms="model")
+    results_high = optimizer.many(models_high, perms="model")
     results_low = optimizer.many_perms(model_low, perms="model")
     best_result_high = max(results_high, key=lambda it: it.LL)
     best_result_low = max(results_low, key=lambda it: it.LL)

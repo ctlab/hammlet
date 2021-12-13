@@ -235,12 +235,16 @@ def stat_reverse(
                 z = ecdfs[int(level_simple[1:])]
             else:
                 a = get_a(model=result_simple.model, theta=result_simple.theta, r=r)
+                log_info(
+                    "Bootstrapping N4/{} {} times...".format(
+                        result_simple.model,
+                        rep,
+                    )
+                )
                 boot = [
                     get_LL2(
-                        model_high=result_complex.model,
+                        models_high=models_by_level[level_complex],
                         model_low=result_simple.model,
-                        permutation_high=result_complex.permutation,
-                        permutation_low=result_simple.permutation,
                         y=a,
                         r=r,
                         theta0=theta0,

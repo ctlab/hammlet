@@ -224,19 +224,17 @@ def stat_levels(
             if ecdfs is not None:
                 z = ecdfs[levels.index(level_current)]
             else:
+                a = get_a(model=result_next.model, theta=result_next.theta, r=r)
                 log_info(
-                    "Bootstrapping {}({}) / {}({}) {} times...".format(
+                    "Bootstrapping {}/{} {} times...".format(
                         level_current,
-                        result_current.model,
-                        level_next,
                         result_next.model,
                         rep,
                     )
                 )
-                a = get_a(model=result_next.model, theta=result_next.theta, r=r)
                 boot = [
                     get_LL2(
-                        model_high=result_current.model,
+                        models_high=models_by_level[level_current],
                         model_low=result_next.model,
                         y=a,
                         r=r,
