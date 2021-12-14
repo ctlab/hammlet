@@ -4,38 +4,14 @@ import click
 import numpy as np
 from tabulate import tabulate
 
-from ..models import models_nrds
+from ..models import constraint_bounds, constraint_value, models_nrds
 from ..optimizer import Optimizer
-from ..parsers import parse_input, parse_models, parse_permutation, presets_db
+from ..parsers import parse_models
 from ..printers import log_debug, log_info, log_success
-from ..utils import autotimeit, pformatf
+from ..utils import autotimeit, get_a, pformatf
 
 
 @click.command()
-@click.option(
-    "--preset",
-    type=click.Choice(presets_db),
-    metavar="<preset>",
-    help="Data preset ({})".format("/".join(presets_db.keys())),
-)
-@click.option(
-    "-y",
-    nargs=10,
-    type=int,
-    metavar="<int...>",
-    help="Space-separated list of "
-    + click.style("ten", bold=True)
-    + " y values (y11 y12 y13 y14 y22 y23 y24 y33 y34 y44)",
-)
-@click.option(
-    "-r",
-    nargs=4,
-    type=float,
-    metavar="<float...>",
-    default=(1, 1, 1, 1),
-    show_default=True,
-    help="Space-separated list of " + click.style("four", bold=True) + " r values",
-)
 @click.option(
     "-l",
     "--level",
@@ -44,6 +20,16 @@ from ..utils import autotimeit, pformatf
     required=True,
     type=click.Choice(["N{}".format(i) for i in range(0, 4 + 1)]),
     help="Level (senior) for bootstrap",
+)
+@click.option(
+    "-x",
+    "--exclude",
+    "excluded_models",
+    multiple=True,
+    metavar="<name...|all>",
+    required=False,
+    callback=parse_models,
+    help="Comma-separated list of models to exclude from the senior level",
 )
 @click.option(
     "-m",
@@ -55,13 +41,26 @@ from ..utils import autotimeit, pformatf
     callback=parse_models,
     help="Model (junior) for bootstrap",
 )
-# @click.option(
-#     "--permutation",
-#     metavar="<int...>",
-#     required=True,
-#     callback=parse_permutation,
-#     help="Permutations to use for calculations",
-# )
+@click.option(
+    "-t",
+    "--theta",
+    nargs=5,
+    type=float,
+    metavar="<n0 T1 T3 g1 g3>",
+    required=True,
+    help="Space-separated list of "
+    + click.style("five", bold=True)
+    + " theta components for a_ij calculation",
+)
+@click.option(
+    "-r",
+    nargs=4,
+    type=float,
+    metavar="<float...>",
+    default=(1, 1, 1, 1),
+    show_default=True,
+    help="Space-separated list of " + click.style("four", bold=True) + " r values",
+)
 @click.option(
     "-n",
     "--times",
@@ -97,12 +96,11 @@ from ..utils import autotimeit, pformatf
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def bootstrap_LL(
-    preset,
-    y,
-    r,
     level_senior,
+    excluded_models,
     models,
-    # permutation,
+    theta,
+    r,
     bootstrap_times,
     output_filename_bootstrap,
     method,
@@ -113,45 +111,44 @@ def bootstrap_LL(
 
     if len(models) != 1:
         raise click.BadParameter(
-            "specify exactly one (junior) model", param_hint="-m/--models"
+            "specify exactly one junior model", param_hint="-m/--model"
         )
-
-    y = parse_input(preset, y, verbose=True)
-    del preset
-
     model_junior = models[0]
     del models
 
-    models_senior = models_nrds[level_senior]
+    bounds = model_junior.get_safe_bounds()
+    theta = tuple(constraint_value(param, bound) for param, bound in zip(theta, bounds))
+    del bounds
 
-    # # Determine senior/junior models
-    # for i in range(0, 4 + 1):
-    #     ms = models_nrds["N{}".format(i)]
-    #     if models[0] in ms:
-    #         n1, m1 = i, models[0]
-    #     if models[1] in ms:
-    #         n2, m2 = i, models[1]
-    # if n1 == n2:
-    #     raise click.BadParameter(
-    #         "specify two models from different N-levels", param_hint="-m/--models"
-    #     )
-    # if n1 > n2:
-    #     model_senior, model_junior = m1, m2
-    # else:
-    #     model_senior, model_junior = m2, m1
-    # del models
+    a = get_a(model=model_junior, theta=theta, r=r)
 
-    log_info("y: {}".format(" ".join(map(str, y))))
-    log_info("r: ({})".format(", ".join(map(pformatf, r))))
     log_info("Senior level: {}".format(level_senior))
     log_info("Junior model: {}".format(model_junior.name))
-    # log_info("Permutation: ({})".format(",".join(map(str, permutation))))
+    log_info("theta: (n0={}, T1={}, T3={}, g1={}, g3={})".format(*map(pformatf, theta)))
+    log_info("r: ({})".format(", ".join(map(pformatf, r))))
+    log_info("a-ij: ({})".format(", ".join(pformatf(aij, 1) for aij in a)))
     log_info("Output file: {}".format(output_filename_bootstrap))
 
     if not theta0:
-        theta0 = (round(0.6 * sum(y), 5), 0.5, 0.5, 0.5, 0.5)
+        theta0 = (10, 0.5, 0.5, 0.5, 0.5)
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
+
+    if excluded_models:
+        log_info(
+            "Excluding models: {}".format(
+                " ".join(model.name for model in excluded_models)
+            )
+        )
+    models_senior = list(set(models_nrds[level_senior]) - set(excluded_models))
+    del excluded_models
+
+    log_info(
+        "Senior models: {}".format(" ".join(model.name for model in models_senior))
+    )
+
+    if not models_senior:
+        raise ValueError("No models left on senior level")
 
     log_info(
         "Bootstraping {}/{} (senior/junior) {} times...".format(
@@ -160,7 +157,7 @@ def bootstrap_LL(
     )
     data = []
     for _ in range(bootstrap_times):
-        y_poissoned = tuple(np.random.poisson(y))
+        y_poissoned = tuple(np.random.poisson(a))
         optimizer_boot = Optimizer(y_poissoned, r, theta0, method, debug=debug)
 
         results_boot_senior = optimizer_boot.many(models_senior, "model")
@@ -184,7 +181,7 @@ def bootstrap_LL(
                 LL_diff,
             )
         )
-    headers = ["y", "Mx", "permx", "LLx", "My", "permy", "LLy", "LLx-LLy"]
+    headers = ["y", "Mx", "px", "LLx", "My", "py", "LLy", "LLx-LLy"]
     if output_filename_bootstrap:
         log_info(
             "Writing bootstrap results to <{}>...".format(output_filename_bootstrap)

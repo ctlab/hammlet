@@ -97,27 +97,27 @@ def parse_models(ctx, param, value):
         else:
             return re.split(r"[,;]", s)
 
-    model_names = tuple(m for s in value for m in _get_model_names(s))
+    model_names = [m for s in value for m in _get_model_names(s)]
     if "all" in map(lambda s: s.lower(), model_names):
         return all_models
     if "H1" in model_names:
-        model_names += tuple(m.name for m in models_H1)
+        model_names += [m.name for m in models_H1]
     if "H2" in model_names:
-        model_names += tuple(m.name for m in models_H2)
+        model_names += [m.name for m in models_H2]
     if "N0" in model_names:
-        model_names += tuple(m.name for m in models_nrds["N0"])
+        model_names += [m.name for m in models_nrds["N0"]]
     if "N1" in model_names:
-        model_names += tuple(m.name for m in models_nrds["N1"])
+        model_names += [m.name for m in models_nrds["N1"]]
     if "N2" in model_names:
-        model_names += tuple(m.name for m in models_nrds["N2"])
+        model_names += [m.name for m in models_nrds["N2"]]
     if "N3" in model_names:
-        model_names += tuple(m.name for m in models_nrds["N3"])
+        model_names += [m.name for m in models_nrds["N3"]]
     if "N4" in model_names:
-        model_names += tuple(m.name for m in models_nrds["N4"])
+        model_names += [m.name for m in models_nrds["N4"]]
     # seen = set()
     seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
     seen_add = seen.add
-    unique_names = tuple(m for m in model_names if not (m in seen or seen_add(m)))
+    unique_names = [m for m in model_names if not (m in seen or seen_add(m))]
     for m in unique_names:
         if m not in models_mapping:
             raise click.BadParameter(
@@ -126,7 +126,7 @@ def parse_models(ctx, param, value):
                 ),
                 param_hint="models",
             )
-    return tuple(models_mapping[m] for m in unique_names)
+    return [models_mapping[m] for m in unique_names]
 
 
 def parse_best(ctx, param, value):

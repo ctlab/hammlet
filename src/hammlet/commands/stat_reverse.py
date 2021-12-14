@@ -182,7 +182,7 @@ def stat_reverse(
     optimizer = Optimizer(y, r, theta0, method, debug=debug)
 
     if excluded_models:
-        log_debug(
+        log_info(
             "Excluding models: {}".format(
                 " ".join(model.name for model in excluded_models)
             )
