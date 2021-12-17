@@ -168,7 +168,7 @@ def bootstrap_LL(
 
         LLx = best_result_senior.LL
         LLy = best_result_junior.LL
-        LL_diff = LLx - LLy
+        LL_diff = 2 * (LLx - LLy)
         data.append(
             (
                 " ".join(format(x, " >2") for x in y_poissoned),

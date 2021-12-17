@@ -226,7 +226,7 @@ def get_LL2(
     best_result_low = max(results_low, key=lambda it: it.LL)
     LLx = best_result_high.LL
     LLy = best_result_low.LL
-    return LLx - LLy
+    return 2 * (LLx - LLy)
 
 
 def get_paths(hierarchy, initial_model):
