@@ -19,12 +19,12 @@ from ..utils import (
 
 
 @click.command()
-@click.option(
-    "--preset",
-    type=click.Choice(presets_db),
-    metavar="<preset>",
-    help="Data preset ({})".format("/".join(presets_db.keys())),
-)
+# @click.option(
+#     "--preset",
+#     type=click.Choice(presets_db),
+#     metavar="<preset>",
+#     help="Data preset ({})".format("/".join(presets_db.keys())),
+# )
 @click.option(
     "-y",
     nargs=10,
@@ -122,7 +122,7 @@ from ..utils import (
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_reverse(
-    preset,
+    # preset,
     y,
     r,
     excluded_models,
@@ -139,6 +139,7 @@ def stat_reverse(
 ):
     """Perform 'reverse' statistics calculation."""
 
+    preset = None
     y = parse_input(preset, y, verbose=True)
     del preset
     log_info("y: {}".format(" ".join(map(str, y))))

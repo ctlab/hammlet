@@ -28,15 +28,14 @@ def cli():
 
 
 # Note: respect the desired order
-cli.add_command(commands.mle)
+# cli.add_command(commands.mle)
 cli.add_command(commands.bootstrap)
 cli.add_command(commands.bootstrap_LL)
 cli.add_command(commands.calculate_aij)
-cli.add_command(commands.show_permutation)
+# cli.add_command(commands.show_permutation)
 cli.add_command(commands.draw)
-cli.add_command(commands.chains)
-cli.add_command(commands.levels)
-# cli.add_command(commands.stat_chains)
+# cli.add_command(commands.chains)
+# cli.add_command(commands.levels)
 cli.add_command(commands.stat_levels)
 cli.add_command(commands.stat_reverse)
 
