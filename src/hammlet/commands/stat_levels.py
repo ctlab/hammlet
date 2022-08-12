@@ -149,6 +149,9 @@ def stat_levels(
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
 
+    if ecdfs is not None:
+        ecdf = True
+
     if bootstrap_times and not ecdf:
         raise click.BadParameter(
             "bootstrap is only performed with --ecdf flag", param_hint="-n/--times"
