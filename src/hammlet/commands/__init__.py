@@ -20,6 +20,5 @@ from .draw import draw
 from .levels import levels
 from .mle import mle
 from .show_permutation import show_permutation
-from .stat_chains import stat_chains
 from .stat_levels import stat_levels
 from .stat_reverse import stat_reverse
