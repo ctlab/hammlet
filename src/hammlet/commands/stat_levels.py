@@ -18,12 +18,13 @@ from ..utils import (
 
 
 @click.command()
-# @click.option(
-#     "--preset",
-#     type=click.Choice(presets_db),
-#     metavar="<preset>",
-#     help="Data preset ({})".format("/".join(presets_db.keys())),
-# )
+@click.option(
+    "--preset",
+    type=click.Choice(presets_db),
+    metavar="<preset>",
+    help="Data preset ({})".format("/".join(presets_db.keys())),
+    hidden=True,
+)
 @click.option(
     "-y",
     nargs=10,
@@ -121,7 +122,7 @@ from ..utils import (
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def stat_levels(
-    # preset,
+    preset,
     y,
     r,
     excluded_models,
@@ -138,8 +139,7 @@ def stat_levels(
 ):
     """Perform 'levels' statistics calculation."""
 
-    preset = None
-    # y = parse_input(preset, y, verbose=True)
+    y = parse_input(preset, y, verbose=True)
     del preset
     log_info("y: {}".format(" ".join(map(str, y))))
     log_info("r: ({})".format(", ".join(map(pformatf, r))))
