@@ -150,6 +150,9 @@ def stat_reverse(
         if debug:
             log_debug("Using default theta0: {}".format(theta0))
 
+    if ecdfs is not None:
+        ecdf = True
+
     if bootstrap_times and not ecdf:
         raise click.BadParameter(
             "bootstrap is only performed with --ecdf flag", param_hint="-n/--times"
@@ -302,7 +305,6 @@ def stat_reverse(
                 log_success("Last 2*delta LL < critical LL, stopping")
                 final_level = level_simple
                 final_result = result_simple
-                del d, z
                 break
         else:
             df = int(level_complex[1:]) - int(level_simple[1:])
@@ -330,36 +332,56 @@ def stat_reverse(
             permutation = final_result.permutation
             LL = final_result.LL
             (n0, T1, T3, g1, g3) = final_result.theta
-            if final_level == levels[0] or final_level == levels[1]:
-                pbad = 0
+            if ecdf:
+                f.write(
+                    "[reverse],{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                        final_level,
+                        name,
+                        mnemo,
+                        "".join(map(str, permutation)),
+                        LL,
+                        n0,
+                        T1,
+                        T3,
+                        g1,
+                        g3,
+                        d,
+                        z,
+                    )
+                )
             else:
-                level_prev = levels[levels.index(final_level) - 1]
-                _, pbad = get_pvalue(
-                    result_complex,
-                    best_result_by_level[level_prev],
-                    df=int(level_complex[1:]) - int(level_prev[1:]),
+                if final_level == levels[0] or final_level == levels[1]:
+                    pbad = 0
+                else:
+                    level_prev = levels[levels.index(final_level) - 1]
+                    _, pbad = get_pvalue(
+                        result_complex,
+                        best_result_by_level[level_prev],
+                        df=int(level_complex[1:]) - int(level_prev[1:]),
+                    )
+                pgood = p
+                if final_level == "N0":
+                    ppoly = 1
+                else:
+                    _, ppoly = get_pvalue(
+                        final_result,
+                        best_result_by_level["N0"],
+                        df=int(final_level[1:]),
+                    )
+                f.write(
+                    "[reverse],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                        final_level,
+                        name,
+                        mnemo,
+                        "".join(map(str, permutation)),
+                        LL,
+                        n0,
+                        T1,
+                        T3,
+                        g1,
+                        g3,
+                        pbad,
+                        pgood,
+                        ppoly,
+                    )
                 )
-            pgood = p
-            if final_level == "N0":
-                ppoly = 1
-            else:
-                _, ppoly = get_pvalue(
-                    final_result, best_result_by_level["N0"], df=int(final_level[1:])
-                )
-            f.write(
-                "[reverse],{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-                    final_level,
-                    name,
-                    mnemo,
-                    "".join(map(str, permutation)),
-                    LL,
-                    n0,
-                    T1,
-                    T3,
-                    g1,
-                    g3,
-                    pbad,
-                    pgood,
-                    ppoly,
-                )
-            )
