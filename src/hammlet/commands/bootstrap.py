@@ -11,12 +11,12 @@ from ..utils import autotimeit, pformatf
 
 
 @click.command()
-@click.option(
-    "--preset",
-    type=click.Choice(presets_db),
-    metavar="<preset>",
-    help="Data preset ({})".format("/".join(presets_db.keys())),
-)
+# @click.option(
+#     "--preset",
+#     type=click.Choice(presets_db),
+#     metavar="<preset>",
+#     help="Data preset ({})".format("/".join(presets_db.keys())),
+# )
 @click.option(
     "-y",
     nargs=10,
@@ -87,7 +87,7 @@ from ..utils import autotimeit, pformatf
 @click.option("--debug", is_flag=True, help="Debug")
 @autotimeit
 def bootstrap(
-    preset,
+    # preset,
     y,
     r,
     models,
@@ -103,6 +103,7 @@ def bootstrap(
     if len(models) != 1:
         raise click.BadParameter("specify exactly one model", param_hint="-m/--model")
 
+    preset = None
     y = parse_input(preset, y, verbose=True)
     model = models[0]
     del preset, models
