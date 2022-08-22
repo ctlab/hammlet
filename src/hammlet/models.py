@@ -11,12 +11,6 @@ __all__ = [
     "all_models",
     "models_H1",
     "models_H2",
-    "models_N0",
-    "models_N1",
-    "models_N2",
-    "models_N3",
-    "models_N4",
-    "models_hierarchy",
     "models_mapping",
     "models_mapping_mnemonic",
 ]
@@ -517,6 +511,14 @@ all_models = models_H1 + models_H2
 
 models_mapping = Model.mapping
 models_mapping_mnemonic = Model.mapping_mnemonic
+
+# fmt: off
+models_H1_nr = ["2H1", "1H1", "1H2", "1H3", "1H4", "1HP1", "1HP2",
+                "1HP3", "T1", "T2", "PT", "TP", "T0", "P"]
+models_H1_nr = [models_mapping[name] for name in models_H1_nr]
+models_H2_nr = ["2H2", "2HP"]
+models_H2_nr = [models_mapping[name] for name in models_H2_nr]
+# fmt: on
 
 models_nrds = {
     "N0": ["P"],

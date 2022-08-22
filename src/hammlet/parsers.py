@@ -114,7 +114,79 @@ def parse_models(ctx, param, value):
         model_names += [m.name for m in models_nrds["N3"]]
     if "N4" in model_names:
         model_names += [m.name for m in models_nrds["N4"]]
-    # seen = set()
+
+    seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
+    seen_add = seen.add
+    unique_names = [m for m in model_names if not (m in seen or seen_add(m))]
+    for m in unique_names:
+        if m not in models_mapping:
+            raise click.BadParameter(
+                'unknown model name "{}", possible values are: {}'.format(
+                    m, ",".join(models_mapping.keys())
+                ),
+                param_hint="models",
+            )
+    return [models_mapping[m] for m in unique_names]
+
+
+def parse_models_nr(ctx, param, value):
+    if not value:
+        # Default value
+        # value = ('2H1', '2H2')
+        return tuple()
+
+    def _get_model_names(s):
+        if ":" in s:
+            assert s.count(":") == 1
+            group, mnemos = s.split(":")
+            model_names = []
+            for mnemo in re.split(r"[,;]", mnemos):
+                m = group + ":" + mnemo
+                if m not in models_mapping_mnemonic:
+                    raise click.BadParameter(
+                        'unknown model mnemonic name "{}"'.format(mnemo),
+                        param_hint="models",
+                    )
+                model_names.append(models_mapping_mnemonic[m].name)
+            return model_names
+        else:
+            return re.split(r"[,;]", s)
+
+    model_names = [m for s in value for m in _get_model_names(s)]
+    nr_H1 = [
+        "2H1",
+        "1H1",
+        "1H2",
+        "1H3",
+        "1H4",
+        "1HP1",
+        "1HP2",
+        "1HP3",
+        "T1",
+        "T2",
+        "PT",
+        "TP",
+        "T0",
+        "P",
+    ]
+    nr_H2 = ["2H2", "2HP"]
+    if "all" in map(lambda s: s.lower(), model_names):
+        model_names = nr_H1 + nr_H2
+    if "H1" in model_names:
+        model_names += nr_H1
+    if "H2" in model_names:
+        model_names += nr_H2
+    if "N0" in model_names:
+        model_names += [m.name for m in models_nrds["N0"]]
+    if "N1" in model_names:
+        model_names += [m.name for m in models_nrds["N1"]]
+    if "N2" in model_names:
+        model_names += [m.name for m in models_nrds["N2"]]
+    if "N3" in model_names:
+        model_names += [m.name for m in models_nrds["N3"]]
+    if "N4" in model_names:
+        model_names += [m.name for m in models_nrds["N4"]]
+
     seen = {"H1", "H2", "N0", "N1", "N2", "N3", "N4"}
     seen_add = seen.add
     unique_names = [m for m in model_names if not (m in seen or seen_add(m))]

@@ -4,7 +4,7 @@ from operator import attrgetter
 
 from scipy.optimize import minimize
 
-from .models import constraint_value
+from .models import constraint_value, models_H1_nr, models_H2_nr
 from .printers import log_debug
 from .utils import convert_permutation, likelihood, morph10
 
@@ -50,19 +50,35 @@ class Optimizer:
 
     def many(self, models, perms="all", sort=True):
         results = []
+
         for model in models:
             if perms == "model":
                 ps = model.perms
+            elif perms == "model_nr":
+                if model in models_H1_nr:
+                    ps = "all"
+                elif model in models_H2_nr:
+                    ps = "half"
+                else:
+                    raise ValueError(
+                        "Bad model '{}' for model_nr perms mode".format(model)
+                    )
             else:
                 ps = perms
+
             if ps == "all":
                 ps = list(itertools.permutations((1, 2, 3, 4)))
+            elif ps == "half":
+                ps = list(itertools.permutations((1, 2, 3, 4)))[:12]
             else:
                 ps = list(map(convert_permutation, ps))
+
             for perm in ps:
                 results.append(self.one(model, perm))
+
         if sort:
             results.sort(key=attrgetter("LL"), reverse=True)
+
         return results
 
     def many_perms(self, model, perms, sort=True):

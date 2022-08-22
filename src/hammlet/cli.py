@@ -29,6 +29,7 @@ def cli():
 
 # Note: respect the desired order
 # cli.add_command(commands.mle)
+cli.add_command(commands.mle_nr)
 cli.add_command(commands.bootstrap)
 cli.add_command(commands.bootstrap_LL)
 cli.add_command(commands.calculate_aij)
