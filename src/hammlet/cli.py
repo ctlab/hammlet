@@ -3,6 +3,8 @@ from collections import OrderedDict
 import click
 
 from . import __version__, commands
+from .models import all_models
+from .printers import log_info
 
 CONTEXT_SETTINGS = dict(max_content_width=999, help_option_names=["-h", "--help"])
 
@@ -18,13 +20,34 @@ class GroupWithUnsortedCommands(click.Group):
         return tuple(self.commands.keys())
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, cls=GroupWithUnsortedCommands)
+@click.group(
+    cls=GroupWithUnsortedCommands,
+    context_settings=CONTEXT_SETTINGS,
+    invoke_without_command=True,
+)
+@click.pass_context
+@click.option(
+    "-l",
+    "--list",
+    "is_list_models",
+    is_flag=True,
+    help="List all models",
+)
 @click.version_option(__version__)
-def cli():
+def cli(ctx, is_list_models):
     """Hybridization Models Maximum Likelihood Estimator
 
     Author: Konstantin Chukharev (lipen00@gmail.com)
     """
+
+    if ctx.invoked_subcommand is None:
+        if is_list_models:
+            log_info("List of all models:")
+            for model in all_models:
+                click.echo("  - {!r}".format(model))
+    else:
+        # Invoking subcommand {ctx.invoked_subcommand}
+        pass
 
 
 # Note: respect the desired order
