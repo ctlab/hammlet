@@ -137,7 +137,7 @@ def stat_levels(
     use_best_senior_model,
     debug,
 ):
-    """Perform 'levels' statistics calculation."""
+    """Perform 'stepwise' statistics calculation."""
 
     y = parse_input(preset, y, verbose=True)
     del preset
